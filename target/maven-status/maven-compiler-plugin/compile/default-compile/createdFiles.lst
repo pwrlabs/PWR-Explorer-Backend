@@ -2,7 +2,9 @@ API\GET.class
 Block\Block.class
 Txn\Txn.class
 Main\Hex.class
+VM\VMs.class
 Txn\Initializer.class
+VM\VM.class
 PWRChain\Synchronizer$1.class
 PWRChain\Synchronizer.class
 API\POST.class

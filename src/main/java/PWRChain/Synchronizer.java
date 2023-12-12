@@ -17,7 +17,7 @@ public class Synchronizer {
         new Thread() {
             public void run() {
                 long blockToCheck = SDBM.loadLong("blockToCheck");
-                if(blockToCheck == 0) blockToCheck = 0;
+                if(blockToCheck == 0) blockToCheck = 1;
                 while(true) {
                     try {
                         try { Thread.sleep(1000); } catch (Exception e) { e.printStackTrace(); }
@@ -51,7 +51,11 @@ public class Synchronizer {
                                     Validators.add(joinTxn.getFrom(), block.getTimestamp());
                                 }
 
-                                new Txn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(), block.getNumber(), Hex.decode(txn.getFrom().substring(2)), txn.getTo(), value, txn.getFee(), data, txn.getType(), txn.getNonceOrValidationHash());
+                                try {
+                                    new Txn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(), block.getNumber(), Hex.decode(txn.getFrom().substring(2)), txn.getTo(), value, txn.getFee(), data, txn.getType(), txn.getNonceOrValidationHash());
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                             }
 
                             SDBM.store("blockToCheck", ++blockToCheck);

@@ -1,6 +1,7 @@
 package Txn;
 
 import Block.Blocks;
+import VM.VMs;
 import com.github.pwrlabs.dbm.DBM;
 import Main.Settings;
 import User.Users;

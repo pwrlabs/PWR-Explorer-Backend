@@ -5,6 +5,7 @@ import API.POST;
 import API.RateLimiter;
 import PWRChain.Synchronizer;
 import User.User;
+import VM.VM;
 import com.github.pwrlabs.dbm.DBM;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 
@@ -51,6 +52,7 @@ public class Main {
         GET.run();
         POST.run();
 
+        DBM.loadAllObjectsFromDatabase(VM.class);
         Block.Initializer.init();
         DBM.loadAllObjectsFromDatabase(User.class);
         Txn.Initializer.init();

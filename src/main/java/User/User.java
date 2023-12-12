@@ -4,9 +4,11 @@ import com.github.pwrlabs.dbm.DBM;
 import Txn.Txn;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 
+import java.io.File;
 import java.util.*;
 
 public class User extends DBM {
+    private List<Long> blocksWhereHasTxn = new LinkedList<>();
     //Latest txns have the smallest index. The latest one is on index 0
     private List<Txn> txns = new LinkedList<>();
     private Map<String /*Validator*/, Long /*Delegated Amount*/> initialDelegations;
@@ -16,6 +18,16 @@ public class User extends DBM {
        // System.out.println("New user created: " + address);
 
         Users.add(this);
+
+        File initialDelegationsFolder = new File(rootPath + "initialDelegations/");
+        if(initialDelegationsFolder.exists()) {
+            initialDelegations = new HashMap<>();
+            for(File validatorFile : initialDelegationsFolder.listFiles()) {
+                String validator = validatorFile.getName();
+                long amount = loadLong("initialDelegations/" + validator);
+                initialDelegations.put(validator, amount);
+            }
+        }
     }
 
     public void addTxn(Txn txn) {
@@ -48,6 +60,8 @@ public class User extends DBM {
             long delegated = initialDelegations.getOrDefault(validator.toLowerCase(), 0L);
             initialDelegations.put(validator.toLowerCase(), delegated + amount);
         }
+
+        store("initialDelegations/" + validator.toLowerCase(), initialDelegations.getOrDefault(validator.toLowerCase(), 0L));
     }
     //Used when a user withdraws PWR, we check if the withdrawn PWR is from rewards only or also delegated PWR
     //If it is from delegated PWR, we decrease the initial delegation amount
@@ -66,6 +80,8 @@ public class User extends DBM {
             long initialDelegation = initialDelegations.getOrDefault(validator.toLowerCase(), 0L);
             if(delegatedPWR < initialDelegation) initialDelegations.put(validator.toLowerCase(), delegatedPWR);
         }
+
+        store("initialDelegations/" + validator.toLowerCase(), initialDelegations.getOrDefault(validator.toLowerCase(), 0L));
     }
     public String getAddress() {
         return id;

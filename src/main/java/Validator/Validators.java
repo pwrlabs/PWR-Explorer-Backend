@@ -1,16 +1,17 @@
 package Validator;
 
+import com.github.pwrlabs.dbm.SDBM;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class Validators {
-    private static Map<String, Long> validatorJoinTime = new HashMap<>();
 
     public static void add(String validatorAddress, long joinTime) {
-        validatorJoinTime.put(validatorAddress.toLowerCase(), joinTime);
+        SDBM.store("validators/joiningTime/" + validatorAddress.toLowerCase(), joinTime);
     }
 
     public static long getJoinTime(String validatorAddress) {
-        return validatorJoinTime.getOrDefault(validatorAddress.toLowerCase(), 0L);
+        return SDBM.loadLong("validators/joiningTime/" + validatorAddress.toLowerCase());
     }
 }

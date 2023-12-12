@@ -9,6 +9,7 @@ import User.Users;
 import User.User;
 import Validator.Validators;
 import com.github.pwrlabs.pwrj.Delegator.Delegator;
+import com.github.pwrlabs.pwrj.Transaction.Transaction;
 import com.github.pwrlabs.pwrj.Validator.Validator;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import org.json.JSONArray;
@@ -173,16 +174,16 @@ public class GET {
 
                 long blockNumber = Long.parseLong(request.queryParams("blockNumber"));
 
-                Block block = Blocks.getBlock(blockNumber);
+                com.github.pwrlabs.pwrj.Block.Block block = PWRJ.getBlockByNumber(blockNumber);
                 if(block == null) return getError(response, "Invalid Block Number");
 
                 return getSuccess(
                         "blockHeight", blockNumber,
-                        "timeStamp", block.getTimeStamp(),
-                        "txnsCount", block.getTxnsCount(),
-                        "blockSize", block.getBlockSize(),
-                        "blockReward", block.getBlockReward(),
-                        "blockSubmitter", "0x" + bytesToHex(block.getBlockSubmitter()),
+                        "timeStamp", block.getTimestamp(),
+                        "txnsCount", block.getTransactionCount(),
+                        "blockSize", block.getSize(),
+                        "blockReward", block.getReward(),
+                        "blockSubmitter", block.getSubmitter(),
                         "blockConfirmations", Blocks.getLatestBlockNumber() - blockNumber);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -201,12 +202,13 @@ public class GET {
                 int previousTxnsCount = (page - 1) * count;
                 int totalTxnCount, totalPages;
 
-                Block block = Blocks.getBlock(blockNumber);
+                com.github.pwrlabs.pwrj.Block.Block block = PWRJ.getBlockByNumber(blockNumber);
                 if(block == null) return getError(response, "Invalid Block Number");
 
                 int txnsCount = 0;
                 JSONArray txns = new JSONArray();
-                Txn[] txnsArray = block.getTxns();
+                Transaction[] txnsArray = block.getTransactions();
+                //Txn[] txnsArray = block.getTxns();
 
                 if(txnsArray == null) totalTxnCount = 0;
                 else totalTxnCount = txnsArray.length;
@@ -215,17 +217,18 @@ public class GET {
                 if(totalTxnCount % count != 0) ++totalPages;
 
                 for(int t = previousTxnsCount; t < txnsArray.length; ++t) {
-                    Txn txn = txnsArray[t];
+                    Transaction txn = txnsArray[t];
+                    //Txn txn = txnsArray[t];
                     if(txn == null) continue;
                     if(txnsCount == count) break;
 
                     JSONObject object = new JSONObject();
 
-                    object.put("txnHash", txn.getTxnHash());
-                    object.put("txnType", txn.getTxnType());
+                    object.put("txnHash", txn.getHash());
+                    object.put("txnType", txn.getType());
                     object.put("blockNumber", blockNumber);
-                    object.put("timeStamp", txn.getTimeStamp());
-                    object.put("from", "0x" + bytesToHex(txn.getFrom()));
+                    object.put("timeStamp", block.getTimestamp());
+                    object.put("from", txn.getFrom());
                     object.put("to", txn.getTo());
                     object.put("value", txn.getValue());
 
@@ -420,7 +423,7 @@ public class GET {
                     metadata.put("totalItems", 0);
                     metadata.put("startIndex", 0);
 
-                    System.out.println("No user found");
+                    //System.out.println("No user found");
                     return getSuccess("transactions", new JSONArray(),
                             "metadata", metadata,
                             "hashOfFirstTxnSent", "null",
@@ -644,6 +647,7 @@ public class GET {
                         "name", "Unnamed Validator",
                         "status", v.getStatus(),
                         "joiningDate", Validators.getJoinTime(validatorAddress),
+                        "hosting", "vps",
                         "website", "null",
                         "description", "null",
                         "delegators", delegatorsArray,

@@ -3,6 +3,7 @@ package Main;
 import API.GET;
 import API.POST;
 import API.RateLimiter;
+import PWRChain.BlockDataScheduler;
 import PWRChain.Synchronizer;
 import User.User;
 import VM.VM;
@@ -47,7 +48,9 @@ public class Main {
 
         PWRJ.setRpcNodeUrl("https://pwrrpc.pwrlabs.io/");
 
-        RateLimiter.initRateLimiter();
+//        BlockDataScheduler.scheduler();
+        GET.run();
+       /* RateLimiter.initRateLimiter();
 
         GET.run();
         POST.run();
@@ -57,6 +60,6 @@ public class Main {
         DBM.loadAllObjectsFromDatabase(User.class);
         Txn.Initializer.init();
 
-        Synchronizer.sync();
+        Synchronizer.sync();*/
     }
 }

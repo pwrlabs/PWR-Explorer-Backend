@@ -3,11 +3,14 @@ package API;
 
 import Block.Blocks;
 import Block.Block;
-import Main.OHTTP;
+import DTOs.BlockDTO;
+import DTOs.TransactionDTO;
 import Main.Settings;
 import User.Users;
 import User.User;
+import Utils.DatabaseUtils;
 import Validator.Validators;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.pwrlabs.pwrj.Delegator.Delegator;
 import com.github.pwrlabs.pwrj.Transaction.Transaction;
 import com.github.pwrlabs.pwrj.Validator.Validator;
@@ -18,15 +21,11 @@ import Txn.Txns;
 import Txn.Txn;
 
 import java.math.BigDecimal;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
+
 
 import static spark.Spark.get;
 
@@ -37,68 +36,40 @@ public class GET {
         get("/explorerInfo/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
-
                 JSONArray blocks = new JSONArray();
                 JSONArray txns = new JSONArray();
 
                 //Fetch the latest 5 blocks
-                long blockNumberToCheck = Blocks.getLatestBlockNumber();
-                for(int t=0; t < 5; ++t) {
-                    Block block = Blocks.getBlock(blockNumberToCheck - t);
-                    if(block == null) break;
-
-                    JSONObject object = new JSONObject();
-
-                    object.put("blockHeight", blockNumberToCheck - t);
-                    object.put("timeStamp", block.getTimeStamp());
-                    object.put("txnsCount", block.getTxnsCount());
-                    object.put("blockReward", block.getBlockReward());
-                    object.put("blockSubmitter", "0x" + bytesToHex(block.getBlockSubmitter()));
-
-                    blocks.put(object);
-                }
-
-                //Fetch the latest 5 txns
-                int fetchedTxns = 0;
-                for(int t=0; fetchedTxns < 5; ++t) {
-                    Block block = Blocks.getBlock(blockNumberToCheck - t);
-                    if(block == null) break;
-
-                    for(Txn txn : block.getTxns()) {
-                        if(txn == null) continue;
-                        JSONObject object = new JSONObject();
-
-                        object.put("txnHash", txn.getTxnHash());
-                        object.put("timeStamp", txn.getTimeStamp());
-                        object.put("from", "0x" + bytesToHex(txn.getFrom()));
-                        object.put("to", txn.getTo());
-                        object.put("value", txn.getValue());
-
-                        txns.put(object);
-                        ++fetchedTxns;
-
-                        if(fetchedTxns == 5) break;
+                List<BlockDTO> lastFiveAddedBlocksList  = DatabaseUtils.fetchLatestBlocks();
+                List<TransactionDTO> lastFiveAddedTransactionsList  = DatabaseUtils.fetchLatestTransactions();
+                if (lastFiveAddedBlocksList != null) {
+                    for(BlockDTO blockDTO : lastFiveAddedBlocksList){
+                        JSONObject object = DatabaseUtils.convertBlockDTOToJson(blockDTO);
+                        blocks.put(object);
                     }
                 }
-
+                if (lastFiveAddedTransactionsList != null) {
+                    for(TransactionDTO transactionDTO : lastFiveAddedTransactionsList){
+                        JSONObject transactionJson = DatabaseUtils.convertTransactionDTOToJson(transactionDTO);
+                        txns.put(transactionJson);
+                    }
+                }
                 return getSuccess(
                         "price", Settings.getPrice(),
                         "priceChange", 2.5,
                         "marketCap", 1000000000L,
                         "totalTransactionsCount", Txns.getTxnCount(),
-                        "blocksCount", blockNumberToCheck,
                         "validators", PWRJ.getActiveValidatorsCount(),
                         "tps", Blocks.getAverageTps(100),
                         "txns", txns,
                         "blocks", blocks
                 );
-
-
             } catch (Exception e) {
                 e.printStackTrace();
                 return getError(response, e.getLocalizedMessage());
             }
         });
+
 
         get("/latestBlocks/", (request, response) -> {
             try {
@@ -168,6 +139,9 @@ public class GET {
                 return getError(response, e.getLocalizedMessage());
             }
         });
+
+        ////////////////////////////////////////////////////
+
         get("/blockDetails/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
@@ -190,6 +164,8 @@ public class GET {
                 return getError(response, e.getLocalizedMessage());
             }
         });
+
+
         get("/blockTransactions/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
@@ -374,6 +350,57 @@ public class GET {
             }
         });
 
+        get("/transactionDetails/new", (request, response) -> {
+            try {
+                response.header("Content-Type", "application/json");
+
+                String txnHash = request.queryParams("txnHash").toLowerCase();
+
+                TransactionDTO transactionDTO = DatabaseUtils.fetchTransactionFromTransactionHash(txnHash);
+                if (transactionDTO != null) {
+                    JSONObject transactionJson = DatabaseUtils.convertTransactionDTOToJson(transactionDTO);
+
+                    // Set the response body
+                    response.status(200);
+                    return transactionJson;
+                }
+                else {
+                    // Handle case when txn is not found
+                    response.status(404);
+                    return new JSONObject().put("error", "txn not found");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return getError(response, e.getLocalizedMessage());
+            }
+        });
+
+        get("/blockDetails/new", (request, response) -> {
+            try {
+                response.header("Content-Type", "application/json");
+
+                long blockNumber = Long.parseLong(request.queryParams("blockNumber"));
+                BlockDTO blockDTO = DatabaseUtils.fetchBlockDetails(blockNumber);
+                ObjectMapper objectMapper = new ObjectMapper();
+
+                if (blockDTO != null) {
+                    // Use the utility method to convert BlockDTO to JsonObject
+                    JSONObject blockJson = DatabaseUtils.convertBlockDTOToJson(blockDTO);
+
+                    // Set the response body
+                    response.status(200);
+                    return blockJson;
+                } else {
+                    // Handle case when block is not found
+                    response.status(404);
+                    return new JSONObject().put("error", "Block not found");
+                }
+            } catch (Exception e) {
+                // Handle exceptions
+                response.status(500);
+                return new JSONObject().put("error", "Internal Server Error");
+            }
+        });
 
 
         //Wallet Calls
@@ -772,6 +799,8 @@ public class GET {
 
         return object;
     }
+
+
 
     public static void main(String[] args) {
         System.out.println(1 / 2);

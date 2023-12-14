@@ -21,10 +21,7 @@ import Txn.Txns;
 import Txn.Txn;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 import static spark.Spark.get;
@@ -71,6 +68,8 @@ public class GET {
         });
 
 
+
+
         get("/latestBlocks/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
@@ -78,59 +77,32 @@ public class GET {
                 int count = Integer.parseInt(request.queryParams("count"));
                 int page = Integer.parseInt(request.queryParams("page"));
 
-                //Metadata variables
+                // Metadata variables
                 long previousBlocksCount = (page - 1) * count;
-                int totalBlockCount, totalPages;
 
-                int blocksCount = 0;
-                JSONArray blocksArray = new JSONArray();
-
-                long latestBlockNumber = Blocks.getLatestBlockNumber();
-
-                totalPages = (int) (latestBlockNumber / count);
-                if(latestBlockNumber % count != 0) ++totalPages;
-
-                totalBlockCount = (int) latestBlockNumber;
-
-                for(long blockNumberToCheck = latestBlockNumber - previousBlocksCount;
-                    blocksCount < count;
-                    --blockNumberToCheck, ++blocksCount
-                ) {
-                    Block block = Blocks.getBlock(blockNumberToCheck);
-                    if(block == null) break;
-
-                    JSONObject object = new JSONObject();
-
-                    object.put("blockHeight", blockNumberToCheck);
-                    object.put("timeStamp", block.getTimeStamp());
-                    object.put("txnsCount", block.getTxnsCount());
-                    object.put("blockReward", block.getBlockReward());
-                    object.put("blockSubmitter", "0x" + bytesToHex(block.getBlockSubmitter()));
-
-                    blocksArray.put(object);
-                }
+                List<BlockDTO> blocks = DatabaseUtils.fetchLatestBlocks(count, page);
 
                 JSONObject metadata = new JSONObject();
-                metadata.put("totalBlocks", Blocks.getLatestBlockNumber());
-                metadata.put("totalPages", totalPages);
+                metadata.put("totalPages", DatabaseUtils.getTotalPagesWrtBlocks(count));
                 metadata.put("currentPage", page);
                 metadata.put("itemsPerPage", count);
-                metadata.put("totalItems", totalBlockCount);
                 metadata.put("startIndex", previousBlocksCount + 1);
 
-                if(previousBlocksCount + count <= totalBlockCount) metadata.put("endIndex", previousBlocksCount + count);
-                else metadata.put("endIndex", totalBlockCount);
-
-                if(page < totalPages) metadata.put("nextPage", page + 1);
+                if (page < DatabaseUtils.getTotalPagesWrtBlocks(count)) metadata.put("nextPage", page + 1);
                 else metadata.put("nextPage", -1);
 
-                if(page > 1) metadata.put("previousPage", page - 1);
+                if (page > 1) metadata.put("previousPage", page - 1);
                 else metadata.put("previousPage", -1);
 
+                JSONArray blocksArray = new JSONArray();
+                for (BlockDTO blockDTO : blocks) {
+                    blocksArray.put(DatabaseUtils.convertBlockDTOToJson(blockDTO));
+                }
+
                 return getSuccess(
-                        "networkUtilizationPast24Hours", Blocks.getNetworkUtilizationPast24Hours(),
-                        "averageBlockSizePast24Hours", Blocks.getAverageBlockSizePast24Hours(),
-                        "totalBlockRewardsPast24Hours", Blocks.getTotalBlockRewardsPast24Hours(),
+                        "networkUtilizationPast24Hours", "Blocks.getNetworkUtilizationPast24Hours()",
+                        "averageBlockSizePast24Hours", "Blocks.getAverageBlockSizePast24Hours()",
+                        "totalBlockRewardsPast24Hours", "Blocks.getTotalBlockRewardsPast24Hours()",
                         "blocks", blocksArray,
                         "metadata", metadata);
 
@@ -140,6 +112,7 @@ public class GET {
             }
         });
 
+
         ////////////////////////////////////////////////////
 
         get("/blockDetails/", (request, response) -> {
@@ -147,7 +120,7 @@ public class GET {
                 response.header("Content-Type", "application/json");
 
                 long blockNumber = Long.parseLong(request.queryParams("blockNumber"));
-
+                long latestBlock = DatabaseUtils.getLatestBlockNumber();
                 com.github.pwrlabs.pwrj.Block.Block block = PWRJ.getBlockByNumber(blockNumber);
                 if(block == null) return getError(response, "Invalid Block Number");
 
@@ -158,14 +131,14 @@ public class GET {
                         "blockSize", block.getSize(),
                         "blockReward", block.getReward(),
                         "blockSubmitter", block.getSubmitter(),
-                        "blockConfirmations", Blocks.getLatestBlockNumber() - blockNumber);
+                        "blockConfirmations", latestBlock - blockNumber);
             } catch (Exception e) {
                 e.printStackTrace();
                 return getError(response, e.getLocalizedMessage());
             }
         });
 
-
+// fixed
         get("/blockTransactions/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
@@ -178,22 +151,22 @@ public class GET {
                 int previousTxnsCount = (page - 1) * count;
                 int totalTxnCount, totalPages;
 
-                com.github.pwrlabs.pwrj.Block.Block block = PWRJ.getBlockByNumber(blockNumber);
+                BlockDTO block = DatabaseUtils.fetchBlockDetails(blockNumber);
                 if(block == null) return getError(response, "Invalid Block Number");
 
                 int txnsCount = 0;
                 JSONArray txns = new JSONArray();
-                Transaction[] txnsArray = block.getTransactions();
+                List<TransactionDTO> txnsArray = block.getTransactions();
                 //Txn[] txnsArray = block.getTxns();
 
                 if(txnsArray == null) totalTxnCount = 0;
-                else totalTxnCount = txnsArray.length;
+                else totalTxnCount = txnsArray.size();
 
                 totalPages = totalTxnCount / count;
                 if(totalTxnCount % count != 0) ++totalPages;
 
-                for(int t = previousTxnsCount; t < txnsArray.length; ++t) {
-                    Transaction txn = txnsArray[t];
+                for(int t = previousTxnsCount; t < txnsArray.size(); ++t) {
+                    TransactionDTO txn = txnsArray.get(t);
                     //Txn txn = txnsArray[t];
                     if(txn == null) continue;
                     if(txnsCount == count) break;
@@ -234,82 +207,102 @@ public class GET {
             }
         });
 
+
         get("/latestTransactions/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
 
                 int count = Integer.parseInt(request.queryParams("count"));
                 int page = Integer.parseInt(request.queryParams("page"));
-
+                long blockNumber = DatabaseUtils.getLatestBlockNumber();
                 int previousTxnsCount = (page - 1) * count;
+                int totalTxnCount = 0;
+                // Fetch the latest blocks
+                List<BlockDTO> latestBlocksList = new ArrayList<>();
+                for(int i =0; i< 5;i++){
+                    BlockDTO blockDTO = DatabaseUtils.fetchBlockDetails(blockNumber);
+                    if(blockDTO != null){
+                        latestBlocksList.add(blockDTO);
+
+                    }
+                    blockNumber--;
+                }
 
                 int fetchedTxns = 0;
+
                 JSONArray txnsArray = new JSONArray();
+                DatabaseUtils.updateTxn24HourStats();
 
-                for(int t=0; fetchedTxns < count + previousTxnsCount; ++t) {
-                    long blockNumber = Blocks.getLatestBlockNumber() - t;
-                    Block block = Blocks.getBlock(blockNumber);
-                    if(block == null) break;
+                for (BlockDTO block : latestBlocksList) {
+                    if (block == null || fetchedTxns >= count + previousTxnsCount) {
+                        break;
+                    }
 
-                    Txn[] txns = block.getTxns();
-                    for(Txn txn : txns) {
-                        if(txn == null) continue;
+                    List<TransactionDTO> txns = block.getTransactions();
 
-                        if(fetchedTxns < previousTxnsCount) {
+                    for (TransactionDTO txn : txns) {
+                        if (txn == null) {
+                            continue;
+                        }
+
+                        if (fetchedTxns < previousTxnsCount) {
                             ++fetchedTxns;
                             continue;
                         }
 
                         JSONObject object = new JSONObject();
 
-                        object.put("txnHash", txn.getTxnHash());
-                        object.put("block", blockNumber);
-                        object.put("txnType", txn.getTxnType());
+                        object.put("txnHash", txn.getHash());
+                        object.put("block", block.getBlockNumber());
+                        object.put("txnType", txn.getType());
                         object.put("timeStamp", txn.getTimeStamp());
-                        object.put("from", "0x" + bytesToHex(txn.getFrom()));
+                        object.put("from", "0x" + txn.getFrom());
                         object.put("to", txn.getTo());
                         object.put("txnFee", txn.getTxnFee());
                         object.put("value", txn.getValue());
-                        object.put("valueInUsd", txn.getValueInUsd());
-                        object.put("txnFeeInUsd", txn.getTxnFeeInUsd());
+                        object.put("valueInUsd", txn.getFeeUsdValue());
+                        object.put("txnFeeInUsd", txn.getFeeUsdValue());
                         object.put("nonceOrValidationHash", txn.getNonceOrValidationHash());
                         object.put("positionInBlock", txn.getPositionInTheBlock());
 
+
                         txnsArray.put(object);
                         ++fetchedTxns;
-                        if(fetchedTxns == count + previousTxnsCount) break;
+
+                        if (fetchedTxns == count + previousTxnsCount || fetchedTxns >= block.getTransactionCount()) {
+                            break;
+                        }
                     }
                 }
 
-                int totalTxnCount = Txns.getTxnCount();
+
                 int totalPages = totalTxnCount / count;
-                if(totalTxnCount % count != 0) ++totalPages;
+                if (totalTxnCount % count != 0) ++totalPages;
 
                 JSONObject metadata = new JSONObject();
-                metadata.put("totalTxns", Txns.getTxnCount());
+                metadata.put("totalTxns", totalTxnCount);
                 metadata.put("totalPages", totalPages);
                 metadata.put("currentPage", page);
                 metadata.put("itemsPerPage", count);
                 metadata.put("totalItems", totalTxnCount);
                 metadata.put("startIndex", previousTxnsCount + 1);
 
-                if(previousTxnsCount + count <= totalTxnCount) metadata.put("endIndex", previousTxnsCount + count);
+                if (previousTxnsCount + count <= totalTxnCount) metadata.put("endIndex", previousTxnsCount + count);
                 else metadata.put("endIndex", totalTxnCount);
 
-                if(page < totalPages) metadata.put("nextPage", page + 1);
+                if (page < totalPages) metadata.put("nextPage", page + 1);
                 else metadata.put("nextPage", -1);
 
-                if(page > 1) metadata.put("previousPage", page - 1);
+                if (page > 1) metadata.put("previousPage", page - 1);
                 else metadata.put("previousPage", -1);
 
-
                 return getSuccess(
-                        "transactionCountPast24Hours", Txns.getTxnCountPast24Hours(),
-                        "transactionCountPercentageChangeComparedToPreviousDay", Txns.getTxnCountPercentageChangeComparedToPreviousDay(),
-                        "totalTransactionFeesPast24Hours", Txns.getTotalTxnFeesPast24Hours(),
-                        "totalTransactionFeesPercentageChangeComparedToPreviousDay", Txns.getTotalTxnFeesPercentageChangeComparedToPreviousDay(),
-                        "averageTransactionFeePast24Hours", Txns.getAverageTxnFeePast24Hours(),
-                        "averageTransactionFeePercentageChangeComparedToPreviousDay", Txns.getAverageTxnFeePercentageChangeComparedToPreviousDay(),
+                        "transactionCountPast24Hours", DatabaseUtils.getTxnCountPast24Hours(),
+                        "transactionCountPercentageChangeComparedToPreviousDay", DatabaseUtils.getTxnCountPercentageChangeComparedToPreviousDay(),
+                        "totalTransactionFeesPast24Hours", DatabaseUtils.getTotalTxnFeesPast24Hours(),
+                        "totalTransactionFeesPercentageChangeComparedToPreviousDay", DatabaseUtils.getTotalTxnFeesPercentageChangeComparedToPreviousDay(),
+                        "averageTransactionFeePast24Hours", DatabaseUtils.getAverageTxnFeePast24Hours(),
+                        "averageTransactionFeePercentageChangeComparedToPreviousDay", DatabaseUtils.getAverageTxnFeePercentageChangeComparedToPreviousDay(),
                         "transactions", txnsArray,
                         "metadata", metadata);
             } catch (Exception e) {
@@ -317,31 +310,34 @@ public class GET {
                 return getError(response, e.getLocalizedMessage());
             }
         });
+
+
         get("/transactionDetails/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
 
                 String txnHash = request.queryParams("txnHash").toLowerCase();
 
-                Txn txn = Txns.getTxn(txnHash);
+                //  Txn txn = Txns.getTxn(txnHash);
+                TransactionDTO txn = DatabaseUtils.fetchTransactionFromTransactionHash(txnHash);
                 if (txn == null) return getError(response, "Invalid Txn Hash");
 
                 String data;
                 if(txn.getData() == null) data = "0x";
-                else data = "0x" + bytesToHex(txn.getData());
+                else data = "0x" + txn.getData();
 
                 return getSuccess(
                         "txnHash", txnHash,
-                        "txnType", txn.getTxnType(),
+                        "txnType", txn.getType(),
                         "size", txn.getSize(),
                         "blockNumber", txn.getBlockNumber(),
                         "timeStamp", txn.getTimeStamp(),
-                        "from", "0x" + bytesToHex(txn.getFrom()),
+                        "from", "0x" + txn.getFrom(),
                         "to", txn.getTo(),
                         "value", txn.getValue(),
-                        "valueInUsd", txn.getValueInUsd(),
+                        "valueInUsd", txn.getAmountUsdValue(),
                         "txnFee", txn.getTxnFee(),
-                        "txnFeeInUsd", txn.getTxnFeeInUsd(),
+                        "txnFeeInUsd", txn.getFeeUsdValue(),
                         "data", data
                 );
             } catch (Exception e) {
@@ -350,7 +346,7 @@ public class GET {
             }
         });
 
-        get("/transactionDetails/new", (request, response) -> {
+        get("/transactionDetails/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
 
@@ -375,7 +371,7 @@ public class GET {
             }
         });
 
-        get("/blockDetails/new", (request, response) -> {
+        get("/blockDetails/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
 
@@ -441,8 +437,11 @@ public class GET {
                 int count = Integer.parseInt(request.queryParams("count"));
                 int page = Integer.parseInt(request.queryParams("page"));
 
-                User user = Users.getUser(address);
-                if(user == null) {
+
+
+
+                 List<TransactionDTO> txnList = DatabaseUtils.fetchLatestTransactionsOfUser(address);
+                if(txnList == null || txnList.isEmpty()) {
                     JSONObject metadata = new JSONObject();
                     metadata.put("totalPages", 0);
                     metadata.put("currentPage", page);
@@ -458,9 +457,8 @@ public class GET {
                             "hashOfLastTxnSent", "null",
                             "timeOfLastTxnSent", "null");
                 }
-
-                List<Txn> txns = user.getTxns();
-                int totalTxnCount = txns.size();
+              //  List<Txn> txns = user.getTxns();
+                int totalTxnCount = txnList.size();
                 int totalPages = totalTxnCount / count;
                 if(totalTxnCount % count != 0) ++totalPages;
                 int previousTxnsCount = (page - 1) * count;
@@ -471,19 +469,19 @@ public class GET {
 
                 int fetchedTxns = 0;
                 for(int t = previousTxnsCount; fetchedTxns++ < count && t < totalTxnCount; ++t) {
-                    Txn txn = txns.get(totalTxnCount - t - 1);
+                    TransactionDTO txn = txnList.get(totalTxnCount - t - 1);
                     JSONObject object = new JSONObject();
 
-                    object.put("txnHash", txn.getTxnHash());
+                    object.put("txnHash", txn.getHash());
                     object.put("block", txn.getBlockNumber());
-                    object.put("txnType", txn.getTxnType());
+                    object.put("txnType", txn.getType());
                     object.put("timeStamp", txn.getTimeStamp());
-                    object.put("from", "0x" + bytesToHex(txn.getFrom()));
+                    object.put("from", "0x" + txn.getFrom());
                     object.put("to", txn.getTo());
                     object.put("txnFee", txn.getTxnFee());
                     object.put("value", txn.getValue());
-                    object.put("valueInUsd", txn.getValueInUsd());
-                    object.put("txnFeeInUsd", txn.getTxnFeeInUsd());
+                    object.put("valueInUsd", txn.getAmountUsdValue());
+                    object.put("txnFeeInUsd", txn.getFeeUsdValue());
                     object.put("nonceOrValidationHash", txn.getNonceOrValidationHash());
 
 
@@ -506,8 +504,8 @@ public class GET {
                 if(page > 1) metadata.put("previousPage", page - 1);
                 else metadata.put("previousPage", -1);
 
-                return getSuccess("transactions", txnsArray, "metadata", metadata, "hashOfFirstTxnSent", txns.get(0).getTxnHash(), "timeOfFirstTxnSent", txns.get(0).getTimeStamp(),
-                        "hashOfLastTxnSent", txns.get(totalTxnCount - 1).getTxnHash(), "timeOfLastTxnSent", txns.get(totalTxnCount - 1).getTimeStamp());
+                return getSuccess("transactions", txnsArray, "metadata", metadata, "hashOfFirstTxnSent", txnList.get(0).getHash(), "timeOfFirstTxnSent", txnList.get(0).getTimeStamp(),
+                        "hashOfLastTxnSent", txnList.get(totalTxnCount - 1).getHash(), "timeOfLastTxnSent", txnList.get(totalTxnCount - 1).getTimeStamp());
             } catch (Exception e) {
                 e.printStackTrace();
                 return getError(response, e.getLocalizedMessage());
@@ -520,7 +518,7 @@ public class GET {
 
                 String txnHash = request.queryParams("txnHash").toLowerCase();
 
-                Txn txn = Txns.getTxn(txnHash);
+                TransactionDTO txn = DatabaseUtils.fetchTransactionFromTransactionHash(txnHash) ;
                 if(txn == null) return getSuccess("isProcessed", false);
                 else return getSuccess("isProcessed", true);
             } catch (Exception e) {
@@ -548,10 +546,10 @@ public class GET {
                 //APY calculation for active validators
 
                 //check APY of active validators for the past 34,560 blocks (2 days)
-                long currentBlockNumber = Blocks.getLatestBlockNumber();
+                long currentBlockNumber = DatabaseUtils.getLatestBlockNumber();
                 long blockNumberToCheck = currentBlockNumber - 34560;
                 if(blockNumberToCheck < 0) blockNumberToCheck = 1;
-                long timeDifference = Blocks.getBlock(currentBlockNumber).getTimeStamp() - Blocks.getBlock(blockNumberToCheck).getTimeStamp();
+                long timeDifference = DatabaseUtils.fetchBlockDetails(currentBlockNumber).getTimestamp() - DatabaseUtils.fetchBlockDetails(blockNumberToCheck).getTimestamp();
 
                 List<String> activeValidatorsList = new LinkedList<>();
                 for(Validator validator : activeValidators) activeValidatorsList.add(validator.getAddress());

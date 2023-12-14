@@ -1,6 +1,8 @@
 package Utils;
 
+import java.math.BigDecimal;
 import java.sql.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +16,19 @@ public class DatabaseUtils {
 
     private static final String jdbcUrl = "jdbc:mysql://localhost:3306/pwrchain";
     private static final String jdbcUser = "root";
-    private static final String jdbcPassword = "#####";
+    private static final String jdbcPassword = "hamza123";
+
+
+
+    private static long txnCountPast24Hours = 0;
+    private static double txnCountPercentageChangeComparedToPreviousDay = 0;
+
+    private static long totalTxnFeesPast24Hours = 0;
+    private static double totalTxnFeesPercentageChangeComparedToPreviousDay = 0;
+
+    private static long averageTxnFeePast24Hours = 0;
+    private static double averageTxnFeePercentageChangeComparedToPreviousDay = 0;
+
     public static BlockDTO fetchBlockDetails(long blockNumber) throws SQLException {
         try (Connection connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword)) {
             String sql = "SELECT b.*, t.* FROM blocks b " +
@@ -77,13 +91,16 @@ public class DatabaseUtils {
         blockDTO.setSubmitter(resultSet.getString("submitter"));
         blockDTO.setSuccess(resultSet.getBoolean("success"));
 
-        List<TransactionDTO> transactions = new ArrayList<>();
-        do {
-            TransactionDTO transactionDTO = createTransactionDTOFromResultSet(resultSet);
-            transactions.add(transactionDTO);
-        } while (resultSet.next());
 
-        blockDTO.setTransactions(transactions);
+            List<TransactionDTO> transactions = new ArrayList<>();
+            do {
+                TransactionDTO transactionDTO = createTransactionDTOFromResultSet(resultSet);
+                transactions.add(transactionDTO);
+            } while (resultSet.next());
+
+            blockDTO.setTransactions(transactions);
+
+
         return blockDTO;
     }
 
@@ -131,14 +148,14 @@ public class DatabaseUtils {
         transactionDTO.setAmountUsdValue((resultSet.getLong("amount_usd_value")));
         transactionDTO.setFeeUsdValue((resultSet.getLong("fee_usd_value")));
         transactionDTO.setBlockNumber((resultSet.getLong("block_id")));
-
+        transactionDTO.setTimeStamp((resultSet.getTimestamp("entryTime")));
         return transactionDTO;
     }
 
 
     public static TransactionDTO fetchTransactionFromTransactionHash(String txnHash){
         try (Connection connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword)) {
-            String sql = "SELECT  t.* FROM transaction t where t.transaction_hash = ? " ;
+            String sql = "SELECT  t.* FROM transactions t where t.transaction_hash = ? " ;
 
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -160,6 +177,7 @@ public class DatabaseUtils {
                         transactionDTO.setAmountUsdValue((resultSet.getLong("amount_usd_value")));
                         transactionDTO.setFeeUsdValue((resultSet.getLong("fee_usd_value")));
                         transactionDTO.setBlockNumber((resultSet.getLong("block_id")));
+                        transactionDTO.setTimeStamp((resultSet.getTimestamp("entryTime")));
                         return transactionDTO;
                     } else {
                         return null;
@@ -180,7 +198,7 @@ public class DatabaseUtils {
             blockJson.put("blockSize",blockDTO.getBlockSize());
             blockJson.put("timestamp",blockDTO.getTimestamp());
             blockJson.put("success",blockDTO.isSuccess());
-            blockJson.put("blockNumebr",blockDTO.getBlockNumber());
+            blockJson.put("blockNumber",blockDTO.getBlockNumber());
             // Add other fields as needed
 
             // Convert TransactionDTOs to JsonArray
@@ -213,6 +231,201 @@ public class DatabaseUtils {
             transactionJson.put("blockNumber", transactionDTO.getBlockNumber());
             return transactionJson;
         }
+
+    public static int getTotalPagesWrtBlocks(int count) throws SQLException {
+        try (Connection connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword)) {
+            String sql = "SELECT COUNT(*) FROM blocks";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        int totalBlocks = resultSet.getInt(1);
+                        return (int) Math.ceil((double) totalBlocks / count);
+                    } else {
+                        return 0;
+                    }
+                }
+            }
+        }
+    }
+
+    public static List<BlockDTO> fetchLatestBlocks(int count, int page) throws SQLException {
+        try (Connection connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword)) {
+            int offset = (page - 1) * count;
+            String sql = "SELECT * FROM blocks ORDER BY timestamp DESC LIMIT ? OFFSET ?";
+
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setInt(1, count);
+                statement.setInt(2, offset);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    List<BlockDTO> latestBlockList = new ArrayList<>();
+                    while (resultSet.next()) {
+                        BlockDTO blockDTO = createBlockDTOFromResultSet(resultSet);
+                        latestBlockList.add(blockDTO);
+                    }
+                    return latestBlockList;
+                }
+            }
+        }
+    }
+
+    public static long getLatestBlockNumber() throws SQLException {
+        try (Connection connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword)) {
+            String sql = "SELECT MAX(block_number) FROM blocks";
+
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getLong(1);
+                    } else {
+                        return 0;
+                    }
+                }
+            }
+        }
+    }
+
+    public static void updateTxn24HourStats() throws SQLException {
+        long txnCountPast24Hours = 0;
+        long totalTxnFeesPast24Hours = 0;
+        long averageTxnFeePast24Hours = 0;
+
+        long txnCountThe24HoursBefore = 0;
+        long totalTxnFeesThe24HoursBefore = 0;
+        long averageTxnFeeThe24HoursBefore = 0;
+
+        long timeNow = Instant.now().getEpochSecond();
+        long blockNumberToCheck = getLatestBlockNumber();
+        while(true) {
+            BlockDTO block = fetchBlockDetails(blockNumberToCheck--);
+            if(block.getTimestamp() < timeNow - 24 * 60 * 60) break;
+
+            txnCountPast24Hours += block.getTransactionCount();
+            for(TransactionDTO txn : block.getTransactions()) {
+                try { totalTxnFeesPast24Hours += txn.getTxnFee(); } catch (Exception e) {
+                    // Handle exception
+                }
+            }
+        }
+        if(txnCountPast24Hours == 0) averageTxnFeePast24Hours = 0;
+        else averageTxnFeePast24Hours = totalTxnFeesPast24Hours / txnCountPast24Hours;
+
+        // Calculate the stats of the 24 hours before the current 24 hours
+        while(true) {
+            BlockDTO block = fetchBlockDetails(blockNumberToCheck--);
+            if(block == null) break;
+            if(block.getTimestamp() < timeNow - 24 * 60 * 60 * 2) break;
+
+            txnCountThe24HoursBefore += block.getTransactionCount();
+            for(TransactionDTO txn : block.getTransactions()) {
+                try { totalTxnFeesThe24HoursBefore += txn.getTxnFee(); } catch (Exception e) {
+                    // Handle exception
+                }
+            }
+        }
+        if(txnCountThe24HoursBefore == 0) averageTxnFeeThe24HoursBefore = 0;
+        else averageTxnFeeThe24HoursBefore = totalTxnFeesThe24HoursBefore / txnCountThe24HoursBefore;
+
+        // Calculate the percentage change
+        if(txnCountThe24HoursBefore == 0) {
+            txnCountPercentageChangeComparedToPreviousDay = 0;
+        } else {
+            txnCountPercentageChangeComparedToPreviousDay = BigDecimal.valueOf(
+                    (txnCountPast24Hours - txnCountThe24HoursBefore) / (double) txnCountThe24HoursBefore * 100
+            ).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+        }
+
+        if(totalTxnFeesThe24HoursBefore == 0) {
+            totalTxnFeesPercentageChangeComparedToPreviousDay = 0;
+        } else {
+            totalTxnFeesPercentageChangeComparedToPreviousDay = BigDecimal.valueOf(
+                    (totalTxnFeesPast24Hours - totalTxnFeesThe24HoursBefore) / (double) totalTxnFeesThe24HoursBefore * 100
+            ).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+        }
+
+        if(averageTxnFeeThe24HoursBefore == 0) {
+            averageTxnFeePercentageChangeComparedToPreviousDay = 0;
+        } else {
+            averageTxnFeePercentageChangeComparedToPreviousDay = BigDecimal.valueOf(
+                    (averageTxnFeePast24Hours - averageTxnFeeThe24HoursBefore) / (double) averageTxnFeeThe24HoursBefore * 100
+            ).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+        }
+
+        // Update the static variables
+//        txnCountPast24Hours = txnCountPast24Hours;
+//        totalTxnFeesPast24Hours = totalTxnFeesPast24Hours;
+//        averageTxnFeePast24Hours = averageTxnFeePast24Hours;
+    }
+
+    public static List<TransactionDTO> fetchLatestTransactionsOfUser(String address) throws SQLException {
+        try (Connection connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword)) {
+            String sql = "select * from transactions where from_address = ? order by entryTime desc ;";
+
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, address);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return fetchLatestTransactionsFromResultSet(resultSet);
+                    } else {
+                        return null;
+                    }
+                }
+            }
+        }
+    }
+
+
+    public static long getTxnCountPast24Hours() {
+        return txnCountPast24Hours;
+    }
+
+    public static void setTxnCountPast24Hours(long txnCountPast24Hours) {
+        DatabaseUtils.txnCountPast24Hours = txnCountPast24Hours;
+    }
+
+    public static double getTxnCountPercentageChangeComparedToPreviousDay() {
+        return txnCountPercentageChangeComparedToPreviousDay;
+    }
+
+    public static void setTxnCountPercentageChangeComparedToPreviousDay(double txnCountPercentageChangeComparedToPreviousDay) {
+        DatabaseUtils.txnCountPercentageChangeComparedToPreviousDay = txnCountPercentageChangeComparedToPreviousDay;
+    }
+
+    public static long getTotalTxnFeesPast24Hours() {
+        return totalTxnFeesPast24Hours;
+    }
+
+    public static void setTotalTxnFeesPast24Hours(long totalTxnFeesPast24Hours) {
+        DatabaseUtils.totalTxnFeesPast24Hours = totalTxnFeesPast24Hours;
+    }
+
+    public static double getTotalTxnFeesPercentageChangeComparedToPreviousDay() {
+        return totalTxnFeesPercentageChangeComparedToPreviousDay;
+    }
+
+    public static void setTotalTxnFeesPercentageChangeComparedToPreviousDay(double totalTxnFeesPercentageChangeComparedToPreviousDay) {
+        DatabaseUtils.totalTxnFeesPercentageChangeComparedToPreviousDay = totalTxnFeesPercentageChangeComparedToPreviousDay;
+    }
+
+    public static long getAverageTxnFeePast24Hours() {
+        return averageTxnFeePast24Hours;
+    }
+
+    public static void setAverageTxnFeePast24Hours(long averageTxnFeePast24Hours) {
+        DatabaseUtils.averageTxnFeePast24Hours = averageTxnFeePast24Hours;
+    }
+
+    public static double getAverageTxnFeePercentageChangeComparedToPreviousDay() {
+        return averageTxnFeePercentageChangeComparedToPreviousDay;
+    }
+
+    public static void setAverageTxnFeePercentageChangeComparedToPreviousDay(double averageTxnFeePercentageChangeComparedToPreviousDay) {
+        DatabaseUtils.averageTxnFeePercentageChangeComparedToPreviousDay = averageTxnFeePercentageChangeComparedToPreviousDay;
+    }
+
+    public static List<TransactionDTO> getAllJoinTransaction(String address){
+
+    }
 
     // Add other utility methods for database operations as needed
 }

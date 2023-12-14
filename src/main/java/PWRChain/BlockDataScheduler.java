@@ -20,7 +20,7 @@ public class BlockDataScheduler {
 
     private static final String jdbcUrl = "jdbc:mysql://localhost:3306/pwrchain";
     private static final String jdbcUser = "root";
-    private static final String jdbcPassword = "####";
+    private static final String jdbcPassword = "hamza123";
 
     public static void scheduler() {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -127,8 +127,8 @@ public class BlockDataScheduler {
     }
 
     private static void insertTransaction(Connection connection, long blockId, com.github.pwrlabs.pwrj.Transaction.Transaction transaction) throws SQLException {
-        String sql = "INSERT INTO transactions (block_id, position_in_block, nonce_or_validation_hash, size, raw_txn, txn_fee, from_address, to_address, type, value, transaction_hash,amount_usd_value,fee_usd_value) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
+        String sql = "INSERT INTO transactions (block_id, position_in_block, nonce_or_validation_hash, size, raw_txn, txn_fee, from_address, to_address, type, value, transaction_hash,amount_usd_value,fee_usd_value,data) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)";
 
         // calculating the dynamic values
         long feeUsdValue = 0L;
@@ -165,6 +165,7 @@ public class BlockDataScheduler {
             statement.setString(11, transaction.getHash());
             statement.setLong(12, amountUsdValue);
             statement.setLong(13, feeUsdValue);
+
             statement.executeUpdate();
         }
     }

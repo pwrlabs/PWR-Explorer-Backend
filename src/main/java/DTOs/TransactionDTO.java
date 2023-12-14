@@ -1,6 +1,7 @@
 package DTOs;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 public class TransactionDTO {
 
@@ -20,6 +21,8 @@ public class TransactionDTO {
     private long amountUsdValue;
 
     private long blockNumber;
+
+    private Date timeStamp;
 
     // Constructors, getters, and setters
 
@@ -135,5 +138,12 @@ public class TransactionDTO {
         this.blockNumber = blockNumber;
     }
 
+    public Date getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(Date timeStamp) {
+        this.timeStamp = timeStamp;
+    }
 
 }

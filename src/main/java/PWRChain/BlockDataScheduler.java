@@ -1,9 +1,12 @@
 
 package PWRChain;
 
+import Main.Hex;
 import Main.Settings;
+import User.User;
 import Utils.DatabaseUtils;
-import com.github.pwrlabs.pwrj.Transaction.Transaction;
+import Validator.Validators;
+import com.github.pwrlabs.pwrj.Transaction.*;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 
 import java.math.BigDecimal;
@@ -134,6 +137,11 @@ public class BlockDataScheduler {
         String sql = "INSERT INTO transactions (block_id, position_in_block, nonce_or_validation_hash, size, raw_txn, txn_fee, from_address, to_address, type, value, transaction_hash,amount_usd_value,fee_usd_value) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
 
+        String insertQuery = "INSERT INTO transaction_categorization (transaction_hash, vm_id, vm_data, with_draw_txn_validator, with_draw_txn_share, transfer_txn_value, join_txn_validator, delegate_txn_validator, delegate_txn_amount, claim_vm_id_txn) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+
+
+
         // calculating the dynamic values
         long feeUsdValue = 0L;
         long amountUsdValue = 0L;
@@ -171,6 +179,63 @@ public class BlockDataScheduler {
             statement.setLong(13, feeUsdValue);
 
             statement.executeUpdate();
+        }
+         catch (SQLException ex){
+
+         }
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery)) {
+            preparedStatement.setString(1, transaction.getHash());
+            preparedStatement.setLong(2, 0); // Set a default value for vm_id
+            preparedStatement.setString(3, ""); // Set a default value for vm_data
+            preparedStatement.setString(4, ""); // Set a default value for with_draw_txn_validator
+            preparedStatement.setLong(5, 0); // Set a default value for with_draw_txn_share
+            preparedStatement.setLong(6, 0); // Set a default value for transfer_txn_value
+            preparedStatement.setString(7, ""); // Set a default value for join_txn_validator
+            preparedStatement.setString(8, ""); // Set a default value for delegate_txn_validator
+            preparedStatement.setLong(9, 0); // Set a default value for delegate_txn_amount
+            preparedStatement.setLong(10, 0); // Set a default value for claim_vm_id_txn
+
+            String data="";
+            //transaction categorization
+            if (transaction instanceof VmDataTxn) {
+                VmDataTxn vmDataTxn = (VmDataTxn) transaction;
+                data =  vmDataTxn.getData();
+                preparedStatement.setString(3, data);
+                preparedStatement.setLong(2, vmDataTxn.getVmId());
+
+            } else if (transaction instanceof DelegateTxn) {
+                DelegateTxn delegateTxn = (DelegateTxn) transaction;
+
+                preparedStatement.setString(8, delegateTxn.getFrom());
+                preparedStatement.setLong(9, delegateTxn.getAmount() );
+                // User u = Users.getUser(delegateTxn.getFrom());
+                // u.addDelegation(delegateTxn.getTo(), delegateTxn.getAmount());
+            } else if (transaction instanceof WithdrawTxn) {
+                WithdrawTxn withdrawTxn = (WithdrawTxn) transaction;
+
+                preparedStatement.setString(4, withdrawTxn.getValidator());
+                preparedStatement.setLong(5, withdrawTxn.getShares());
+                // User u = Users.getUser(withdrawTxn.getFrom());
+                // u.checkDelegation(withdrawTxn.getTo());
+            } else if (transaction instanceof JoinTxn) {
+                JoinTxn joinTxn = (JoinTxn) transaction;
+                preparedStatement.setString(7, joinTxn.getValidator());
+                //  Validators.add(joinTxn.getFrom(), block.getTimestamp());
+            }
+            else if (transaction instanceof TransferTxn) {
+                preparedStatement.setLong(6, transaction.getValue());
+                //  Validators.add(joinTxn.getFrom(), block.getTimestamp());
+            }
+
+
+            preparedStatement.setString(1, transaction.getHash());
+            preparedStatement.executeUpdate();
+
+            System.out.println("Insertion successful!");
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 }

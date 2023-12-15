@@ -155,7 +155,7 @@ public class DatabaseUtils {
 
     public static TransactionDTO fetchTransactionFromTransactionHash(String txnHash){
         try (Connection connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword)) {
-            String sql = "SELECT  t.* FROM transactions t where t.transaction_hash = ? " ;
+            String sql = "SELECT  t.*,tc.* FROM transactions t , transaction_categorization tc where t.transaction_hash = tc.transaction_hash and t.transaction_hash  = ? " ;
 
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -178,6 +178,7 @@ public class DatabaseUtils {
                         transactionDTO.setFeeUsdValue((resultSet.getLong("fee_usd_value")));
                         transactionDTO.setBlockNumber((resultSet.getLong("block_id")));
                         transactionDTO.setTimeStamp((resultSet.getTimestamp("entryTime")));
+                        transactionDTO.setData(resultSet.getString("vm_data"));
                         return transactionDTO;
                     } else {
                         return null;

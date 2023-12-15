@@ -6,7 +6,7 @@ import org.json.JSONObject;
 
 import static spark.Spark.post;
 
-public class POST {
+public class   POST {
 
     public static void run() {
         post("/broadcast/", (request, response) -> {

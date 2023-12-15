@@ -2,6 +2,7 @@
 package PWRChain;
 
 import Main.Settings;
+import Utils.DatabaseUtils;
 import com.github.pwrlabs.pwrj.Transaction.Transaction;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 
@@ -65,6 +66,9 @@ public class BlockDataScheduler {
 
             // Start fetching data for the next few blocks in parallel
             for (int i = 0; i < THREAD_POOL_SIZE; i++) {
+                if(latestBlockNumber == 0){
+                    latestBlockNumber = (int) DatabaseUtils.getLatestBlockNumber();
+                }
                 int blockNumber = latestBlockNumber + 1;
                 Future<com.github.pwrlabs.pwrj.Block.Block> future = executorService.submit(() -> PWRJ.getBlockByNumber(blockNumber));
                 futures.add(future);
@@ -127,8 +131,8 @@ public class BlockDataScheduler {
     }
 
     private static void insertTransaction(Connection connection, long blockId, com.github.pwrlabs.pwrj.Transaction.Transaction transaction) throws SQLException {
-        String sql = "INSERT INTO transactions (block_id, position_in_block, nonce_or_validation_hash, size, raw_txn, txn_fee, from_address, to_address, type, value, transaction_hash,amount_usd_value,fee_usd_value,data) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)";
+        String sql = "INSERT INTO transactions (block_id, position_in_block, nonce_or_validation_hash, size, raw_txn, txn_fee, from_address, to_address, type, value, transaction_hash,amount_usd_value,fee_usd_value) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
 
         // calculating the dynamic values
         long feeUsdValue = 0L;

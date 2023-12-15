@@ -48,11 +48,12 @@ public class Main {
 
         PWRJ.setRpcNodeUrl("https://pwrrpc.pwrlabs.io/");
 
-//        BlockDataScheduler.scheduler();
+        BlockDataScheduler.scheduler();
         GET.run();
-       /* RateLimiter.initRateLimiter();
+        POST.run();
+        RateLimiter.initRateLimiter();
 
-        GET.run();
+     /*   GET.run();
         POST.run();
 
         DBM.loadAllObjectsFromDatabase(VM.class);

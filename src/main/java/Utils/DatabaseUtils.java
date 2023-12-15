@@ -423,9 +423,9 @@ public class DatabaseUtils {
         DatabaseUtils.averageTxnFeePercentageChangeComparedToPreviousDay = averageTxnFeePercentageChangeComparedToPreviousDay;
     }
 
-    public static List<TransactionDTO> getAllJoinTransaction(String address){
-
-    }
+//    public static List<TransactionDTO> getAllJoinTransaction(String address){
+//
+//    }
 
     // Add other utility methods for database operations as needed
 }

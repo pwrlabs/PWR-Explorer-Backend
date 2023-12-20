@@ -5,7 +5,6 @@ import com.github.pwrlabs.dbm.DBM;
 public class Initializer {
 
     public static void init() throws NoSuchMethodException {
-        DBM.loadAllObjectsFromDatabase(Txn.class);
 
         new Thread() {
             public void run() {

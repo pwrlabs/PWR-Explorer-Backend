@@ -1,5 +1,6 @@
 package PWRChain;
 
+import Block.Blocks;
 import Main.Hex;
 import Main.Settings;
 import Txn.Txn;
@@ -12,11 +13,10 @@ import com.github.pwrlabs.pwrj.protocol.PWRJ;
 
 public class Synchronizer {
     public static void sync() {
-        PWRJ.setRpcNodeUrl("https://pwrrpc.pwrlabs.io/");
 
         new Thread() {
             public void run() {
-                long blockToCheck = SDBM.loadLong("blockToCheck");
+                long blockToCheck = Blocks.getLatestBlockNumber();
                 if(blockToCheck == 0) blockToCheck = 1;
                 while(true) {
                     try {

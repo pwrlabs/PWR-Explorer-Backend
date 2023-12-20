@@ -5,6 +5,7 @@ import VM.VMs;
 import com.github.pwrlabs.dbm.DBM;
 import Main.Settings;
 import User.Users;
+import org.bouncycastle.util.encoders.Hex;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -12,19 +13,35 @@ import java.text.DecimalFormat;
 
 public class Txn extends DBM {
     private final long txnFee;
+
+    
     public Txn(String hash, int size, int positionInTheBlock, long blockNumber, byte[] from, String to, long value, long txnFee, byte[] data, String txnType, String nonceOrValidationHash) {
         super(hash);
 
-        store("size", size);
-        store("positionInTheBlock", positionInTheBlock);
-        store("blockNumber", blockNumber);
-        store("from", from);
-        store("to", to);
-        store("value", value);
-        store("txnFee", txnFee);
-        store("data", data);
-        store("txnType", txnType);
-        store("nonceOrValidationHash", nonceOrValidationHash);
+        if(data != null) {
+            store(
+                    "size", size,
+                    "positionInTheBlock", positionInTheBlock,
+                    "blockNumber", blockNumber,
+                    "from", Hex.toHexString(from),
+                    "to", to,
+                    "value", value,
+                    "txnFee", txnFee,
+                    "data", Hex.toHexString(data),
+                    "txnType", txnType,
+                    "nonceOrValidationHash", nonceOrValidationHash);
+        } else {
+            store(
+                    "size", size,
+                    "positionInTheBlock", positionInTheBlock,
+                    "blockNumber", blockNumber,
+                    "from", Hex.toHexString(from),
+                    "to", to,
+                    "value", value,
+                    "txnFee", txnFee,
+                    "txnType", txnType,
+                    "nonceOrValidationHash", nonceOrValidationHash);
+        }
 
         this.txnFee = txnFee;
 

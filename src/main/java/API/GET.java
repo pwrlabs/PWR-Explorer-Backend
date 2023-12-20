@@ -32,6 +32,16 @@ import static spark.Spark.get;
 
 public class GET {
     public static void run() {
+        get("/test/", (request, response) -> {
+            try {
+                response.header("Content-Type", "application/json");
+
+                return "Server is on";
+            } catch (Exception e) {
+                e.printStackTrace();
+                return getError(response, e.getLocalizedMessage());
+            }
+        });
 
         //Explorer Calls
         get("/explorerInfo/", (request, response) -> {
@@ -531,26 +541,26 @@ public class GET {
                 JSONObject oldShareValues = PWRJ.getShareValue(activeValidatorsList, blockNumberToCheck);
                 JSONObject currentShareValues = PWRJ.getShareValue(activeValidatorsList, currentBlockNumber);
 
-                Map<String, BigDecimal> apyByValidator = new HashMap<>();
-                for(String validator: activeValidatorsList) {
-                    BigDecimal oldShareValue;
-                    if(oldShareValues.has(validator)) {
-                        oldShareValue = oldShareValues.getBigDecimal(validator);
-                    } else {
-                        oldShareValue = BigDecimal.ONE.divide(BigDecimal.valueOf(3600), 18, BigDecimal.ROUND_HALF_UP);
-                    }
-
-                    BigDecimal currentShareValue;
-
-                    if(currentShareValues.has(validator)) {
-                        currentShareValue = currentShareValues.getBigDecimal(validator);
-                    } else {
-                        currentShareValue = BigDecimal.ONE.divide(BigDecimal.valueOf(3600), 18, BigDecimal.ROUND_HALF_UP);
-                    }
-
-                    BigDecimal apy = currentShareValue.subtract(oldShareValue).divide(oldShareValue, 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(31536000)).divide(BigDecimal.valueOf(timeDifference), 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100));
-                    apyByValidator.put(validator, apy);
-                }
+//                Map<String, BigDecimal> apyByValidator = new HashMap<>();
+//                for(String validator: activeValidatorsList) {
+//                    BigDecimal oldShareValue;
+//                    if(oldShareValues.has(validator)) {
+//                        oldShareValue = oldShareValues.getBigDecimal(validator);
+//                    } else {
+//                        oldShareValue = BigDecimal.ONE.divide(BigDecimal.valueOf(3600), 18, BigDecimal.ROUND_HALF_UP);
+//                    }
+//
+//                    BigDecimal currentShareValue;
+//
+//                    if(currentShareValues.has(validator)) {
+//                        currentShareValue = currentShareValues.getBigDecimal(validator);
+//                    } else {
+//                        currentShareValue = BigDecimal.ONE.divide(BigDecimal.valueOf(3600), 18, BigDecimal.ROUND_HALF_UP);
+//                    }
+//
+//                    BigDecimal apy = currentShareValue.subtract(oldShareValue).divide(oldShareValue, 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(31536000)).divide(BigDecimal.valueOf(timeDifference), 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100));
+//                    apyByValidator.put(validator, apy);
+//                }
 
                 //Get the validators for the requested page
 
@@ -576,7 +586,7 @@ public class GET {
                     object.put("votingPower", validator.getVotingPower());
                     object.put("totalPowerShare", BigDecimal.valueOf(validator.getVotingPower()).divide(BigDecimal.valueOf(activeVotingPower), 4, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100)));
                     object.put("commission", 1);
-                    object.put("apy", apyByValidator.getOrDefault(validator.getAddress(), BigDecimal.ZERO));
+                    object.put("apy", 5);
                     object.put("hosting", "vps");
 
                     validatorsArray.put(object);
@@ -695,26 +705,26 @@ public class GET {
                 JSONObject oldShareValues = PWRJ.getShareValue(delegatedValidators, blockNumberToCheck);
                 JSONObject currentShareValues = PWRJ.getShareValue(delegatedValidators, currentBlockNumber);
 
-                Map<String, BigDecimal> apyByValidator = new HashMap<>();
-                for(String validator: delegatedValidators) {
-                    BigDecimal oldShareValue;
-                    if(oldShareValues.has(validator)) {
-                        oldShareValue = oldShareValues.getBigDecimal(validator);
-                    } else {
-                        oldShareValue = BigDecimal.ONE.divide(BigDecimal.valueOf(3600), 18, BigDecimal.ROUND_HALF_UP);
-                    }
-
-                    BigDecimal currentShareValue;
-
-                    if(currentShareValues.has(validator)) {
-                        currentShareValue = currentShareValues.getBigDecimal(validator);
-                    } else {
-                        currentShareValue = BigDecimal.ONE.divide(BigDecimal.valueOf(3600), 18, BigDecimal.ROUND_HALF_UP);
-                    }
-
-                    BigDecimal apy = currentShareValue.subtract(oldShareValue).divide(oldShareValue, 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(31536000)).divide(BigDecimal.valueOf(timeDifference), 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100));
-                    apyByValidator.put(validator, apy);
-                }
+//                Map<String, BigDecimal> apyByValidator = new HashMap<>();
+//                for(String validator: delegatedValidators) {
+//                    BigDecimal oldShareValue;
+//                    if(oldShareValues.has(validator)) {
+//                        oldShareValue = oldShareValues.getBigDecimal(validator);
+//                    } else {
+//                        oldShareValue = BigDecimal.ONE.divide(BigDecimal.valueOf(3600), 18, BigDecimal.ROUND_HALF_UP);
+//                    }
+//
+//                    BigDecimal currentShareValue;
+//
+//                    if(currentShareValues.has(validator)) {
+//                        currentShareValue = currentShareValues.getBigDecimal(validator);
+//                    } else {
+//                        currentShareValue = BigDecimal.ONE.divide(BigDecimal.valueOf(3600), 18, BigDecimal.ROUND_HALF_UP);
+//                    }
+//
+//                    BigDecimal apy = currentShareValue.subtract(oldShareValue).divide(oldShareValue, 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(31536000)).divide(BigDecimal.valueOf(timeDifference), 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100));
+//                    apyByValidator.put(validator, apy);
+//                }
 
                 for(String validator: delegatedValidators) {
                     Validator v = PWRJ.getValidator(validator);
@@ -725,7 +735,7 @@ public class GET {
                     object.put("votingPower", v.getVotingPower());
                     object.put("totalPowerShare", BigDecimal.valueOf(v.getVotingPower()).divide(BigDecimal.valueOf(PWRJ.getActiveVotingPower()), 4, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100)));
                     object.put("delegatedPWR", u.getDelegatedAmount(validator));
-                    object.put("apy", apyByValidator.getOrDefault(validator, BigDecimal.ZERO));
+                    object.put("apy", 5);
                 }
 
                 return getSuccess(

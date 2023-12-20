@@ -52,9 +52,12 @@ public class Main {
         GET.run();
         POST.run();
 
+        DBM.loadAllObjectsFromDatabase(Block.Block.class);
         DBM.loadAllObjectsFromDatabase(VM.class);
-        Block.Initializer.init();
         DBM.loadAllObjectsFromDatabase(User.class);
+        DBM.loadAllObjectsFromDatabase(Txn.Txn.class);
+
+        Block.Initializer.init();
         Txn.Initializer.init();
 
         Synchronizer.sync();

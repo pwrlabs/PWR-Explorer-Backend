@@ -3,6 +3,7 @@ package User;
 import com.github.pwrlabs.dbm.DBM;
 import Txn.Txn;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.util.*;
@@ -19,36 +20,15 @@ public class User extends DBM {
 
         Users.add(this);
 
-        File initialDelegationsFolder = new File(rootPath + "initialDelegations/");
-        if(initialDelegationsFolder.exists()) {
-            initialDelegations = new HashMap<>();
-            for(File validatorFile : initialDelegationsFolder.listFiles()) {
-                String validator = validatorFile.getName();
-                long amount = loadLong("initialDelegations/" + validator);
-                initialDelegations.put(validator, amount);
-            }
+        JSONObject initialDelegationsJSON = loadJSON("initialDelegations");
+        initialDelegations = new HashMap<>();
+        for (String validator : initialDelegationsJSON.keySet()) {
+            initialDelegations.put(validator.toLowerCase(), initialDelegationsJSON.getLong(validator));
         }
     }
 
     public void addTxn(Txn txn) {
         txns.add(txn);
-
-        //System.out.println("New txn added to user: " + getAddress());
-        //System.out.println("Txn count: " + txns.size());
-
-//        if(txns.size() == 0) txns.add(txn);
-//        else if (txn.getTimeStamp() > txns.get(0).getTimeStamp()) txns.add(0, txn);
-//        else if (txn.getTimeStamp() < txns.get(txns.size() - 1).getTimeStamp()) txns.add(txns.size(), txn);
-//        else {
-//            for(int i = 1; i < txns.size(); i++) {
-//                if(txn.getTimeStamp() > txns.get(i).getTimeStamp()) {
-//                    txns.add(i, txn);
-//                    return;
-//                }
-//            }
-//
-//            txns.add(txn);
-//        }
     }
 
     public void addDelegation(String validator, long amount) {
@@ -61,7 +41,7 @@ public class User extends DBM {
             initialDelegations.put(validator.toLowerCase(), delegated + amount);
         }
 
-        store("initialDelegations/" + validator.toLowerCase(), initialDelegations.getOrDefault(validator.toLowerCase(), 0L));
+        store("initialDelegations", new JSONObject(initialDelegations).toString());
     }
     //Used when a user withdraws PWR, we check if the withdrawn PWR is from rewards only or also delegated PWR
     //If it is from delegated PWR, we decrease the initial delegation amount

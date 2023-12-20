@@ -6,6 +6,8 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import Block.Block;
+import Block.Blocks;
 import DTOs.BlockDTO;
 import DTOs.TransactionDTO;
 import org.json.JSONArray;
@@ -51,7 +53,7 @@ public class DatabaseUtils {
 
     public static List<BlockDTO> fetchLatestBlocks() throws SQLException {
         try (Connection connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword)) {
-            String sql = "select * from blocks order by timestamp desc limit 5;";
+            String sql = "select * from blocks order by timestamp desc limit 6;";
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 try (ResultSet resultSet = statement.executeQuery()) {
@@ -67,7 +69,7 @@ public class DatabaseUtils {
 
     public static List<TransactionDTO> fetchLatestTransactions() throws SQLException {
         try (Connection connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword)) {
-            String sql = "select * from transactions order by entryTime desc limit 5";
+            String sql = "select * from transactions order by entryTime desc limit 6";
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 try (ResultSet resultSet = statement.executeQuery()) {
@@ -200,6 +202,7 @@ public class DatabaseUtils {
             blockJson.put("timestamp",blockDTO.getTimestamp());
             blockJson.put("success",blockDTO.isSuccess());
             blockJson.put("blockNumber",blockDTO.getBlockNumber());
+        blockJson.put("blockHeight",blockDTO.getBlockNumber());
             // Add other fields as needed
 
             // Convert TransactionDTOs to JsonArray
@@ -216,6 +219,9 @@ public class DatabaseUtils {
 
         public static JSONObject convertTransactionDTOToJson(TransactionDTO transactionDTO) {
             JSONObject transactionJson = new JSONObject();
+            String data;
+            if(transactionDTO.getData() == null) data = "0x";
+            else data = "0x" + transactionDTO  .getData();
             transactionJson.put("positionInTheBlock", transactionDTO.getPositionInTheBlock());
             transactionJson.put("nonceOrValidationHash", transactionDTO.getNonceOrValidationHash());
             transactionJson.put("size", transactionDTO.getSize());
@@ -226,10 +232,12 @@ public class DatabaseUtils {
             transactionJson.put("txnFee", transactionDTO.getTxnFee());
             transactionJson.put("type", transactionDTO.getType());
             transactionJson.put("value", transactionDTO.getValue());
-            transactionJson.put("hash", transactionDTO.getHash());
+            transactionJson.put("txnHash", transactionDTO.getHash());
             transactionJson.put("amountUsdValue", transactionDTO.getAmountUsdValue());
             transactionJson.put("feeUsdValue", transactionDTO.getFeeUsdValue());
             transactionJson.put("blockNumber", transactionDTO.getBlockNumber());
+            transactionJson.put("timeStamp", transactionDTO.getTimeStamp().getTime());
+            transactionJson.put("data", data);
             return transactionJson;
         }
 
@@ -423,6 +431,58 @@ public class DatabaseUtils {
     public static void setAverageTxnFeePercentageChangeComparedToPreviousDay(double averageTxnFeePercentageChangeComparedToPreviousDay) {
         DatabaseUtils.averageTxnFeePercentageChangeComparedToPreviousDay = averageTxnFeePercentageChangeComparedToPreviousDay;
     }
+
+    public static double getAverageTps(int numberOfBlocks) throws SQLException {
+        long totalTxnCount = 0;
+        int blocksCounted = 0;
+
+        long blockNumberToCheck = DatabaseUtils.getLatestBlockNumber();
+        for(int i = 0; i < numberOfBlocks; i++) {
+            BlockDTO block = DatabaseUtils.fetchBlockDetails(blockNumberToCheck - i);
+            if(block == null) break;
+
+            totalTxnCount += block.getTransactionCount();
+            ++blocksCounted;
+        }
+
+        if(blocksCounted == 0) return 0;
+        return BigDecimal.valueOf(totalTxnCount).divide(BigDecimal.valueOf(blocksCounted), 1, BigDecimal.ROUND_HALF_UP).doubleValue();
+    }
+
+    public static long getTxnCount() throws SQLException {
+        try (Connection connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword)) {
+            String sql = "select count(*) as totalTransactions from transactions  ;";
+
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getLong(1);
+                    } else {
+                        return 0L;
+                    }
+                }
+            }
+        }
+    }
+
+    public static long getBlockCount() throws SQLException {
+        try (Connection connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword)) {
+            String sql = "select count(*) as totalTransactions from blocks  ;";
+
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getLong(1);
+                    } else {
+                        return 0L;
+                    }
+                }
+            }
+        }
+    }
+
 
 //    public static List<TransactionDTO> getAllJoinTransaction(String address){
 //

@@ -22,20 +22,25 @@ import Txn.Txn;
 
 import java.math.BigDecimal;
 import java.util.*;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import static spark.Spark.get;
 
 public class GET {
+
+    private static final Logger logger = LogManager.getLogger(GET.class);
     public static void run() {
 
         //Explorer Calls
         get("/explorerInfo/", (request, response) -> {
             try {
+                logger.info("Handling request for /explorerInfo/");
                 response.header("Content-Type", "application/json");
                 JSONArray blocks = new JSONArray();
                 JSONArray txns = new JSONArray();
-
+                long totalBlockCount = DatabaseUtils.getBlockCount();
+                long totalTxnCount = DatabaseUtils.getTxnCount();
                 //Fetch the latest 5 blocks
                 List<BlockDTO> lastFiveAddedBlocksList  = DatabaseUtils.fetchLatestBlocks();
                 List<TransactionDTO> lastFiveAddedTransactionsList  = DatabaseUtils.fetchLatestTransactions();
@@ -51,18 +56,20 @@ public class GET {
                         txns.put(transactionJson);
                     }
                 }
+
                 return getSuccess(
+                        "blocksCount",totalBlockCount,
                         "price", Settings.getPrice(),
                         "priceChange", 2.5,
                         "marketCap", 1000000000L,
-                        "totalTransactionsCount", Txns.getTxnCount(),
+                        "totalTransactionsCount", totalTxnCount,
                         "validators", PWRJ.getActiveValidatorsCount(),
-                        "tps", Blocks.getAverageTps(100),
+                        "tps", DatabaseUtils.getAverageTps(100),
                         "txns", txns,
                         "blocks", blocks
                 );
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("An error occurred while processing /explorerInfo/", e);
                 return getError(response, e.getLocalizedMessage());
             }
         });
@@ -72,8 +79,8 @@ public class GET {
 
         get("/latestBlocks/", (request, response) -> {
             try {
+                logger.info("Handling request for /latestBlocks/");
                 response.header("Content-Type", "application/json");
-
                 int count = Integer.parseInt(request.queryParams("count"));
                 int page = Integer.parseInt(request.queryParams("page"));
 
@@ -98,7 +105,7 @@ public class GET {
                 for (BlockDTO blockDTO : blocks) {
                     blocksArray.put(DatabaseUtils.convertBlockDTOToJson(blockDTO));
                 }
-
+                logger.info("Returning latest blocks");
                 return getSuccess(
                         "networkUtilizationPast24Hours", "Blocks.getNetworkUtilizationPast24Hours()",
                         "averageBlockSizePast24Hours", "Blocks.getAverageBlockSizePast24Hours()",
@@ -107,7 +114,7 @@ public class GET {
                         "metadata", metadata);
 
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("An error occurred while processing /latestBlocks/", e);
                 return getError(response, e.getLocalizedMessage());
             }
         });
@@ -117,13 +124,17 @@ public class GET {
 
         get("/blockDetails/", (request, response) -> {
             try {
+                logger.info("Handling request for /blockDetails/");
                 response.header("Content-Type", "application/json");
 
                 long blockNumber = Long.parseLong(request.queryParams("blockNumber"));
                 long latestBlock = DatabaseUtils.getLatestBlockNumber();
                 com.github.pwrlabs.pwrj.Block.Block block = PWRJ.getBlockByNumber(blockNumber);
-                if(block == null) return getError(response, "Invalid Block Number");
-
+                if(block == null) {
+                    logger.warn("Invalid Block Number: {}", blockNumber);
+                    return getError(response, "Invalid Block Number");
+                }
+                logger.info("Returning block details for blockNumber: {}", blockNumber);
                 return getSuccess(
                         "blockHeight", blockNumber,
                         "timeStamp", block.getTimestamp(),
@@ -133,6 +144,7 @@ public class GET {
                         "blockSubmitter", block.getSubmitter(),
                         "blockConfirmations", latestBlock - blockNumber);
             } catch (Exception e) {
+                logger.error("An error occurred while processing /blockDetails/", e);
                 e.printStackTrace();
                 return getError(response, e.getLocalizedMessage());
             }
@@ -141,8 +153,8 @@ public class GET {
 // fixed
         get("/blockTransactions/", (request, response) -> {
             try {
+                logger.info("Handling request for /blockTransactions/");
                 response.header("Content-Type", "application/json");
-
                 long blockNumber = Long.parseLong(request.queryParams("blockNumber"));
                 int count = Integer.parseInt(request.queryParams("count"));
                 int page = Integer.parseInt(request.queryParams("page"));
@@ -200,9 +212,10 @@ public class GET {
                 if(page > 1) metadata.put("previousPage", page - 1);
                 else metadata.put("previousPage", -1);
 
+                logger.info("Returning block transactions");
                 return getSuccess("metadata", metadata, "transactions", txns);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("An error occurred while processing /blockTransactions/", e);
                 return getError(response, e.getLocalizedMessage());
             }
         });
@@ -210,8 +223,8 @@ public class GET {
 
         get("/latestTransactions/", (request, response) -> {
             try {
+                logger.info("Handling request for /latestTransactions/");
                 response.header("Content-Type", "application/json");
-
                 int count = Integer.parseInt(request.queryParams("count"));
                 int page = Integer.parseInt(request.queryParams("page"));
                 long blockNumber = DatabaseUtils.getLatestBlockNumber();
@@ -295,7 +308,7 @@ public class GET {
 
                 if (page > 1) metadata.put("previousPage", page - 1);
                 else metadata.put("previousPage", -1);
-
+                logger.info("Returning latest transactions");
                 return getSuccess(
                         "transactionCountPast24Hours", DatabaseUtils.getTxnCountPast24Hours(),
                         "transactionCountPercentageChangeComparedToPreviousDay", DatabaseUtils.getTxnCountPercentageChangeComparedToPreviousDay(),
@@ -306,7 +319,8 @@ public class GET {
                         "transactions", txnsArray,
                         "metadata", metadata);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("An error occurred while processing /latestTransactions/", e);
+
                 return getError(response, e.getLocalizedMessage());
             }
         });
@@ -314,24 +328,27 @@ public class GET {
 
         get("/transactionDetails/", (request, response) -> {
             try {
+                logger.info("Handling request for /transactionDetails/");
                 response.header("Content-Type", "application/json");
-
                 String txnHash = request.queryParams("txnHash").toLowerCase();
-
                 //  Txn txn = Txns.getTxn(txnHash);
                 TransactionDTO txn = DatabaseUtils.fetchTransactionFromTransactionHash(txnHash);
-                if (txn == null) return getError(response, "Invalid Txn Hash");
+                if (txn == null) {
+                    logger.error("Invalid Txn Hash");
+                    return getError(response, "Invalid Txn Hash");
+                }
 
                 String data;
                 if(txn.getData() == null) data = "0x";
                 else data = "0x" + txn.getData();
 
+                logger.info("Returning transaction details");
                 return getSuccess(
                         "txnHash", txnHash,
                         "txnType", txn.getType(),
                         "size", txn.getSize(),
                         "blockNumber", txn.getBlockNumber(),
-                        "timeStamp", txn.getTimeStamp(),
+                        "timeStamp", txn.getTimeStamp().getTime(),
                         "from", "0x" + txn.getFrom(),
                         "to", txn.getTo(),
                         "value", txn.getValue(),
@@ -341,40 +358,41 @@ public class GET {
                         "data", data
                 );
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("An error occurred while processing /transactionDetails/", e);
                 return getError(response, e.getLocalizedMessage());
             }
         });
 
         get("/transactionDetails/", (request, response) -> {
             try {
+                logger.info("Handling request for /transactionDetails/");
                 response.header("Content-Type", "application/json");
-
                 String txnHash = request.queryParams("txnHash").toLowerCase();
 
                 TransactionDTO transactionDTO = DatabaseUtils.fetchTransactionFromTransactionHash(txnHash);
                 if (transactionDTO != null) {
                     JSONObject transactionJson = DatabaseUtils.convertTransactionDTOToJson(transactionDTO);
-
+                    logger.info("Returning transaction details");
                     // Set the response body
                     response.status(200);
                     return transactionJson;
                 }
                 else {
                     // Handle case when txn is not found
+                    logger.warn("Transaction not found for hash: {}", txnHash);
                     response.status(404);
                     return new JSONObject().put("error", "txn not found");
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("An error occurred while processing /transactionDetails/", e);
                 return getError(response, e.getLocalizedMessage());
             }
         });
 
         get("/blockDetails/", (request, response) -> {
             try {
+                logger.info("Handling request for /transactionDetails/");
                 response.header("Content-Type", "application/json");
-
                 long blockNumber = Long.parseLong(request.queryParams("blockNumber"));
                 BlockDTO blockDTO = DatabaseUtils.fetchBlockDetails(blockNumber);
                 ObjectMapper objectMapper = new ObjectMapper();
@@ -382,17 +400,19 @@ public class GET {
                 if (blockDTO != null) {
                     // Use the utility method to convert BlockDTO to JsonObject
                     JSONObject blockJson = DatabaseUtils.convertBlockDTOToJson(blockDTO);
-
+                    logger.info("Returning blocks details");
                     // Set the response body
                     response.status(200);
                     return blockJson;
                 } else {
                     // Handle case when block is not found
+                    logger.warn("Block not found for block number: {}", blockNumber);
                     response.status(404);
                     return new JSONObject().put("error", "Block not found");
                 }
             } catch (Exception e) {
                 // Handle exceptions
+                logger.error("An error occurred while processing /blockDetails/", e);
                 response.status(500);
                 return new JSONObject().put("error", "Internal Server Error");
             }
@@ -402,29 +422,31 @@ public class GET {
         //Wallet Calls
         get("/balanceOf/", (request, response) -> {
             try {
+                logger.info("Handling request for /balanceOf/");
                 response.header("Content-Type", "application/json");
-
                 String address = request.queryParams("userAddress").toLowerCase();
 
                 long balance = PWRJ.getBalanceOfAddress(address);
                 long usdValue = balance * Settings.getPrice();
                 BigDecimal usdValueBigDec = new BigDecimal(usdValue).divide(BigDecimal.valueOf((long) Math.pow(10, 11)));
+                logger.info("Returning balance details for address: {}", address);
 
                 return  getSuccess("balance", balance, "balanceUsdValue", usdValueBigDec);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("An error occurred while processing /balanceOf/", e);
                 return getError(response, e.getLocalizedMessage());
             }
         });
 
         get("/nonceOfUser/", (request, response) -> {
             try {
+                logger.info("Handling request for /nonceOfUser/");
                 response.header("Content-Type", "application/json");
                 String userAddress = request.queryParams("userAddress");
-
+                logger.info("Returning nonce for user address: {}", userAddress);
                 return getSuccess("nonce", PWRJ.getNonceOfAddress(userAddress));
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("An error occurred while processing /nonceOfUser/", e);
                 return getError(response, e.getLocalizedMessage());
             }
         });
@@ -432,13 +454,10 @@ public class GET {
         get("/transactionHistory/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
-
+                logger.info("Handling request for /transactionHistory/");
                 String address = request.queryParams("address").toLowerCase();
                 int count = Integer.parseInt(request.queryParams("count"));
                 int page = Integer.parseInt(request.queryParams("page"));
-
-
-
 
                  List<TransactionDTO> txnList = DatabaseUtils.fetchLatestTransactionsOfUser(address);
                 if(txnList == null || txnList.isEmpty()) {
@@ -450,6 +469,7 @@ public class GET {
                     metadata.put("startIndex", 0);
 
                     //System.out.println("No user found");
+                    logger.info("Returning transaction history for address: {}", address);
                     return getSuccess("transactions", new JSONArray(),
                             "metadata", metadata,
                             "hashOfFirstTxnSent", "null",
@@ -463,8 +483,11 @@ public class GET {
                 if(totalTxnCount % count != 0) ++totalPages;
                 int previousTxnsCount = (page - 1) * count;
 
-                if(page > totalPages) return getError(response, "Page number is greater than addresses' total pages");
-
+                if (page > totalPages) {
+                    // Log the error and return an error response
+                    logger.error("Page number is greater than address's total pages");
+                    return getError(response, "Page number is greater than address's total pages");
+                }
                 JSONArray txnsArray = new JSONArray();
 
                 int fetchedTxns = 0;
@@ -475,7 +498,7 @@ public class GET {
                     object.put("txnHash", txn.getHash());
                     object.put("block", txn.getBlockNumber());
                     object.put("txnType", txn.getType());
-                    object.put("timeStamp", txn.getTimeStamp());
+                    object.put("timeStamp", txn.getTimeStamp().getTime());
                     object.put("from", "0x" + txn.getFrom());
                     object.put("to", txn.getTo());
                     object.put("txnFee", txn.getTxnFee());
@@ -507,21 +530,27 @@ public class GET {
                 return getSuccess("transactions", txnsArray, "metadata", metadata, "hashOfFirstTxnSent", txnList.get(0).getHash(), "timeOfFirstTxnSent", txnList.get(0).getTimeStamp(),
                         "hashOfLastTxnSent", txnList.get(totalTxnCount - 1).getHash(), "timeOfLastTxnSent", txnList.get(totalTxnCount - 1).getTimeStamp());
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("An error occurred while processing /transactionHistory/", e);
                 return getError(response, e.getLocalizedMessage());
             }
         });
 
         get("/isTxnProcessed/", (request, response) -> {
             try {
+                logger.info("Handling request for /isTxnProcessed/");
                 response.header("Content-Type", "application/json");
-
                 String txnHash = request.queryParams("txnHash").toLowerCase();
-
+                logger.info("Checking if transaction is processed for hash: {}", txnHash);
                 TransactionDTO txn = DatabaseUtils.fetchTransactionFromTransactionHash(txnHash) ;
-                if(txn == null) return getSuccess("isProcessed", false);
-                else return getSuccess("isProcessed", true);
+                if (txn == null) {
+                    logger.info("Transaction with hash {} not processed", txnHash);
+                    return getSuccess("isProcessed", false);
+                } else {
+                    logger.info("Transaction with hash {} processed", txnHash);
+                    return getSuccess("isProcessed", true);
+                }
             } catch (Exception e) {
+                logger.error("An error occurred while processing /isTxnProcessed/", e);
                 e.printStackTrace();
                 return getError(response, e.getLocalizedMessage());
             }

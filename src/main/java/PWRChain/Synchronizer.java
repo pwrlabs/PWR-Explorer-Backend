@@ -19,9 +19,8 @@ public class Synchronizer {
                 long blockToCheck = Blocks.getLatestBlockNumber();
                 if(blockToCheck == 0) blockToCheck = 1;
                 while(true) {
+                    try { Thread.sleep(1000); } catch (Exception e) { e.printStackTrace(); }
                     try {
-                        try { Thread.sleep(1000); } catch (Exception e) { e.printStackTrace(); }
-
                         long latestBlockNumber = PWRJ.getLatestBlockNumber();
                         while(blockToCheck <= latestBlockNumber) {
                             System.out.println("Checking block: " + blockToCheck);

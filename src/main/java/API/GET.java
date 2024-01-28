@@ -526,7 +526,10 @@ public class GET {
                 int availablePages = totalValidatorsCount / count;
                 if(totalValidatorsCount % count != 0) ++availablePages;
 
-                if(page > availablePages) return getError(response, "Page number is greater than the total available pages");
+                System.out.println("Active validators count: " + activeValidators.size());
+                System.out.println("Standby validators count: " + standbyValidators.size());
+                System.out.println("Total validators count: " + totalValidatorsCount);
+                if(page > availablePages) return getError(response, "Page number is greater than the total available pages: " + availablePages);
 
                 //APY calculation for active validators
 
@@ -538,8 +541,8 @@ public class GET {
 
                 List<String> activeValidatorsList = new LinkedList<>();
                 for(Validator validator : activeValidators) activeValidatorsList.add(validator.getAddress());
-                JSONObject oldShareValues = PWRJ.getShareValue(activeValidatorsList, blockNumberToCheck);
-                JSONObject currentShareValues = PWRJ.getShareValue(activeValidatorsList, currentBlockNumber);
+//                BigDecimal oldShareValues = PWRJ.getShareValue(activeValidatorsList, blockNumberToCheck);
+//                JSONObject currentShareValues = PWRJ.getShareValue(activeValidatorsList, currentBlockNumber);
 
 //                Map<String, BigDecimal> apyByValidator = new HashMap<>();
 //                for(String validator: activeValidatorsList) {
@@ -583,7 +586,7 @@ public class GET {
 
                     object.put("name", validator.getAddress());
                     object.put("status", validator.getStatus());
-                    object.put("votingPower", validator.getVotingPower());
+                    object.put("votingPower", BigDecimal.valueOf(validator.getVotingPower()).divide(BigDecimal.valueOf(1000000000), 2, BigDecimal.ROUND_HALF_UP));
                     object.put("totalPowerShare", BigDecimal.valueOf(validator.getVotingPower()).divide(BigDecimal.valueOf(activeVotingPower), 4, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100)));
                     object.put("commission", 1);
                     object.put("apy", 5);
@@ -605,7 +608,7 @@ public class GET {
                 return getSuccess(
                         "activeValidatorsCount", PWRJ.getActiveValidatorsCount(),
                         "activeVotingPower", BigDecimal.valueOf(PWRJ.getActiveVotingPower()).divide(BigDecimal.TEN.pow(9), 0, BigDecimal.ROUND_HALF_UP),
-                        "delegatorsCount", Users.getDelegatorsCount(),
+                        "delegatorsCount", PWRJ.getTotalDelegatorsCount(),
                         "validators", validatorsArray,
                         "metadata", metadata);
             } catch (Exception e) {
@@ -702,8 +705,8 @@ public class GET {
                 long blockNumberToCheck = currentBlockNumber - 34560;
                 if(blockNumberToCheck < 0) blockNumberToCheck = 1;
                 long timeDifference = Blocks.getBlock(currentBlockNumber).getTimeStamp() - Blocks.getBlock(blockNumberToCheck).getTimeStamp();
-                JSONObject oldShareValues = PWRJ.getShareValue(delegatedValidators, blockNumberToCheck);
-                JSONObject currentShareValues = PWRJ.getShareValue(delegatedValidators, currentBlockNumber);
+//                JSONObject oldShareValues = PWRJ.getShareValue(delegatedValidators, blockNumberToCheck);
+//                JSONObject currentShareValues = PWRJ.getShareValue(delegatedValidators, currentBlockNumber);
 
 //                Map<String, BigDecimal> apyByValidator = new HashMap<>();
 //                for(String validator: delegatedValidators) {

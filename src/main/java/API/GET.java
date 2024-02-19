@@ -238,7 +238,7 @@ public class GET {
                     object.put("txnType", txn.getType());
                     object.put("blockNumber", blockNumber);
                     object.put("timeStamp", block.getTimestamp());
-                    object.put("from", txn.getFrom());
+                    object.put("from", txn.getSender());
                     object.put("to", txn.getTo());
                     object.put("value", txn.getValue());
 

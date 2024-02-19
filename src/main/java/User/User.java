@@ -46,22 +46,25 @@ public class User extends DBM {
     //Used when a user withdraws PWR, we check if the withdrawn PWR is from rewards only or also delegated PWR
     //If it is from delegated PWR, we decrease the initial delegation amount
     public void checkDelegation(String validator) {
-        if(initialDelegations == null) return;
-        long delegatedPWR = PWRJ.getDelegatedPWR(getAddress(), validator);
+        try {
+            if (initialDelegations == null) return;
+            long delegatedPWR = PWRJ.getDelegatedPWR(getAddress(), validator);
 
-        if(delegatedPWR == 0) {
-            initialDelegations.remove(validator.toLowerCase());
-            if(initialDelegations.size() == 0) {
-                initialDelegations = null;
-                Users.removeDelegator();
+            if (delegatedPWR == 0) {
+                initialDelegations.remove(validator.toLowerCase());
+                if (initialDelegations.size() == 0) {
+                    initialDelegations = null;
+                    Users.removeDelegator();
+                }
+            } else {
+                long initialDelegation = initialDelegations.getOrDefault(validator.toLowerCase(), 0L);
+                if (delegatedPWR < initialDelegation) initialDelegations.put(validator.toLowerCase(), delegatedPWR);
             }
-        }
-        else {
-            long initialDelegation = initialDelegations.getOrDefault(validator.toLowerCase(), 0L);
-            if(delegatedPWR < initialDelegation) initialDelegations.put(validator.toLowerCase(), delegatedPWR);
-        }
 
-        store("initialDelegations/" + validator.toLowerCase(), initialDelegations.getOrDefault(validator.toLowerCase(), 0L));
+            store("initialDelegations/" + validator.toLowerCase(), initialDelegations.getOrDefault(validator.toLowerCase(), 0L));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     public String getAddress() {
         return id;

@@ -19,7 +19,7 @@
         <dependency>
             <groupId>com.github.pwrlabs</groupId>
             <artifactId>pwrj</artifactId>
-            <version>2.6.2</version>
+            <version>4.0.5</version>
         </dependency>
 
         <dependency>

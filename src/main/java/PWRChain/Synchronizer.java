@@ -37,21 +37,21 @@ public class Synchronizer {
                                 } else if (txn instanceof DelegateTxn) {
                                     DelegateTxn delegateTxn = (DelegateTxn) txn;
 
-                                    User u = Users.getUser(delegateTxn.getFrom());
+                                    User u = Users.getUser(delegateTxn.getSender());
                                     u.addDelegation(delegateTxn.getTo(), delegateTxn.getAmount());
                                 } else if (txn instanceof WithdrawTxn) {
                                     WithdrawTxn withdrawTxn = (WithdrawTxn) txn;
 
-                                    User u = Users.getUser(withdrawTxn.getFrom());
+                                    User u = Users.getUser(withdrawTxn.getSender());
                                     u.checkDelegation(withdrawTxn.getTo());
                                 } else if (txn instanceof JoinTxn) {
                                     JoinTxn joinTxn = (JoinTxn) txn;
 
-                                    Validators.add(joinTxn.getFrom(), block.getTimestamp());
+                                    Validators.add(joinTxn.getSender(), block.getTimestamp());
                                 }
 
                                 try {
-                                    new Txn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(), block.getNumber(), Hex.decode(txn.getFrom().substring(2)), txn.getTo(), value, txn.getFee(), data, txn.getType(), txn.getNonceOrValidationHash());
+                                    new Txn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(), block.getNumber(), Hex.decode(txn.getSender().substring(2)), txn.getTo(), value, txn.getFee(), data, txn.getType(), txn.getNonce() + "");
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }

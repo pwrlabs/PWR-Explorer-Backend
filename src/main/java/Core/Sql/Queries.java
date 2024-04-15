@@ -46,16 +46,6 @@ import static Core.DatabaseConnection.getConnection;
 
 public class Queries {
     private static final Logger logger = LogManager.getLogger(Queries.class);
-    
-//    private static Connection mainConn;
-
-//    static {
-//        try {
-//            mainConn = getConnection();
-//        } catch (SQLException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
 
     public static void insertUser(String address) {
         String sql = "INSERT INTO \"User\" ("+ADDRESS+", "+DELEGATOR_COUNT+") VALUES (?, ?);";
@@ -120,6 +110,23 @@ public class Queries {
             logger.error(e.toString());
         }
         return user;
+    }
+
+    public static boolean DbUserExists(String address) {
+        String sql ="SELECT COUNT(*) AS count FROM \"User\" WHERE "+ADDRESS+" = ?;";
+        int count = 0;
+
+        try(Connection conn = getConnection();
+            PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, address);
+            try(ResultSet rs = preparedStatement.executeQuery()) {
+                count = rs.getInt("count");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+        }
+        return count>0;
     }
 
     public static void updateInitialDelegations(String address, String json) {  //TODO: not tested
@@ -346,18 +353,50 @@ public class Queries {
         return txn;
     }
 
+    public static List<Txn> getUserTxns(String address) {
+        String sql = "SELECT * FROM \"Txn\" WHERE " + FROM_ADDRESS + " = ?";
+        List<Txn> txns = new ArrayList<>();
+
+        try(Connection conn = getConnection();
+            PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, address);
+            try(ResultSet rs = preparedStatement.executeQuery()) {
+                while(rs.next()){
+                    Txn txn = populateTxnObject(rs);
+                    txns.add(txn);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+        }
+        return txns;
+    }
+
 //============================helpers=============================================
     private static Txn populateTxnObject(ResultSet rs) throws SQLException {
+        String to = rs.getString(TO_ADDRESS);
+        if(to == null) {
+            to = rs.getString(TO);
+        }
+
+        String encodedData = rs.getString(DATA);
+        byte[] data;
+        if(encodedData != null) {
+            data = Hex.decode(encodedData);
+        } else {
+            data = new byte[0];
+        }
         return new Txn(
                 rs.getString(HASH),
                 rs.getInt(SIZE),
                 rs.getInt(POSITION_IN_BLOCK),
                 Long.parseLong(rs.getString(BLOCK_NUMBER)),
                 Hex.decode(rs.getString(FROM_ADDRESS).substring(2)),
-                rs.getString(TO_ADDRESS),
+                to,
                 rs.getLong(VALUE),
                 rs.getLong(TXN_FEE),
-                Hex.decode(rs.getString(DATA)),
+                data,
                 rs.getString(TXN_TYPE),
                 rs.getString(NONCE_OR_VALIDATION)
         );

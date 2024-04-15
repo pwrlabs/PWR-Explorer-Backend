@@ -8,14 +8,15 @@ import Txn.Txn;
 import User.User;
 import User.Users;
 import Validator.Validators;
-import com.github.pwrlabs.dbm.SDBM;
 import com.github.pwrlabs.pwrj.Transaction.*;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import static Core.Sql.Queries.getDbUser;
 import static Core.Sql.Queries.insertBlock;
 import static Core.Sql.Queries.insertTxn;
+import static Core.Sql.Queries.insertUser;
 
 public class Synchronizer {
     private static final Logger logger = LogManager.getLogger(Synchronizer.class);
@@ -67,6 +68,10 @@ public class Synchronizer {
                                 try {
                                     new Txn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(), block.getNumber(), Hex.decode(txn.getSender().substring(2)), txn.getTo(), value, txn.getFee(), data, txn.getType(), txn.getNonce()+""); //TODO: perhaps pass this as a parameter?
                                     insertTxn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(), block.getNumber(), Hex.decode(txn.getSender().substring(2)), txn.getTo(), value, txn.getFee(), data, txn.getType(), txn.getNonce()+"");
+
+                                    if(getDbUser(txn.getSender().toLowerCase()) == null) {
+                                        insertUser(txn.getSender());
+                                    }
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }

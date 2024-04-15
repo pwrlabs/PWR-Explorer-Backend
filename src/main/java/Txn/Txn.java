@@ -45,12 +45,12 @@ public class Txn {
         this.txnType = txnType;
         this.nonceOrValidationHash = nonceOrValidationHash;
 
-        Blocks.getBlock(blockNumber).addTxn(this, positionInTheBlock);
-        Users.getUserCreateIfMissing(from).addTxn(this);
-
-        if(txnType.equalsIgnoreCase("transfer")) {
-            Users.getUserCreateIfMissing(to).addTxn(this);
-        }
+//        Blocks.getBlock(blockNumber).addTxn(this, positionInTheBlock);
+//        Users.getUserCreateIfMissing(from).addTxn(this);
+//
+//        if(txnType.equalsIgnoreCase("transfer")) {
+//            Users.getUserCreateIfMissing(to).addTxn(this);
+//        }
 
         Txns.add(this);
         logger.info("New txn created: {}", hash);

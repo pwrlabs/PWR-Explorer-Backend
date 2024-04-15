@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import static Core.Sql.Queries.getDbBlock;
+import static Core.Sql.Queries.getUserTxns;
 import static spark.Spark.get;
 
 public class GET {
@@ -448,7 +449,7 @@ public class GET {
                             "timeOfLastTxnSent", "null");
                 }
 
-                List<Txn> txns = user.getTxns();
+                List<Txn> txns = getUserTxns(address);
                 int totalTxnCount = txns.size();
                 int totalPages = totalTxnCount / count;
                 if(totalTxnCount % count != 0) ++totalPages;

@@ -31,22 +31,17 @@ public class Block {
         this.txnCount = txnCount;
 
         txns = new Txn[txnCount];
-        logger.info("CREATED ARRAY OF LENGTH: {}, ACTUAL LENGTH: {}", txnCount, txns.length);
         Txn[] tempTxns = getBlockTxns(blockNumber);
 
         for(int i = 0; i < tempTxns.length; i++) {
             txns[i] = tempTxns[i];
         }
 
-        logger.info("LENGTH AFTER PROCESSING: {}", txns.length);
-
         Blocks.add(this);
     }
 
     public void addTxn(Txn txn, int positionInTheBlock) {
-        logger.info("TXNS OF BLOCK: {} HAS A SIZE OF : {} WHEN CALLED", blockNumber, txns.length);
         txns[positionInTheBlock] = txn;
-        logger.info("New txn added to block: {}  at position: {}", blockNumber, positionInTheBlock);
     }
 
     public String getBlockNumber() {

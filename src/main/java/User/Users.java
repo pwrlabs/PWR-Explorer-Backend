@@ -3,6 +3,7 @@ package User;
 import java.util.HashMap;
 import java.util.Map;
 
+import static Core.Sql.Queries.DbUserExists;
 import static Core.Sql.Queries.getDbUser;
 import static Core.Sql.Queries.insertUser;
 
@@ -32,19 +33,18 @@ public class Users {
         return getUser("0x" + bytesToHex(address));
     }
 
-    public static User getUserCreateIfMissing(String address) {
-//        User user = getUser(address);
-        User user = getDbUser(address);
-        if(user == null) {
-            user = new User(address.toLowerCase());
-            insertUser(address);
-        }
-        return user;
-    }
-
-    public static User getUserCreateIfMissing(byte[] address) {
-        return getUserCreateIfMissing("0x" + bytesToHex(address).toLowerCase());
-    }
+//    public static User getUserCreateIfMissing(String address) {
+//        User user = getDbUser(address);
+//        if(user == null) {
+//            user = new User(address.toLowerCase());
+//            insertUser(address);
+//        }
+//        return user;
+//    }
+//
+//    public static User getUserCreateIfMissing(byte[] address) {
+//        return getUserCreateIfMissing("0x" + bytesToHex(address).toLowerCase());
+//    }
 
     public static String bytesToHex(byte[] bytes) {
         StringBuilder hexString = new StringBuilder();

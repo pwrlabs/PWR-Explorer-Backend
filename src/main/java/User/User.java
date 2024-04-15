@@ -16,7 +16,7 @@ import static Core.Sql.Queries.getInitialDeletations;
 import static Core.Sql.Queries.insertUser;
 import static Core.Sql.Queries.updateInitialDelegations;
 
-public class User extends DBM {
+public class User {
     private static final Logger logger = LogManager.getLogger(User.class);
     private String address;
     private List<Long> blocksWhereHasTxn = new LinkedList<>();
@@ -24,19 +24,12 @@ public class User extends DBM {
     private List<Txn> txns = new LinkedList<>();
     private Map<String /*Validator*/, Long /*Delegated Amount*/> initialDelegations;
     public User(String address) {
-        super(address.toLowerCase().trim());
-//        User user = getDbUser(address);
-//        if(user == null || user.getAddress() == null) {
-//            insertUser(address.toLowerCase().trim());
-//        }
-
         this.address = address;
 
         Users.add(this);
 
 //        JSONObject initialDelegationsJSON = loadJSON("initialDelegations");
         JSONObject initialDelegationsJSON = getInitialDeletations(address);
-        logger.info("RAMI: {}", initialDelegationsJSON);
         initialDelegations = new HashMap<>();
         for (String validator : initialDelegationsJSON.keySet()) {
             initialDelegations.put(validator.toLowerCase(), initialDelegationsJSON.getLong(validator));
@@ -57,7 +50,6 @@ public class User extends DBM {
             initialDelegations.put(validator.toLowerCase(), delegated + amount);
         }
 
-        store("initialDelegations", new JSONObject(initialDelegations).toString());
         updateInitialDelegations(address, new JSONObject(initialDelegations).toString());
     }
     //Used when a user withdraws PWR, we check if the withdrawn PWR is from rewards only or also delegated PWR
@@ -79,7 +71,7 @@ public class User extends DBM {
         }
 
         //TODO: is this supposed to be updating the previous validator amount for this address?
-        store("initialDelegations/" + validator.toLowerCase(), initialDelegations.getOrDefault(validator.toLowerCase(), 0L));
+//        store("initialDelegations/" + validator.toLowerCase(), initialDelegations.getOrDefault(validator.toLowerCase(), 0L));
     }
 //    public String getAddress() {
 //        return id;
@@ -87,9 +79,9 @@ public class User extends DBM {
     public String getAddress() {
         return address;
     }
-    public long getBalance() {
-        return loadLong("balance");
-    }
+//    public long getBalance() {
+//        return loadLong("balance");
+//    }
     public List<Txn> getTxns() {
         return txns;
     }

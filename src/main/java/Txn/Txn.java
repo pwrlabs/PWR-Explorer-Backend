@@ -14,198 +14,84 @@ import java.math.BigInteger;
 import java.text.DecimalFormat;
 
 import static Core.Sql.Queries.getDbBlock;
-
 public class Txn {
-    private static final Logger logger = LogManager.getLogger(Txn.class);
     private String hash;
     private int size;
-    private int positionInTheBlock;
+    private int positionInBlock;
     private long blockNumber;
-    private byte[] from;
-    private String to;
+    private byte[] fromAddress;
+    private String toAddress;
+    private long timestamp;
     private long value;
     private long txnFee;
-    private byte[] data;
+    private byte[] txnData;
     private String txnType;
     private String nonceOrValidationHash;
-    private  BigDecimal valueInUsd;
-    private BigDecimal txnFeeInUsd;
 
-    
-    public Txn(String hash, int size, int positionInTheBlock, long blockNumber, byte[] from, String to, long value, long txnFee, byte[] data, String txnType, String nonceOrValidationHash) {
+    public Txn(String hash, int size, int positionInBlock, long blockNumber, byte[] fromAddress, String toAddress,
+               long timestamp, long value, long txnFee, byte[] txnData, String txnType, String nonceOrValidationHash) {
         this.hash = hash;
         this.size = size;
-        this.positionInTheBlock = positionInTheBlock;
+        this.positionInBlock = positionInBlock;
         this.blockNumber = blockNumber;
-        this.from = from;
-        this.to = to;
+        this.fromAddress = fromAddress;
+        this.toAddress = toAddress;
+        this.timestamp = timestamp;
         this.value = value;
         this.txnFee = txnFee;
-        this.data = data;
+        this.txnData = txnData;
         this.txnType = txnType;
         this.nonceOrValidationHash = nonceOrValidationHash;
-
-//        Blocks.getBlock(blockNumber).addTxn(this, positionInTheBlock);
-//        Users.getUserCreateIfMissing(from).addTxn(this);
-//
-//        if(txnType.equalsIgnoreCase("transfer")) {
-//            Users.getUserCreateIfMissing(to).addTxn(this);
-//        }
-
-        Txns.add(this);
-        logger.info("New txn created: {}", hash);
     }
 
-
+    // Getters for all fields
     public String getHash() {
         return hash;
-    }
-
-    public void setHash(String hash) {
-        this.hash = hash;
     }
 
     public int getSize() {
         return size;
     }
 
-    public void setSize(int size) {
-        this.size = size;
-    }
-
-    public int getPositionInTheBlock() {
-        return positionInTheBlock;
-    }
-
-    public void setPositionInTheBlock(int positionInTheBlock) {
-        this.positionInTheBlock = positionInTheBlock;
+    public int getPositionInBlock() {
+        return positionInBlock;
     }
 
     public long getBlockNumber() {
         return blockNumber;
     }
 
-    public void setBlockNumber(long blockNumber) {
-        this.blockNumber = blockNumber;
+    public byte[] getFromAddress() {
+        return fromAddress;
     }
 
-    public byte[] getFrom() {
-        return from;
+    public String getToAddress() {
+        return toAddress;
     }
 
-    public void setFrom(byte[] from) {
-        this.from = from;
-    }
-
-    public String getTo() {
-        return to;
-    }
-
-    public void setTo(String to) {
-        this.to = to;
+    public long getTimestamp() {
+        return timestamp;
     }
 
     public long getValue() {
         return value;
     }
 
-    public void setValue(long value) {
-        this.value = value;
-    }
-
     public long getTxnFee() {
         return txnFee;
     }
 
-    public void setTxnFee(long txnFee) {
-        this.txnFee = txnFee;
-    }
-
-    public byte[] getData() {
-        return data;
-    }
-
-    public void setData(byte[] data) {
-        this.data = data;
+    public byte[] getTxnData() {
+        return txnData;
     }
 
     public String getTxnType() {
         return txnType;
     }
 
-    public void setTxnType(String txnType) {
-        this.txnType = txnType;
-    }
-
     public String getNonceOrValidationHash() {
         return nonceOrValidationHash;
     }
-
-    public void setNonceOrValidationHash(String nonceOrValidationHash) {
-        this.nonceOrValidationHash = nonceOrValidationHash;
-    }
-
-    public BigDecimal getValueInUsd() {
-        return valueInUsd;
-    }
-
-    public void setValueInUsd(BigDecimal valueInUsd) {
-        this.valueInUsd = valueInUsd;
-    }
-
-    public BigDecimal getTxnFeeInUsd() {
-        return txnFeeInUsd;
-    }
-
-    public void setTxnFeeInUsd(BigDecimal txnFeeInUsd) {
-        this.txnFeeInUsd = txnFeeInUsd;
-    }
-
-    public long getTimeStamp() {
-        return getDbBlock(blockNumber+"").getTimeStamp();
-    }
-
-    //    public String getTxnHash() {
-//        return id;
-//    }
-//    public int getSize() {
-//        return loadInt("size");
-//    }
-//    public long getBlockNumber() {
-//        return loadLong("blockNumber");
-//    }
-//    public long getTimeStamp() {
-//        return Blocks.getBlock(getBlockNumber()).getTimeStamp();
-//    }
-//    public byte[] getFrom() {
-//        return load("from");
-//    }
-//    public String getTo() {
-//        return loadString("to");
-//    }
-//    public long getValue() {
-//        return loadLong("value");
-//    }
-//    public BigDecimal getValueInUsd() {
-//        return loadBigDec("amountUsdValue");
-//    }
-//    public long getTxnFee() {
-//        return txnFee;
-//    }
-//    public BigDecimal getTxnFeeInUsd() {
-//        return loadBigDec("feeUsdValue");
-//    }
-//    public byte[] getData() {
-//        return load("data");
-//    }
-//    public String getTxnType() {
-//        return loadString("txnType");
-//    }
-//    public int getPositionInTheBlock() {
-//        return loadInt("positionInTheBlock");
-//    }
-//    public String getNonceOrValidationHash() {
-//        return loadString("nonceOrValidationHash");
-//    }
-
 }
+
+

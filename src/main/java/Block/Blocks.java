@@ -29,7 +29,7 @@ public class Blocks {
 
     public static Block getBlock(Long blockNumber) {
         if(blockByNumber.getOrDefault(blockNumber.toString(), null) == null) {
-            blockByNumber.put(blockNumber.toString(), getDbBlock(blockNumber.toString()));
+            blockByNumber.put(blockNumber.toString(), getDbBlock(blockNumber));
         }
         return blockByNumber.get(blockNumber.toString());
     }

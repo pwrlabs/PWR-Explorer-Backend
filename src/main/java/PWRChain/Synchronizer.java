@@ -1,6 +1,5 @@
 package PWRChain;
 
-import Block.Blocks;
 import Block.Block;
 import Main.Hex;
 import Main.Settings;
@@ -13,80 +12,75 @@ import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import static Core.Sql.Queries.getDbUser;
-import static Core.Sql.Queries.insertBlock;
-import static Core.Sql.Queries.insertTxn;
-import static Core.Sql.Queries.insertUser;
+import static Core.Sql.Queries.*;
 
 public class Synchronizer {
     private static final Logger logger = LogManager.getLogger(Synchronizer.class);
+
     public static void sync() {
+        new Thread(() -> {
+            long blockToCheck = getLastBlockNumber();
+            if (blockToCheck == 0) blockToCheck = 1;
 
-        new Thread() {
-            public void run() {
-                Blocks.updateLatestBlockNumber();
-                long blockToCheck = Blocks.getLatestBlockNumber();
-//                if(blockToCheck == 0) {
-//                    Blocks.updateLatestBlockNumber();
-//                }
-                //                            PWRJ.getOwnerOfVm(vmId);  TODO: use this to fetch vm owner
+            while (true) {
+                try {
+                    Thread.sleep(1000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
-                if(blockToCheck == 0) blockToCheck = 1;
-                while(true) {
-                    try { Thread.sleep(1000); } catch (Exception e) { e.printStackTrace(); }
-                    try {
-                        long latestBlockNumber = PWRJ.getLatestBlockNumber();
-                        while(blockToCheck <= latestBlockNumber) {
-                            logger.info("Checking block: {}", blockToCheck);
-                            com.github.pwrlabs.pwrj.Block.Block block = PWRJ.getBlockByNumber(blockToCheck);
+                try {
+                    long latestBlockNumber = PWRJ.getLatestBlockNumber();
+                    while (blockToCheck <= latestBlockNumber) {
+                        logger.info("Checking block: {}", blockToCheck);
+                        com.github.pwrlabs.pwrj.Block.Block block = PWRJ.getBlockByNumber(blockToCheck);
 
-                            new Block(block.getNumber() + "", block.getTimestamp(), Hex.decode(block.getSubmitter().substring(2)), block.getReward(), block.getSize(), block.getTransactionCount());
-                            insertBlock(block.getNumber() + "", block.getTimestamp(), Hex.decode(block.getSubmitter().substring(2)), block.getReward(), block.getSize(), block.getTransactionCount()); //TODO: check if this should be placed within Block to ensure caching of variables
-                            for(Transaction txn: block.getTransactions()) {
-                                long value = txn.getValue();
-                                byte[] data = null;
+                        insertBlock(block.getNumber(), block.getHash(), Hex.decode(block.getSubmitter().substring(2)),
+                                block.getTimestamp(), block.getTransactionCount(), block.getReward(), block.getSize());
 
-                                if (txn instanceof VmDataTxn) {
-                                    VmDataTxn vmDataTxn = (VmDataTxn) txn;
-                                    data = Hex.decode(vmDataTxn.getData());
-                                } else if (txn instanceof DelegateTxn) {
-                                    DelegateTxn delegateTxn = (DelegateTxn) txn;
+                        for (Transaction txn : block.getTransactions()) {
+                            long value = txn.getValue();
+                            byte[] data = null;
 
-                                    User u = Users.getUser(delegateTxn.getSender());
-                                    u.addDelegation(delegateTxn.getTo(), delegateTxn.getAmount());
-                                } else if (txn instanceof WithdrawTxn) {
-                                    WithdrawTxn withdrawTxn = (WithdrawTxn) txn;
+                            if (txn instanceof VmDataTxn) {
+                                VmDataTxn vmDataTxn = (VmDataTxn) txn;
+                                data = Hex.decode(vmDataTxn.getData());
 
-                                    User u = Users.getUser(withdrawTxn.getSender());
-                                    u.checkDelegation(withdrawTxn.getTo());
-                                } else if (txn instanceof JoinTxn) {
-                                    JoinTxn joinTxn = (JoinTxn) txn;
-
-                                    Validators.add(joinTxn.getSender(), block.getTimestamp());  //TODO: reroute this to DB
-                                }
-
-                                try {
-                                    new Txn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(), block.getNumber(), Hex.decode(txn.getSender().substring(2)), txn.getTo(), value, txn.getFee(), data, txn.getType(), txn.getNonce()+""); //TODO: perhaps pass this as a parameter?
-                                    insertTxn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(), block.getNumber(), Hex.decode(txn.getSender().substring(2)), txn.getTo(), value, txn.getFee(), data, txn.getType(), txn.getNonce()+"");
-
-                                    if(getDbUser(txn.getSender().toLowerCase()) == null) {
-                                        insertUser(txn.getSender());
-                                    }
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
+                            } else if (txn instanceof DelegateTxn) {
+                                DelegateTxn delegateTxn = (DelegateTxn) txn;
+                                updateInitialDelegations(delegateTxn.getSender(),delegateTxn.getValidator(),delegateTxn.getAmount());
+//                                User user = Users.getUserCreateIfMissing(delegateTxn.getSender());
+//                                user.addDelegation(delegateTxn.getTo(), delegateTxn.getAmount());
+                            } else if (txn instanceof WithdrawTxn) {
+                                WithdrawTxn withdrawTxn = (WithdrawTxn) txn;
+                                User user = Users.getUserCreateIfMissing(withdrawTxn.getSender());
+                                user.checkDelegation(withdrawTxn.getTo(),withdrawTxn.getValidator());
+                            } else if (txn instanceof JoinTxn) {
+                                JoinTxn joinTxn = (JoinTxn) txn;
+                                Validators.add(joinTxn.getSender(), block.getTimestamp());
                             }
-                            ++blockToCheck;
-//                            SDBM.store("blockToCheck", ++blockToCheck); //TODO does this need to be here?
-                            Thread.sleep(10);
+
+                            try {
+                                insertTxn(txn.getHash(), block.getNumber(), txn.getSize(), txn.getPositionInTheBlock(),
+                                       txn.getSender().substring(2), txn.getTo(), block.getTimestamp(),
+                                        value, txn.getFee(), data, txn.getType(), 0, 0);
+
+//                                User user = Users.getUserCreateIfMissing(txn.getSender());
+//                                user.addTxn(new Txn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(),
+//                                        block.getNumber(), Hex.decode(txn.getSender().substring(2)), txn.getTo(),
+//                                        block.getTimestamp(), value, txn.getFee(), data, txn.getType(), txn.getNonce() + ""));
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
 
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                        ++blockToCheck;
+                        Thread.sleep(10);
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
-        }.start();
+        }).start();
     }
-
 }

@@ -31,10 +31,10 @@ public class Block {
         this.txnCount = txnCount;
 
         txns = new Txn[txnCount];
-        Txn[] tempTxns = getBlockTxns(blockNumber);
+        List<Txn> tempTxns = getBlockTxns(blockNumber);
 
-        for(int i = 0; i < tempTxns.length; i++) {
-            txns[i] = tempTxns[i];
+        for(int i = 0; i < tempTxns.size(); i++) {
+            txns[i] = tempTxns.get(i);
         }
 
         Blocks.add(this);

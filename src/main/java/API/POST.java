@@ -8,13 +8,13 @@ import static spark.Spark.post;
 
 public class POST {
 
-    public static void run() {
+    public static void run(PWRJ pwrj) {
         post("/broadcast/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
                 JSONObject requestJson = new JSONObject(request.body());
 
-                return OHTTP.sendPostRequest(PWRJ.getRpcNodeUrl() + "/broadcast/", requestJson);
+                return OHTTP.sendPostRequest(pwrj.getRpcNodeUrl() + "/broadcast/", requestJson);
             } catch (Exception e) {
                 e.printStackTrace();
                 return getError(response, e.getLocalizedMessage());

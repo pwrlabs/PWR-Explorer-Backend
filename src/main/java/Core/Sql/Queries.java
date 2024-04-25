@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -409,6 +410,184 @@ public class Queries {
             e.printStackTrace();
             // Handle the exception appropriately (e.g., log, throw, etc.)
         }
+    }
+
+    public static double getAverageTransactionFeePercentageChange() {
+        double percentageChange = 0.0;
+        String tableName = getTransactionsTableName("0");
+        String sql = "SELECT " +
+                "(AVG(\"" + TXN_FEE + "\") FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000) / " +
+                "AVG(\"" + TXN_FEE + "\") FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '48 hours')) * 1000 AND " +
+                "\"" + TIMESTAMP + "\" < EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000) - 1) * 100 AS percentage_change " +
+                "FROM " + tableName + ";";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            logger.info("QUERY: {}", preparedStatement.toString());
+
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                if (rs.next()) {
+                    percentageChange = rs.getDouble("percentage_change");
+                    logger.info("Average Transaction Fee Percentage Change: {}", percentageChange);
+                } else {
+                    logger.info("No data found for Average Transaction Fee Percentage Change");
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error while calculating Average Transaction Fee Percentage Change: {}", e.toString());
+            e.printStackTrace();
+        }
+
+        return percentageChange;
+    }
+
+    public static double getTotalTransactionFeesPercentageChange() {
+        double percentageChange = 0.0;
+        String tableName = getTransactionsTableName("0");
+        String sql = "SELECT " +
+                "(SUM(\"" + TXN_FEE + "\") FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000) / " +
+                "SUM(\"" + TXN_FEE + "\") FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '48 hours')) * 1000 AND " +
+                "\"" + TIMESTAMP + "\" < EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000) - 1) * 100 AS percentage_change " +
+                "FROM " + tableName + ";";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            logger.info("QUERY: {}", preparedStatement.toString());
+
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                if (rs.next()) {
+                    percentageChange = rs.getDouble("percentage_change");
+                    logger.info("Total Transaction Fees Percentage Change: {}", percentageChange);
+                } else {
+                    logger.info("No data found for Total Transaction Fees Percentage Change");
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error while calculating Total Transaction Fees Percentage Change: {}", e.toString());
+            e.printStackTrace();
+        }
+
+        return percentageChange;
+    }
+
+    public static BigInteger getAverageTransactionFeePast24Hours() {
+        BigInteger averageFee = BigInteger.ZERO;
+        String tableName = getTransactionsTableName("0");
+        String sql = "SELECT AVG(\"" + TXN_FEE + "\") AS average_fee FROM " + tableName +
+                " WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000;";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            logger.info("QUERY: {}", preparedStatement.toString());
+
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                if (rs.next()) {
+                    BigDecimal averageFeeDecimal = rs.getBigDecimal("average_fee");
+                    if (averageFeeDecimal != null) {
+                        averageFee = averageFeeDecimal.toBigInteger();
+                        logger.info("Average Transaction Fee Past 24 Hours: {}", averageFee);
+                    } else {
+                        logger.info("No data found for Average Transaction Fee Past 24 Hours");
+                    }
+                } else {
+                    logger.info("No data found for Average Transaction Fee Past 24 Hours");
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error while calculating Average Transaction Fee Past 24 Hours: {}", e.toString());
+            e.printStackTrace();
+        }
+
+        return averageFee;
+    }
+
+    public static BigInteger getTotalTransactionFeesPast24Hours() {
+        BigInteger totalFees = BigInteger.ZERO;
+        String tableName = getTransactionsTableName("0");
+        String sql = "SELECT SUM(\"" + TXN_FEE + "\") AS total_fees FROM " + tableName +
+                " WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000;";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            logger.info("QUERY: {}", preparedStatement.toString());
+
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                if (rs.next()) {
+                    BigDecimal totalFeesDecimal = rs.getBigDecimal("total_fees");
+                    if (totalFeesDecimal != null) {
+                        totalFees = totalFeesDecimal.toBigInteger();
+                        logger.info("Total Transaction Fees Past 24 Hours: {}", totalFees);
+                    } else {
+                        logger.info("No data found for Total Transaction Fees Past 24 Hours");
+                    }
+                } else {
+                    logger.info("No data found for Total Transaction Fees Past 24 Hours");
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error while calculating Total Transaction Fees Past 24 Hours: {}", e.toString());
+            e.printStackTrace();
+        }
+
+        return totalFees;
+    }
+
+    public static int getTransactionCountPast24Hours() {
+        int transactionCount = 0;
+        String tableName = getTransactionsTableName("0");
+        String sql = "SELECT COUNT(*) AS transaction_count FROM " + tableName +
+                " WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000;";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            logger.info("QUERY: {}", preparedStatement.toString());
+
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                if (rs.next()) {
+                    transactionCount = rs.getInt("transaction_count");
+                    logger.info("Transaction Count Past 24 Hours: {}", transactionCount);
+                } else {
+                    logger.info("No data found for Transaction Count Past 24 Hours");
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error while calculating Transaction Count Past 24 Hours: {}", e.toString());
+            e.printStackTrace();
+        }
+
+        return transactionCount;
+    }
+
+    public static double getTransactionCountPercentageChangeComparedToPreviousDay() {
+        double percentageChange = 0.0;
+        String tableName = getTransactionsTableName("0");
+        String sql = "SELECT CASE " +
+                "WHEN COUNT(*) FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '48 hours')) * 1000 AND " +
+                "\"" + TIMESTAMP + "\" < EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000) = 0 THEN 0 " +
+                "ELSE (COUNT(*) FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000) * 1.0 / " +
+                "COUNT(*) FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '48 hours')) * 1000 AND " +
+                "\"" + TIMESTAMP + "\" < EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000) - 1) * 100 " +
+                "END AS percentage_change " +
+                "FROM " + tableName + ";";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            logger.info("QUERY: {}", preparedStatement.toString());
+
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                if (rs.next()) {
+                    percentageChange = rs.getDouble("percentage_change");
+                    logger.info("Transaction Count Percentage Change Compared to Previous Day: {}", percentageChange);
+                } else {
+                    logger.info("No data found for Transaction Count Percentage Change Compared to Previous Day");
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error while calculating Transaction Count Percentage Change Compared to Previous Day: {}", e.toString());
+            e.printStackTrace();
+        }
+
+        return percentageChange;
     }
 
     //============================helpers=============================================

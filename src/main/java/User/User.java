@@ -115,6 +115,7 @@ public class User {
     private byte[] lastSentTxn;
     private byte[][] transactionHashes;
     private int transactionsCount;
+
     private Map<String /*Validator*/, Long /*Delegated Amount*/> initialDelegations;
 
     public User(String address, byte[] firstSentTxn, byte[] lastSentTxn, byte[][] transactionHashes, int transactionsCount) {
@@ -156,9 +157,9 @@ public class User {
         updateInitialDelegations(address, validator, delegated + amount);
     }
 
-    public void checkDelegation(String delegator, String validator) throws IOException {
+    public void checkDelegation(PWRJ pwrj, String delegator, String validator) throws IOException {
         if(initialDelegations == null) return;
-        long delegatedPWR = PWRJ.getDelegatedPWR(delegator,validator);
+        long delegatedPWR = pwrj.getDelegatedPWR(delegator,validator);
 
         if(delegatedPWR == 0) {
             initialDelegations.remove(validator.toLowerCase());

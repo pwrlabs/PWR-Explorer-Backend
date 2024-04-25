@@ -8,7 +8,6 @@ API/RateLimiter.class
 Txn/Txn.class
 Txn/Txns.class
 VM/VM.class
-PWRChain/Synchronizer$1.class
 Core/DatabaseConnection.class
 API/IptablesBlocker.class
 Main/OHTTP.class
@@ -21,6 +20,7 @@ VM/VMs.class
 User/Users.class
 Block/Blocks.class
 API/POST.class
+DailyActivity/DailyActivity.class
 Block/Block.class
 API/GET.class
 User/User.class

@@ -47,14 +47,12 @@ public class Main {
         });
         before((request, response) -> response.header("Access-Control-Allow-Origin", "*"));
 
-        PWRJ.setRpcNodeUrl("https://pwrrpc.pwrlabs.io/");
-
         RateLimiter.initRateLimiter();
 
         DatabaseInitialization.initialize();
-
-        GET.run();
-        POST.run();
+        PWRJ pwrj = new PWRJ("https://pwrrpc.pwrlabs.io/");
+        GET.run(pwrj);
+        POST.run(pwrj);
 
 //        DBM.loadAllObjectsFromDatabase(Block.Block.class);
         DBM.loadAllObjectsFromDatabase(VM.class);
@@ -64,6 +62,6 @@ public class Main {
         Block.Initializer.init();
         Txn.Initializer.init();
 
-        Synchronizer.sync();
+        Synchronizer.sync(pwrj);
     }
 }

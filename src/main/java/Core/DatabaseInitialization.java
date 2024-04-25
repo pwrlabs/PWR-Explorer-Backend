@@ -55,19 +55,9 @@ public class DatabaseInitialization {
             "    \"blocks_submitted\" BIGINT[]\n" +
             ");";
 
-    private static final String initializeBlockNumber = "CREATE TABLE IF NOT EXISTS \"BlockNumber\" (\n" +
-            "    \"id\" INTEGER PRIMARY KEY,\n" +
-            "    \"number\" DOUBLE PRECISION NOT NULL,\n" +
-            "    \"timestamp\" TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n" +
-            ");";
-
-    private static final String insertInitialBlockNumber = "INSERT INTO \"BlockNumber\" (\"id\", \"number\") " +
-            "SELECT 1, 1.0 " +
-            "WHERE NOT EXISTS (SELECT 1 FROM \"BlockNumber\" WHERE \"id\" = 1);";
 
     final static String[] initializationQueue = new String[]{
-            initializeUser, initializeVM, initializeInitialDelegation, initializeValidator,
-            initializeBlockNumber, insertInitialBlockNumber
+            initializeUser, initializeVM, initializeInitialDelegation, initializeValidator
     };
 
     public static void initialize() {

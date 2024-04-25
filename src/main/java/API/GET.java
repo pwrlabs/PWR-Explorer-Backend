@@ -24,10 +24,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static Core.Sql.Queries.*;
@@ -559,7 +556,10 @@ public class GET {
                 int count = Integer.parseInt(request.queryParams("count"));
                 int page = Integer.parseInt(request.queryParams("page"));
 
-                List<Validator> activeValidators = PWRJ.getAllValidators();
+                List<Validator> activeValidators = PWRJ.getActiveValidators();
+                for(Validator val: activeValidators){
+                    System.out.println(">>>validatorrr"+ val.getAddress());
+                }
                 List<Validator> standbyValidators = PWRJ.getStandbyValidators();
                 int totalValidatorsCount = activeValidators.size() + standbyValidators.size();
                 int availablePages = totalValidatorsCount / count;
@@ -573,10 +573,10 @@ public class GET {
                 //APY calculation for active validators
 
                 //check APY of active validators for the past 34,560 blocks (2 days)
-                long currentBlockNumber = Blocks.getLatestBlockNumber();
-                long blockNumberToCheck = currentBlockNumber - 34560;
-                if(blockNumberToCheck < 0) blockNumberToCheck = 1;
-                long timeDifference = Blocks.getBlock(currentBlockNumber).getTimeStamp() - Blocks.getBlock(blockNumberToCheck).getTimeStamp();
+//                long currentBlockNumber = Blocks.getLatestBlockNumber();
+//                long blockNumberToCheck = currentBlockNumber - 34560;
+//                if(blockNumberToCheck < 0) blockNumberToCheck = 1;
+//                long timeDifference = Blocks.getBlock(currentBlockNumber).getTimeStamp() - Blocks.getBlock(blockNumberToCheck).getTimeStamp();
 
                 List<String> activeValidatorsList = new LinkedList<>();
                 for(Validator validator : activeValidators) activeValidatorsList.add(validator.getAddress());
@@ -665,6 +665,7 @@ public class GET {
                 int page = Integer.parseInt(request.queryParams("page"));
 
                 Validator v = PWRJ.getValidator(validatorAddress);
+                System.out.println(">>Validator address "+ v.getAddress());
                 if(v == null) return getError(response, "Invalid Validator Address");
 
                 int totalPages = v.getDelegatorsCount() / count;
@@ -743,7 +744,7 @@ public class GET {
                 long currentBlockNumber = Blocks.getLatestBlockNumber();
                 long blockNumberToCheck = currentBlockNumber - 34560;
                 if(blockNumberToCheck < 0) blockNumberToCheck = 1;
-                long timeDifference = Blocks.getBlock(currentBlockNumber).getTimeStamp() - Blocks.getBlock(blockNumberToCheck).getTimeStamp();
+//                long timeDifference = Blocks.getBlock(currentBlockNumber).getTimeStamp() - Blocks.getBlock(blockNumberToCheck).getTimeStamp();
 //                JSONObject oldShareValues = PWRJ.getShareValue(delegatedValidators, blockNumberToCheck);
 //                JSONObject currentShareValues = PWRJ.getShareValue(delegatedValidators, currentBlockNumber);
 

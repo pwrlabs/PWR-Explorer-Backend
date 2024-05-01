@@ -1,6 +1,7 @@
 package Core.Sql;
 
 import Block.Block;
+import Core.DatabaseConnection;
 import DailyActivity.DailyActivity;
 import Main.Hex;
 import Main.Settings;
@@ -21,6 +22,7 @@ import java.util.*;
 
 import static Core.Constants.Constants.*;
 import static Core.DatabaseConnection.getConnection;
+import static Core.DatabaseConnection.getPool;
 
 public class Queries {
     private static final Logger logger = LogManager.getLogger(Queries.class);
@@ -270,6 +272,34 @@ public class Queries {
         return txn;
     }
 
+    public static List<Txn> getTransactions(int limit, int offset) {
+        List<Txn> txns = new ArrayList<>();
+        String tableName = getTransactionsTableName("0");
+        String sql = "SELECT * " +
+                "FROM " + tableName +
+                " ORDER BY " + BLOCK_NUMBER + " DESC, " + POSITION_IN_BLOCK + " DESC " +
+                "LIMIT ? OFFSET ?;";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setInt(1, limit);
+            preparedStatement.setInt(2, offset);
+
+            logger.info("QUERY: {}", preparedStatement.toString());
+
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                while (rs.next()) {
+                    Txn txn = populateTxnObject(rs);
+                    txns.add(txn);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+        }
+
+        return txns;
+    }
     public static List<Txn> getLastXTransactions(int x) {
         List<Txn> txns = new ArrayList<>();
         String tableName = getTransactionsTableName("0");
@@ -293,9 +323,6 @@ public class Queries {
             e.printStackTrace();
             logger.error(e.toString());
         }
-
-        // Reverse the order of transactions to have the latest first
-        Collections.reverse(txns);
 
         return txns;
     }
@@ -330,9 +357,6 @@ public class Queries {
             logger.error(e.getMessage());
         }
 
-        // Reverse the order of blocks to have the latest first
-        Collections.reverse(blocks);
-
         return blocks;
     }
 
@@ -361,16 +385,22 @@ public class Queries {
         }
         return txns;
     }
-    public static List<Txn> getUserTxns(String address) {
+    public static List<Txn> getUserTxns(String address, int page, int pageSize) {
         List<Txn> txns = new ArrayList<>();
+
         String tableName = getTransactionsTableName("0");
-        String sql = "SELECT * FROM "+tableName +" WHERE " + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ? " +
-                "ORDER BY " + TIMESTAMP + " ASC;";
+
+        String sql = "SELECT * FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ? " +
+                "ORDER BY " + TIMESTAMP + " ASC " +
+                "LIMIT ? OFFSET ?;";
 
         try (Connection conn = getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, address);
             preparedStatement.setString(2, address);
+            preparedStatement.setInt(3, pageSize);
+            preparedStatement.setInt(4, (page - 1) * pageSize);
+
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 while (rs.next()) {
                     Txn txn = populateTxnObject(rs);
@@ -381,6 +411,7 @@ public class Queries {
             e.printStackTrace();
             logger.error(e.toString());
         }
+
         return txns;
     }
 
@@ -590,6 +621,50 @@ public class Queries {
         return percentageChange;
     }
 
+    public static int getTotalTransactionCount() {
+        int totalCount = 0;
+        String tableName = getTransactionsTableName("0");
+        String sql = "SELECT COUNT(*) AS total_count FROM " + tableName;
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql);
+             ResultSet rs = preparedStatement.executeQuery()) {
+            if (rs.next()) {
+                totalCount = rs.getInt("total_count");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+        }
+
+        return totalCount;
+    }
+
+    public static int getTotalTxnCount(String address) {
+        int totalCount = 0;
+
+        String tableName = getTransactionsTableName("0");
+
+        String sql = "SELECT COUNT(*) AS total_count FROM " + tableName +
+                " WHERE " + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ?;";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, address);
+            preparedStatement.setString(2, address);
+
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                if (rs.next()) {
+                    totalCount = rs.getInt("total_count");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+        }
+
+        return totalCount;
+    }
     //============================helpers=============================================
 
 //        public static List<DailyActivity> getDailyActivity() {

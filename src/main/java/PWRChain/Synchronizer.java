@@ -55,8 +55,9 @@ public class Synchronizer {
 //                                user.addDelegation(delegateTxn.getTo(), delegateTxn.getAmount());
                             } else if (txn instanceof WithdrawTransaction) {
                                 WithdrawTransaction withdrawTxn = (WithdrawTransaction) txn;
-                                User user = Users.getUserCreateIfMissing(withdrawTxn.getSender());
-                                user.checkDelegation(pwrj, withdrawTxn.getReceiver(),withdrawTxn.getValidator());
+                                updateInitialDelegations(withdrawTxn.getReceiver(),withdrawTxn.getSender(),withdrawTxn.getValue());
+//                                User user = Users.getUserCreateIfMissing(withdrawTxn.getSender());
+//                                user.checkDelegation(pwrj, withdrawTxn.getReceiver(),withdrawTxn.getValidator());
                             } else if (txn instanceof JoinTransaction) {
                                 JoinTransaction joinTxn = (JoinTransaction) txn;
                                 Validators.add(joinTxn.getSender(), block.getTimestamp());

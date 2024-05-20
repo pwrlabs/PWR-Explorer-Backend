@@ -6,6 +6,7 @@ import DailyActivity.DailyActivity;
 import Main.Hex;
 import Main.Settings;
 import Txn.Txn;
+import Block.Block;
 import User.User;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,7 +23,7 @@ import java.util.*;
 
 import static Core.Constants.Constants.*;
 import static Core.DatabaseConnection.getConnection;
-import static Core.DatabaseConnection.getPool;
+//import static Core.DatabaseConnection.getPool;
 
 public class Queries {
     private static final Logger logger = LogManager.getLogger(Queries.class);
@@ -132,6 +133,8 @@ public class Queries {
     }
 
     public static void insertBlock(long blockNumber, String blockHash, byte[] feeRecipient, long timestamp, int transactionsCount, long blockReward, int size) {
+        String blockNumberStr= ""+ blockNumber;
+        new Block(blockNumberStr,timestamp,feeRecipient,blockReward,size, transactionsCount);
         String sql = "INSERT INTO \"Block\" ("+
                 BLOCK_NUMBER+", "+
                 BLOCK_HASH+", "+
@@ -205,7 +208,7 @@ public class Queries {
         return 0;
     }
 
-    public static void insertTxn(String hash, long blockNumber, int size, int positionInBlock, String fromAddress, String toAddress, long timestamp, long value, long txnFee, byte[] txnData, String txnType, long amountUsdValue, long feeUsdValue) {
+    public static void insertTxn(String hash, long blockNumber, int size, int positionInBlock, String fromAddress, String toAddress, long timestamp, long value, long txnFee, byte[] txnData, String txnType, long amountUsdValue, long feeUsdValue, Boolean success, String errorMessage) {
         String tableName = getTransactionsTableName("0");
         logger.info("table name {}", tableName);
 
@@ -222,8 +225,10 @@ public class Queries {
                 TXN_DATA +", " +
                 TXN_TYPE +", " +
                 AMOUNT_USD_VALUE +", " +
-                FEE_USD_VALUE +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+                FEE_USD_VALUE +", " +
+                SUCCESS +", " +
+                ERROR_MESSAGE+
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
         try(Connection conn = getConnection();
             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
@@ -240,6 +245,8 @@ public class Queries {
             preparedStatement.setString(11, txnType);
             preparedStatement.setLong(12, amountUsdValue);
             preparedStatement.setLong(13, feeUsdValue);
+            preparedStatement.setObject(14, success);
+            preparedStatement.setString(15, errorMessage);
 
             logger.info("QUERY: {}", preparedStatement.toString());
 
@@ -446,10 +453,12 @@ public class Queries {
     public static double getAverageTransactionFeePercentageChange() {
         double percentageChange = 0.0;
         String tableName = getTransactionsTableName("0");
+
         String sql = "SELECT " +
-                "(AVG(\"" + TXN_FEE + "\") FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000) / " +
-                "AVG(\"" + TXN_FEE + "\") FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '48 hours')) * 1000 AND " +
-                "\"" + TIMESTAMP + "\" < EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000) - 1) * 100 AS percentage_change " +
+                "CASE WHEN COUNT(*) FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) = 0 THEN 0 " +
+                "ELSE ((AVG(\"" + TXN_FEE + "\") FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) / " +
+                "AVG(\"" + TXN_FEE + "\") FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '48 hours')) * 1000 AND \"" + TIMESTAMP + "\" < EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) - 1) * 100) " +
+                "END AS percentage_change " +
                 "FROM " + tableName + ";";
 
         try (Connection conn = getConnection();
@@ -472,13 +481,17 @@ public class Queries {
         return percentageChange;
     }
 
+
+
     public static double getTotalTransactionFeesPercentageChange() {
         double percentageChange = 0.0;
         String tableName = getTransactionsTableName("0");
+
         String sql = "SELECT " +
-                "(SUM(\"" + TXN_FEE + "\") FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000) / " +
-                "SUM(\"" + TXN_FEE + "\") FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '48 hours')) * 1000 AND " +
-                "\"" + TIMESTAMP + "\" < EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000) - 1) * 100 AS percentage_change " +
+                "CASE WHEN COUNT(*) FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) = 0 THEN 0 " +
+                "ELSE ((SUM(\"" + TXN_FEE + "\") FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) / " +
+                "SUM(\"" + TXN_FEE + "\") FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '48 hours')) * 1000 AND \"" + TIMESTAMP + "\" < EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) - 1) * 100) " +
+                "END AS percentage_change " +
                 "FROM " + tableName + ";";
 
         try (Connection conn = getConnection();
@@ -504,8 +517,9 @@ public class Queries {
     public static BigInteger getAverageTransactionFeePast24Hours() {
         BigInteger averageFee = BigInteger.ZERO;
         String tableName = getTransactionsTableName("0");
+
         String sql = "SELECT AVG(\"" + TXN_FEE + "\") AS average_fee FROM " + tableName +
-                " WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000;";
+                " WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000;";
 
         try (Connection conn = getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
@@ -532,11 +546,13 @@ public class Queries {
         return averageFee;
     }
 
+
     public static BigInteger getTotalTransactionFeesPast24Hours() {
         BigInteger totalFees = BigInteger.ZERO;
         String tableName = getTransactionsTableName("0");
+
         String sql = "SELECT SUM(\"" + TXN_FEE + "\") AS total_fees FROM " + tableName +
-                " WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000;";
+                " WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000;";
 
         try (Connection conn = getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
@@ -563,11 +579,13 @@ public class Queries {
         return totalFees;
     }
 
+
     public static int getTransactionCountPast24Hours() {
         int transactionCount = 0;
         String tableName = getTransactionsTableName("0");
+
         String sql = "SELECT COUNT(*) AS transaction_count FROM " + tableName +
-                " WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000;";
+                " WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000;";
 
         try (Connection conn = getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
@@ -589,15 +607,16 @@ public class Queries {
         return transactionCount;
     }
 
+
+
     public static double getTransactionCountPercentageChangeComparedToPreviousDay() {
         double percentageChange = 0.0;
         String tableName = getTransactionsTableName("0");
+
         String sql = "SELECT CASE " +
-                "WHEN COUNT(*) FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '48 hours')) * 1000 AND " +
-                "\"" + TIMESTAMP + "\" < EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000) = 0 THEN 0 " +
-                "ELSE (COUNT(*) FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000) * 1.0 / " +
-                "COUNT(*) FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() - INTERVAL '48 hours')) * 1000 AND " +
-                "\"" + TIMESTAMP + "\" < EXTRACT(EPOCH FROM (NOW() - INTERVAL '24 hours')) * 1000) - 1) * 100 " +
+                "WHEN COUNT(*) FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '48 hours')) * 1000 AND \"" + TIMESTAMP + "\" < EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) = 0 THEN 0 " +
+                "ELSE (COUNT(*) FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) * 1.0 / " +
+                "COUNT(*) FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '48 hours')) * 1000 AND \"" + TIMESTAMP + "\" < EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) - 1) * 100 " +
                 "END AS percentage_change " +
                 "FROM " + tableName + ";";
 
@@ -620,6 +639,7 @@ public class Queries {
 
         return percentageChange;
     }
+
 
     public static int getTotalTransactionCount() {
         int totalCount = 0;
@@ -735,9 +755,12 @@ public class Queries {
                 rs.getLong(TXN_FEE),
                 rs.getBytes(TXN_DATA),
                 rs.getString(TXN_TYPE),
-                "0x0"
+                "0",
+                rs.getBoolean(SUCCESS),
+                rs.getString(ERROR_MESSAGE)
         );
     }
+
 
     private static String getTransactionsTableName(String hash) {
         int shardIndex = Math.abs(hash.hashCode()) % NUMBER_OF_SHARDS;

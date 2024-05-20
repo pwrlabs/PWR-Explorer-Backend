@@ -32,4 +32,7 @@ public class Constants {
     public static final String NONCE_OR_VALIDATION = "nonce_or_validation";
     public static final String AMOUNT_USD_VALUE = "amount_usd_value";
     public static final String FEE_USD_VALUE = "fee_usd_value";
+    public static final String SUCCESS = "success";
+    public static final String ERROR_MESSAGE = "error_message";
+
 }

@@ -82,7 +82,7 @@ public class GET {
                         "price", Settings.getPrice(),
                         "priceChange", 2.5,
                         "marketCap", 1000000000L,
-                        "totalTransactionsCount", Txns.getTxnCount(),
+                        "totalTransactionsCount",getTotalTransactionCount(),
                         "blocksCount", blockNumberToCheck,
                         "validators", pwrj.getActiveValidatorsCount(),
                         "tps", Blocks.getAverageTps(100),
@@ -90,6 +90,68 @@ public class GET {
                         "blocks", blocks
                 );
 
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                return getError(response, e.getLocalizedMessage());
+            }
+        });
+
+        get("/dailyStats", (request, response) -> {
+            try {
+                response.header("Content-Type", "application/json");
+
+                // Initialize JSON objects for the response
+                JSONArray blocks = new JSONArray();
+                JSONArray txns = new JSONArray();
+
+                // Fetch the latest 5 blocks (assuming a function getLastXBlocks exists)
+                List<Block> blockList = getLastXBlocks(5);
+                for (Block block : blockList) {
+                    JSONObject object = new JSONObject();
+                    object.put("blockNumber", block.getBlockNumber());
+                    object.put("blockHeight", Blocks.getLatestBlockNumber());
+                    object.put("timeStamp", block.getTimeStamp());
+                    object.put("txnsCount", block.getTxnCount());
+                    object.put("blockReward", block.getBlockReward());
+                    object.put("blockSubmitter", "0x" + bytesToHex(block.getBlockSubmitter()));
+
+                    blocks.put(object);
+                }
+
+                // Fetch the latest 5 transactions (assuming a function getLastXTransactions exists)
+                List<Txn> txnsList = getLastXTransactions(5);
+                for (Txn txn : txnsList) {
+                    if (txn == null) continue;
+                    JSONObject object = new JSONObject();
+                    object.put("txnHash", txn.getHash());
+                    object.put("timeStamp", txn.getTimestamp());
+                    object.put("from", "0x" + bytesToHex(txn.getFromAddress()));
+                    object.put("to", txn.getToAddress());
+                    object.put("value", txn.getValue());
+
+                    txns.put(object);
+                }
+
+                // Build the response JSON
+                JSONObject responseObject = new JSONObject();
+                responseObject.put("price", Settings.getPrice());
+                responseObject.put("priceChange", 2.5);  // example value
+                responseObject.put("marketCap", 1000000000L);  // example value
+                responseObject.put("totalTransactionsCount", getTransactionCountPast24Hours());
+                responseObject.put("blocksCount", Blocks.getLatestBlockNumber());
+                responseObject.put("validators", pwrj.getActiveValidatorsCount());  // example value
+                responseObject.put("tps", Blocks.getAverageTps(100));  // example value
+                responseObject.put("txns", txns);
+                responseObject.put("blocks", blocks);
+                responseObject.put("avgTxnFeeChange", getAverageTransactionFeePercentageChange());
+                responseObject.put("totalTxnFeesChange", getTotalTransactionFeesPercentageChange());
+                responseObject.put("avgTxnFeePast24Hours", getAverageTransactionFeePast24Hours());
+                responseObject.put("totalTxnFeesPast24Hours", getTotalTransactionFeesPast24Hours());
+                responseObject.put("txnCountChange", getTransactionCountPercentageChangeComparedToPreviousDay());
+
+                // Return the response as a JSON string
+                return responseObject.toString();
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -331,11 +393,11 @@ public class GET {
 //            }
 //        });
 
-        get("/transactions", (request, response) -> {
+        get("/latestTransactions/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
 
-                int limit = Integer.parseInt(request.queryParams("limit"));
+                int limit = Integer.parseInt(request.queryParams("count"));
                 int page = Integer.parseInt(request.queryParams("page"));
                 int offset = (page - 1) * limit;
                 System.out.println(">>hello");
@@ -360,7 +422,6 @@ public class GET {
                     object.put("from", "0x" + bytesToHex(txn.getFromAddress()));
                     object.put("to", txn.getToAddress());
                     object.put("value", txn.getValue());
-
                     transactions.put(object);
                 }
 
@@ -423,7 +484,9 @@ public class GET {
                         "valueInUsd", txn.getValue(),
                         "txnFee", txn.getTxnFee(),
                         "txnFeeInUsd", txn.getTxnFee(),
-                        "data", data
+                        "data", data,
+                        "success", txn.getSuccess(),
+                        "error_message", txn.getErrorMessage()
                 );
             } catch (Exception e) {
                 e.printStackTrace();
@@ -498,6 +561,8 @@ public class GET {
                     object.put("valueInUsd", txn.getValue());
                     object.put("txnFeeInUsd", txn.getTxnFee());
                     object.put("nonceOrValidationHash", txn.getNonceOrValidationHash());
+                    object.put("success",txn.getSuccess());
+                    object.put("error_message", txn.getErrorMessage());
 
                     txnsArray.put(object);
                 }

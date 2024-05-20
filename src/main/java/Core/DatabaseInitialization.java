@@ -102,6 +102,8 @@ public class DatabaseInitialization {
                 "    \"txn_type\" VARCHAR(256),\n" +
                 "    \"amount_usd_value\" BIGINT,\n" +
                 "    \"fee_usd_value\" BIGINT,\n" +
+                "    \"success\" BOOLEAN,\n" +
+                "    \"error_message\" VARCHAR(256),\n" +
                 "    PRIMARY KEY (\"hash\", \"block_number\"),\n" +
                 "    FOREIGN KEY (\"block_number\") REFERENCES \"Block\"(\"block_number\")\n" +
                 ");\n" +

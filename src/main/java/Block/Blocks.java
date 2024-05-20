@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.math.BigDecimal;
+import java.sql.SQLOutput;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,6 +65,7 @@ public class Blocks {
     private static long totalBlockRewardsPast24Hours = 0;
 
     public static void updateBlock24HourStats() {
+        System.out.println(">>>UPDATING BLOCK");
         long totalBlockSizePast24Hours = 0;
         long totalBlockRewardsPast24Hours = 0;
         long totalBlockCountPast24Hours = 0;
@@ -72,20 +74,43 @@ public class Blocks {
         long blockNumberToCheck = Blocks.getLatestBlockNumber();
         while(true) {
             Block block = Blocks.getBlock(blockNumberToCheck--);
-            if(block == null) break;
-            if(block.getTimeStamp() < timeNow - 24 * 60 * 60) break;
+            if(block == null) {
+                System.out.println(">>Block is null for block number: " + (blockNumberToCheck + 1));
+                break;
+            }
+
+            long blockTimestamp = block.getTimeStamp();
+            if(blockTimestamp < timeNow - 24 * 60 * 60) {
+                System.out.println(">>Block is older than 24 hours. Stopping iteration.");
+                break;
+            }
+
+            System.out.println(">>Block number: " + block.getBlockNumber());
+            System.out.println(">>Block size: " + block.getBlockSize());
+            System.out.println(">>Block reward: " + block.getBlockReward());
+            System.out.println(">>Block count: " + (totalBlockCountPast24Hours + 1));
 
             totalBlockSizePast24Hours += block.getBlockSize();
             totalBlockRewardsPast24Hours += block.getBlockReward();
             totalBlockCountPast24Hours++;
         }
-        if(totalBlockCountPast24Hours == 0) averageBlockSizePast24Hours = 0;
-        else averageBlockSizePast24Hours = (int) (totalBlockSizePast24Hours / totalBlockCountPast24Hours);
 
-        if(averageBlockSizePast24Hours == 0) networkUtilizationPast24Hours = 0;
-        else networkUtilizationPast24Hours = BigDecimal.valueOf( ((double)averageBlockSizePast24Hours / (double)Settings.getBlockSizeLimit()) * 100).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+        if(totalBlockCountPast24Hours == 0) {
+            System.out.println(">>No blocks found in the past 24 hours.");
+            averageBlockSizePast24Hours = 0;
+        } else {
+            averageBlockSizePast24Hours = (int) (totalBlockSizePast24Hours / totalBlockCountPast24Hours);
+        }
+
+        if(averageBlockSizePast24Hours == 0) {
+            System.out.println(">>Average block size is zero.");
+            networkUtilizationPast24Hours = 0;
+        } else {
+            networkUtilizationPast24Hours = BigDecimal.valueOf(((double)averageBlockSizePast24Hours / (double)Settings.getBlockSizeLimit()) * 100).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+        }
 
         Blocks.totalBlockRewardsPast24Hours = totalBlockRewardsPast24Hours;
+        System.out.println(">>REWARDS 24: " + totalBlockRewardsPast24Hours);
     }
 
     public static double getNetworkUtilizationPast24Hours() {

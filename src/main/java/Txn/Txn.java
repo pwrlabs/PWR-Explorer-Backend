@@ -27,9 +27,12 @@ public class Txn {
     private byte[] txnData;
     private String txnType;
     private String nonceOrValidationHash;
+    private boolean success;
+    private String errorMessage;
 
     public Txn(String hash, int size, int positionInBlock, long blockNumber, byte[] fromAddress, String toAddress,
-               long timestamp, long value, long txnFee, byte[] txnData, String txnType, String nonceOrValidationHash) {
+               long timestamp, long value, long txnFee, byte[] txnData, String txnType, String nonceOrValidationHash,
+               boolean success, String errorMessage) {
         this.hash = hash;
         this.size = size;
         this.positionInBlock = positionInBlock;
@@ -42,6 +45,17 @@ public class Txn {
         this.txnData = txnData;
         this.txnType = txnType;
         this.nonceOrValidationHash = nonceOrValidationHash;
+        this.success = success;
+        this.errorMessage = errorMessage;
+    }
+
+
+    public Boolean getSuccess() {
+        return success;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
     }
 
     // Getters for all fields

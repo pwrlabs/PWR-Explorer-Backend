@@ -3,6 +3,7 @@ package PWRChain;
 import Main.Hex;
 import Main.Settings;
 import Txn.Txn;
+
 import User.User;
 import User.Users;
 import Validator.Validators;
@@ -37,6 +38,7 @@ public class Synchronizer {
                         logger.info("Checking block: {}", blockToCheck);
                         Block block = pwrj.getBlockByNumber(blockToCheck);
 
+
                         insertBlock(block.getNumber(), block.getHash(), Hex.decode(block.getSubmitter().substring(2)),
                                 block.getTimestamp(), block.getTransactionCount(), block.getReward(), block.getSize());
 
@@ -64,9 +66,11 @@ public class Synchronizer {
                             }
 
                             try {
+                                new Txn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(), block.getNumber(), Hex.decode(txn.getSender().substring(2)),
+                                        txn.getReceiver(),txn.getTimestamp(), value, txn.getFee(), data, txn.getType(), txn.getNonce() + "", true,"No message for now");
                                 insertTxn(txn.getHash(), block.getNumber(), txn.getSize(), txn.getPositionInTheBlock(),
                                        txn.getSender().substring(2), txn.getReceiver(), block.getTimestamp(),
-                                        value, txn.getFee(), data, txn.getType(), 0, 0);
+                                        value, txn.getFee(), data, txn.getType(), 0, 0,true,null);
 //                                User user = Users.getUserCreateIfMissing(txn.getSender());
 //                                user.addTxn(new Txn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(),
 //                                        block.getNumber(), Hex.decode(txn.getSender().substring(2)), txn.getTo(),

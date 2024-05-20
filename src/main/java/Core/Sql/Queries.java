@@ -748,7 +748,7 @@ public class Queries {
                 rs.getInt(SIZE),
                 rs.getInt(POSITION_IN_BLOCK),
                 rs.getLong(BLOCK_NUMBER),
-                rs.getBytes(FROM_ADDRESS),
+                rs.getString(FROM_ADDRESS),
                 rs.getString(TO_ADDRESS),
                 rs.getLong(TIMESTAMP),
                 rs.getLong(VALUE),

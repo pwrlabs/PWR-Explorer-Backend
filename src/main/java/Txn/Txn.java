@@ -19,7 +19,7 @@ public class Txn {
     private int size;
     private int positionInBlock;
     private long blockNumber;
-    private byte[] fromAddress;
+    private String fromAddress;
     private String toAddress;
     private long timestamp;
     private long value;
@@ -30,7 +30,7 @@ public class Txn {
     private boolean success;
     private String errorMessage;
 
-    public Txn(String hash, int size, int positionInBlock, long blockNumber, byte[] fromAddress, String toAddress,
+    public Txn(String hash, int size, int positionInBlock, long blockNumber, String  fromAddress, String toAddress,
                long timestamp, long value, long txnFee, byte[] txnData, String txnType, String nonceOrValidationHash,
                boolean success, String errorMessage) {
         this.hash = hash;
@@ -75,7 +75,7 @@ public class Txn {
         return blockNumber;
     }
 
-    public byte[] getFromAddress() {
+    public String getFromAddress() {
         return fromAddress;
     }
 

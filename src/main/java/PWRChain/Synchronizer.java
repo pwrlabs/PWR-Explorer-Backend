@@ -66,7 +66,7 @@ public class Synchronizer {
                             }
 
                             try {
-                                new Txn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(), block.getNumber(), Hex.decode(txn.getSender().substring(2)),
+                                new Txn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(), block.getNumber(), txn.getSender().substring(2),
                                         txn.getReceiver(),txn.getTimestamp(), value, txn.getFee(), data, txn.getType(), txn.getNonce() + "", true,"No message for now");
                                 insertTxn(txn.getHash(), block.getNumber(), txn.getSize(), txn.getPositionInTheBlock(),
                                        txn.getSender().substring(2), txn.getReceiver(), block.getTimestamp(),

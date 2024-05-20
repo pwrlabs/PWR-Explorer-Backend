@@ -68,10 +68,9 @@ public class GET {
                     for(Txn txn : txnsList) {
                         if(txn == null) continue;
                         JSONObject object = new JSONObject();
-
                         object.put("txnHash", txn.getHash());
                         object.put("timeStamp", txn.getTimestamp());
-                        object.put("from", "0x" + bytesToHex(txn.getFromAddress()));
+                        object.put("from", "0x" + txn.getFromAddress());
                         object.put("to", txn.getToAddress());
                         object.put("value", txn.getValue());
 
@@ -126,7 +125,7 @@ public class GET {
                     JSONObject object = new JSONObject();
                     object.put("txnHash", txn.getHash());
                     object.put("timeStamp", txn.getTimestamp());
-                    object.put("from", "0x" + bytesToHex(txn.getFromAddress()));
+                    object.put("from", "0x" + txn.getFromAddress());
                     object.put("to", txn.getToAddress());
                     object.put("value", txn.getValue());
 
@@ -419,7 +418,7 @@ public class GET {
                     object.put("txnType", txn.getTxnType());
                     object.put("blockNumber", txn.getBlockNumber());
                     object.put("timeStamp", txn.getTimestamp());
-                    object.put("from", "0x" + bytesToHex(txn.getFromAddress()));
+                    object.put("from", "0x" + txn.getFromAddress());
                     object.put("to", txn.getToAddress());
                     object.put("value", txn.getValue());
                     transactions.put(object);
@@ -471,6 +470,7 @@ public class GET {
                 String data;
                 if(txn.getTxnData() == null) data = "0x";
                 else data = "0x" + bytesToHex(txn.getTxnData());
+                System.out.println(">>>hellooo");
 
                 return getSuccess(
                         "txnHash", txnHash,
@@ -478,7 +478,7 @@ public class GET {
                         "size", txn.getSize(),
                         "blockNumber", txn.getBlockNumber(),
                         "timeStamp", txn.getTimestamp(),
-                        "from", "0x" + bytesToHex(txn.getFromAddress()),
+                        "from", "0x" + txn.getFromAddress(),
                         "to", txn.getToAddress(),
                         "value", txn.getValue(),
                         "valueInUsd", txn.getValue(),
@@ -554,7 +554,7 @@ public class GET {
                     object.put("block", txn.getBlockNumber());
                     object.put("txnType", txn.getTxnType());
                     object.put("timeStamp", txn.getTimestamp());
-                    object.put("from", "0x" + bytesToHex(txn.getFromAddress()));
+                    object.put("from", "0x" +txn.getFromAddress());
                     object.put("to", txn.getToAddress());
                     object.put("txnFee", txn.getTxnFee());
                     object.put("value", txn.getValue());

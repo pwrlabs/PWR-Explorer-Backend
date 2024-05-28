@@ -2,8 +2,6 @@ package Core.Constants;
 
 public class Constants {
     public static final String ADDRESS = "address";
-    public static final String INITIAL_DELEGATIONS = "initial_delegations";
-    public static final String DELEGATOR_COUNT = "delegator_count";
     public static final String FIRST_SENT_TXN = "first_sent_txn";
     public static final String LAST_SENT_TXN = "last_sent_txn";
     public static final String TRANSACTION_HASHES = "transaction_hashes";
@@ -29,10 +27,19 @@ public class Constants {
     public static final String TXN_FEE = "txn_fee";
     public static final String TXN_DATA = "txn_data";
     public static final String TXN_TYPE = "txn_type";
-    public static final String NONCE_OR_VALIDATION = "nonce_or_validation";
     public static final String AMOUNT_USD_VALUE = "amount_usd_value";
     public static final String FEE_USD_VALUE = "fee_usd_value";
     public static final String SUCCESS = "success";
     public static final String ERROR_MESSAGE = "error_message";
+    public static final String EXTRA_DATA = "extra_data";
+    public static final String NONCE = "nonce";
+    public static final String ACTION_FEE = "action_fee";
+    public static final String PAID = "paid";
+    public static final String FEEPAYER = "feePayer";
+    public static final String ID = "id";
+    public static final String TOTAL_REVENUE = "total_revenue";
+    public static final String LIFETIME_REWARDS = "lifetime_rewards";
+    public static final String SUBMITTED_BLOCKS = "submitted_blocks";
+    public static final String BLOCKS_SUBMITTED = "blocks_submitted";
 
 }

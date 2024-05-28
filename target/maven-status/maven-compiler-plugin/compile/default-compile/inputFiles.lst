@@ -17,6 +17,8 @@
 /Users/johnjurdak/Desktop/PWR/PWR Explorer/PWR-Explorer-Backend/src/main/java/Core/DatabaseConnection.java
 /Users/johnjurdak/Desktop/PWR/PWR Explorer/PWR-Explorer-Backend/src/main/java/Main/Main.java
 /Users/johnjurdak/Desktop/PWR/PWR Explorer/PWR-Explorer-Backend/src/main/java/Core/Sql/Queries.java
+/Users/johnjurdak/Desktop/PWR/PWR Explorer/PWR-Explorer-Backend/src/main/java/API/JsonUtil.java
+/Users/johnjurdak/Desktop/PWR/PWR Explorer/PWR-Explorer-Backend/src/main/java/API/CompressionFilter.java
 /Users/johnjurdak/Desktop/PWR/PWR Explorer/PWR-Explorer-Backend/src/main/java/Main/Settings.java
 /Users/johnjurdak/Desktop/PWR/PWR Explorer/PWR-Explorer-Backend/src/main/java/Core/DatabaseInitialization.java
 /Users/johnjurdak/Desktop/PWR/PWR Explorer/PWR-Explorer-Backend/src/main/java/Core/Constants/Constants.java

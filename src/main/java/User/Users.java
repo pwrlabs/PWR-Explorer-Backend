@@ -33,7 +33,7 @@ public class Users {
         User user = getUser(address);
         if (user == null) {
             if (!dbUserExists(address)) {
-                insertUser(address, null, null, null, 0);
+                insertUser(address, null, null, null);
             }
             user = getDbUser(address);
             userByAddress.put(address, user);

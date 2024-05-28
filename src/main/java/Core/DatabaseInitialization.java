@@ -20,7 +20,8 @@ public class DatabaseInitialization {
             "    \"timestamp\" BIGINT,\n" +
             "    \"transactions_count\" INTEGER,\n" +
             "    \"block_reward\" BIGINT,\n" +
-            "    \"size\" INTEGER\n" +
+            "    \"size\" INTEGER,\n" +
+            "    \"success\" BOOLEAN\n" +
             ");\n" +
             "CREATE INDEX IF NOT EXISTS \"idx_block_number\" ON \"Block\" (\"block_number\");";
 
@@ -28,8 +29,7 @@ public class DatabaseInitialization {
             "    \"address\" VARCHAR(256) PRIMARY KEY,\n" +
             "    \"first_sent_txn\" BYTEA,\n" +
             "    \"last_sent_txn\" BYTEA,\n" +
-            "    \"transaction_hashes\" BYTEA[],\n" +
-            "    \"transactions_count\" INTEGER\n" +
+            "    \"transaction_hashes\" BYTEA[]\n" + // Removed the trailing comma
             ");";
 
     private static final String initializeVM = "CREATE TABLE IF NOT EXISTS \"VM\" (\n" +
@@ -54,7 +54,6 @@ public class DatabaseInitialization {
             "    \"submitted_blocks\" INTEGER,\n" +
             "    \"blocks_submitted\" BIGINT[]\n" +
             ");";
-
 
     final static String[] initializationQueue = new String[]{
             initializeUser, initializeVM, initializeInitialDelegation, initializeValidator
@@ -100,10 +99,13 @@ public class DatabaseInitialization {
                 "    \"txn_fee\" BIGINT,\n" +
                 "    \"txn_data\" BYTEA,\n" +
                 "    \"txn_type\" VARCHAR(256),\n" +
-                "    \"amount_usd_value\" BIGINT,\n" +
-                "    \"fee_usd_value\" BIGINT,\n" +
                 "    \"success\" BOOLEAN,\n" +
                 "    \"error_message\" VARCHAR(256),\n" +
+                "    \"extra_data\" JSONB,\n" +
+                "    \"nonce\" BIGINT NOT NULL,\n" +
+                "    \"action_fee\" BIGINT,\n" +
+                "    \"paid\" BOOLEAN,\n" +
+                "    \"feePayer\" VARCHAR(256),\n" +
                 "    PRIMARY KEY (\"hash\", \"block_number\"),\n" +
                 "    FOREIGN KEY (\"block_number\") REFERENCES \"Block\"(\"block_number\")\n" +
                 ");\n" +

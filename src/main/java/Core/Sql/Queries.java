@@ -14,10 +14,7 @@ import org.json.JSONObject;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -29,15 +26,160 @@ public class Queries {
     private static final Logger logger = LogManager.getLogger(Queries.class);
     private static final int NUMBER_OF_SHARDS = 1;
 
-    public static void insertUser(String address, byte[] firstSentTxn, byte[] lastSentTxn, byte[][] transactionHashes, int transactionsCount) {
-        String sql = "INSERT INTO \"User\" ("+ADDRESS+", "+FIRST_SENT_TXN+", "+LAST_SENT_TXN+", "+TRANSACTION_HASHES+", "+TRANSACTIONS_COUNT+") VALUES (?, ?, ?, ?, ?);";
+    //>>>>>>>INSERT<<<<<<<<
+    public static void insertUser(String address, byte[] firstSentTxn, byte[] lastSentTxn, byte[][] transactionHashes) {
+        String sql = "INSERT INTO \"User\" (" +
+                "address, " +
+                "first_sent_txn, " +
+                "last_sent_txn, " +
+                "transaction_hashes" +
+                ") VALUES (?, ?, ?, ?);";
+
         try (Connection conn = getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, address);
             preparedStatement.setBytes(2, firstSentTxn);
             preparedStatement.setBytes(3, lastSentTxn);
             preparedStatement.setArray(4, conn.createArrayOf("BYTEA", transactionHashes));
+
+            logger.info("QUERY: {}", preparedStatement.toString());
+
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+        }
+    }
+    public static void insertBlock(long blockNumber, String blockHash, byte[] feeRecipient, long timestamp, int transactionsCount, long blockReward, int size, boolean success) {
+        String blockNumberStr = "" + blockNumber;
+        new Block(blockNumberStr, timestamp, feeRecipient, blockReward, size, transactionsCount);
+        String sql = "INSERT INTO \"Block\" ("+
+                BLOCK_NUMBER + ", " +
+                BLOCK_HASH + ", " +
+                FEE_RECIPIENT + ", " +
+                TIMESTAMP + ", " +
+                TRANSACTIONS_COUNT + ", " +
+                BLOCK_REWARD + ", " +
+                BLOCK_SIZE + ", " +
+                "success" +  // Add success column
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?);";  // Add one more placeholder for success
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setLong(1, blockNumber);
+            preparedStatement.setString(2, blockHash);
+            preparedStatement.setBytes(3, feeRecipient);
+            preparedStatement.setLong(4, timestamp);
             preparedStatement.setInt(5, transactionsCount);
+            preparedStatement.setLong(6, blockReward);
+            preparedStatement.setInt(7, size);
+            preparedStatement.setBoolean(8, success);  // Set the success parameter
+
+            logger.info("QUERY: {}", preparedStatement.toString());
+
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+        }
+    }
+    public static void insertTxn(String hash, long blockNumber, int size, int positionInBlock, String fromAddress, String toAddress, long timestamp, long value, long txnFee, byte[] txnData, String txnType, long amountUsdValue, long feeUsdValue, Boolean success, String errorMessage,  String extraData, long nonce, long actionFee, boolean paid, String feePayer) {
+        String tableName = getTransactionsTableName("0");
+        logger.info("table name {}", tableName);
+
+        String sql = "INSERT INTO " + tableName + " (" +
+                HASH +", " +
+                BLOCK_NUMBER +", " +
+                SIZE +", " +
+                POSITION_IN_BLOCK +", " +
+                FROM_ADDRESS +", " +
+                TO_ADDRESS +", " +
+                TIMESTAMP +", " +
+                VALUE +", " +
+                TXN_FEE +", " +
+                TXN_DATA +", " +
+                TXN_TYPE +", " +
+                AMOUNT_USD_VALUE +", " +
+                FEE_USD_VALUE +", " +
+                SUCCESS +", " +
+                ERROR_MESSAGE +", " +
+                EXTRA_DATA +", " +
+                NONCE +", " +
+                ACTION_FEE +", " +
+                PAID +", " +
+                FEEPAYER +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON), ?, ?, ?, ?);";
+
+        try(Connection conn = getConnection();
+            PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, hash);
+            preparedStatement.setLong(2, blockNumber);
+            preparedStatement.setInt(3, size);
+            preparedStatement.setInt(4, positionInBlock);
+            preparedStatement.setString(5, fromAddress);
+            preparedStatement.setString(6, toAddress);
+            preparedStatement.setLong(7, timestamp);
+            preparedStatement.setLong(8, value);
+            preparedStatement.setLong(9, txnFee);
+            preparedStatement.setBytes(10, txnData);
+            preparedStatement.setString(11, txnType);
+            preparedStatement.setLong(12, amountUsdValue);
+            preparedStatement.setLong(13, feeUsdValue);
+            preparedStatement.setObject(14, success);
+            preparedStatement.setString(15, errorMessage);
+            preparedStatement.setObject(14, extraData);  // Set JSON data
+            preparedStatement.setLong(15, nonce);
+            preparedStatement.setLong(16, actionFee);
+            preparedStatement.setBoolean(17, paid);
+            preparedStatement.setString(18, feePayer);
+
+            logger.info("QUERY: {}", preparedStatement.toString());
+
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+        }
+    }
+    public static void insertVM(long id, byte[] firstSentTxn, byte[] lastSentTxn, byte[][] transactionHashes, int transactionsCount, long totalRevenue) {
+        String sql = "INSERT INTO \"VM\" (" +
+                ID + ", " +
+                FIRST_SENT_TXN + ", " +
+                LAST_SENT_TXN + ", " +
+                TRANSACTION_HASHES + ", " +
+                TRANSACTIONS_COUNT + ", " +
+                TOTAL_REVENUE +
+                ") VALUES (?, ?, ?, ?, ?, ?);";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setLong(1, id);
+            preparedStatement.setBytes(2, firstSentTxn);
+            preparedStatement.setBytes(3, lastSentTxn);
+            preparedStatement.setArray(4, conn.createArrayOf("BYTEA", transactionHashes));
+            preparedStatement.setInt(5, transactionsCount);
+            preparedStatement.setLong(6, totalRevenue);
+
+            logger.info("QUERY: {}", preparedStatement.toString());
+
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+        }
+    }
+    public static void insertInitialDelegation(String userAddress, String validatorAddress, long initialDelegation) {
+        String sql = "INSERT INTO \"InitialDelegation\" (" +
+                USER_ADDRESS + ", " +
+                VALIDATOR_ADDRESS + ", " +
+                INITIAL_DELEGATION +
+                ") VALUES (?, ?, ?);";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, userAddress);
+            preparedStatement.setString(2, validatorAddress);
+            preparedStatement.setLong(3, initialDelegation);
 
             logger.info("QUERY: {}", preparedStatement.toString());
 
@@ -48,6 +190,177 @@ public class Queries {
         }
     }
 
+
+    //>>>>>>>UPDATE<<<<<<<<
+    public static void updateInitialDelegations(String userAddress, String validatorAddress, long initialDelegation) {
+        String sql = "INSERT INTO \"InitialDelegation\" ("+USER_ADDRESS+", "+VALIDATOR_ADDRESS+", "+INITIAL_DELEGATION+") " +
+                "VALUES (?, ?, ?) " +
+                "ON CONFLICT ("+USER_ADDRESS+", "+VALIDATOR_ADDRESS+") DO UPDATE SET "+INITIAL_DELEGATION+" = ?;";
+
+        try(Connection conn = getConnection();
+            PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, userAddress);
+            preparedStatement.setString(2, validatorAddress);
+            preparedStatement.setLong(3, initialDelegation);
+            preparedStatement.setLong(4, initialDelegation);
+
+            logger.info("QUERY: {}", preparedStatement);
+
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+        }
+    }
+    public static void updateBlock(long blockNumber, String blockHash, byte[] feeRecipient, long timestamp, int transactionsCount, long blockReward, int size, boolean success) {
+        String sql = "UPDATE \"Block\" SET " +
+                BLOCK_HASH + " = ?, " +
+                FEE_RECIPIENT + " = ?, " +
+                TIMESTAMP + " = ?, " +
+                TRANSACTIONS_COUNT + " = ?, " +
+                BLOCK_REWARD + " = ?, " +
+                SIZE + " = ?, " +
+                SUCCESS + " = ? " +
+                "WHERE " + BLOCK_NUMBER + " = ?;";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, blockHash);
+            preparedStatement.setBytes(2, feeRecipient);
+            preparedStatement.setLong(3, timestamp);
+            preparedStatement.setInt(4, transactionsCount);
+            preparedStatement.setLong(5, blockReward);
+            preparedStatement.setInt(6, size);
+            preparedStatement.setBoolean(7, success);
+            preparedStatement.setLong(8, blockNumber);
+
+            logger.info("QUERY: {}", preparedStatement.toString());
+
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+        }
+    }
+    public static void updateUser(String address, byte[] firstSentTxn, byte[] lastSentTxn, byte[][] transactionHashes) {
+        String sql = "UPDATE \"User\" SET " +
+                FIRST_SENT_TXN + " = ?, " +
+                LAST_SENT_TXN + " = ?, " +
+                TRANSACTION_HASHES + " = ? " +
+                "WHERE " + ADDRESS + " = ?;";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setBytes(1, firstSentTxn);
+            preparedStatement.setBytes(2, lastSentTxn);
+            preparedStatement.setArray(3, conn.createArrayOf("BYTEA", transactionHashes));
+            preparedStatement.setString(4, address);
+
+            logger.info("QUERY: {}", preparedStatement.toString());
+
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+        }
+    }
+    public static void updateVM(long id, byte[] firstSentTxn, byte[] lastSentTxn, byte[][] transactionHashes, int transactionsCount, long totalRevenue) {
+        String sql = "UPDATE \"VM\" SET " +
+                FIRST_SENT_TXN + " = ?, " +
+                LAST_SENT_TXN + " = ?, " +
+                TRANSACTION_HASHES + " = ?, " +
+                TRANSACTIONS_COUNT + " = ?, " +
+                TOTAL_REVENUE + " = ? " +
+                "WHERE " + ID + " = ?;";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setBytes(1, firstSentTxn);
+            preparedStatement.setBytes(2, lastSentTxn);
+            preparedStatement.setArray(3, conn.createArrayOf("BYTEA", transactionHashes));
+            preparedStatement.setInt(4, transactionsCount);
+            preparedStatement.setLong(5, totalRevenue);
+            preparedStatement.setLong(6, id);
+
+            logger.info("QUERY: {}", preparedStatement.toString());
+
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+        }
+    }
+    public static void updateInitialDelegation(String userAddress, String validatorAddress, long initialDelegation) {
+        String sql = "UPDATE \"InitialDelegation\" SET " +
+                INITIAL_DELEGATION + " = ? " +
+                "WHERE " + USER_ADDRESS + " = ? AND " + VALIDATOR_ADDRESS + " = ?;";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setLong(1, initialDelegation);
+            preparedStatement.setString(2, userAddress);
+            preparedStatement.setString(3, validatorAddress);
+
+            logger.info("QUERY: {}", preparedStatement.toString());
+
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+        }
+    }
+    public static void updateValidator(String address, long lifetimeRewards, int submittedBlocks, Object[] blocksSubmitted) {
+        String sql = "UPDATE \"Validator\" SET " +
+                LIFETIME_REWARDS + " = ?, " +
+                SUBMITTED_BLOCKS + " = ?, " +
+                BLOCKS_SUBMITTED + " = ? " +
+                "WHERE " + ADDRESS + " = ?;";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setLong(1, lifetimeRewards);
+            preparedStatement.setInt(2, submittedBlocks);
+            preparedStatement.setArray(3, conn.createArrayOf("BIGINT", blocksSubmitted));
+            preparedStatement.setString(4, address);
+
+            logger.info("QUERY: {}", preparedStatement.toString());
+
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+        }
+    }
+    public static void updateUserInDatabase(String address, byte[] firstSentTxn, byte[] lastSentTxn, byte[][] transactionHashes, int transactionsCount) {
+        String sql = "UPDATE \"User\" SET " +
+                "\"first_sent_txn\" = ?, " +
+                "\"last_sent_txn\" = ?, " +
+                "\"transaction_hashes\" = ?, " +
+                "\"transactions_count\" = ? " +
+                "WHERE \"address\" = ?";
+        Connection conn = null;
+        try {
+            conn = getConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setBytes(1, firstSentTxn);
+            preparedStatement.setBytes(2, lastSentTxn);
+            preparedStatement.setArray(3, conn.createArrayOf("BYTEA", transactionHashes));
+            preparedStatement.setInt(4, transactionsCount);
+            preparedStatement.setString(5, address);
+
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Handle the exception appropriately (e.g., log, throw, etc.)
+        }
+    }
+
+
+    //>>>>>>>GET<<<<<<<<
     public static JSONObject getInitialDelegations(String userAddress) {
         String sql = "SELECT "+INITIAL_DELEGATION+" FROM \"InitialDelegation\" WHERE "+USER_ADDRESS+" = ?;";
         JSONObject jsonObject = new JSONObject();
@@ -69,7 +382,6 @@ public class Queries {
         }
         return jsonObject;
     }
-
     public static User getDbUser(String address) {
         String sql = "SELECT * FROM \"User\" WHERE "+ADDRESS+" = ?;";
         User user = null;
@@ -94,7 +406,6 @@ public class Queries {
         }
         return user;
     }
-
     public static boolean dbUserExists(String address) {
         String sql = "SELECT EXISTS (SELECT 1 FROM \"User\" WHERE "+ADDRESS+" = ?);";
         try(Connection conn = getConnection();
@@ -110,60 +421,6 @@ public class Queries {
         }
         return false;
     }
-
-    public static void updateInitialDelegations(String userAddress, String validatorAddress, long initialDelegation) {
-        String sql = "INSERT INTO \"InitialDelegation\" ("+USER_ADDRESS+", "+VALIDATOR_ADDRESS+", "+INITIAL_DELEGATION+") " +
-                "VALUES (?, ?, ?) " +
-                "ON CONFLICT ("+USER_ADDRESS+", "+VALIDATOR_ADDRESS+") DO UPDATE SET "+INITIAL_DELEGATION+" = ?;";
-
-        try(Connection conn = getConnection();
-            PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setString(1, userAddress);
-            preparedStatement.setString(2, validatorAddress);
-            preparedStatement.setLong(3, initialDelegation);
-            preparedStatement.setLong(4, initialDelegation);
-
-            logger.info("QUERY: {}", preparedStatement);
-
-            preparedStatement.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
-        }
-    }
-
-    public static void insertBlock(long blockNumber, String blockHash, byte[] feeRecipient, long timestamp, int transactionsCount, long blockReward, int size) {
-        String blockNumberStr= ""+ blockNumber;
-        new Block(blockNumberStr,timestamp,feeRecipient,blockReward,size, transactionsCount);
-        String sql = "INSERT INTO \"Block\" ("+
-                BLOCK_NUMBER+", "+
-                BLOCK_HASH+", "+
-                FEE_RECIPIENT+", "+
-                TIMESTAMP+", "+
-                TRANSACTIONS_COUNT+", "+
-                BLOCK_REWARD+", "+
-                BLOCK_SIZE+
-                ") VALUES (?, ?, ?, ?, ?, ?, ?);";
-
-        try(Connection conn = getConnection();
-            PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setLong(1, blockNumber);
-            preparedStatement.setString(2, blockHash);
-            preparedStatement.setBytes(3, feeRecipient);
-            preparedStatement.setLong(4, timestamp);
-            preparedStatement.setInt(5, transactionsCount);
-            preparedStatement.setLong(6, blockReward);
-            preparedStatement.setInt(7, size);
-
-            logger.info("QUERY: {}", preparedStatement.toString());
-
-            preparedStatement.executeUpdate();
-        }catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
-        }
-    }
-
     public static Block getDbBlock(long blockNumber) {
         String sql = "SELECT * FROM \"Block\" WHERE "+BLOCK_NUMBER+" = ?;";
         Block block = null;
@@ -191,7 +448,6 @@ public class Queries {
         }
         return block;
     }
-
     public static long getLastBlockNumber() {
         String sql = "SELECT MAX("+BLOCK_NUMBER+") FROM \"Block\";";
 
@@ -207,56 +463,6 @@ public class Queries {
         }
         return 0;
     }
-
-    public static void insertTxn(String hash, long blockNumber, int size, int positionInBlock, String fromAddress, String toAddress, long timestamp, long value, long txnFee, byte[] txnData, String txnType, long amountUsdValue, long feeUsdValue, Boolean success, String errorMessage) {
-        String tableName = getTransactionsTableName("0");
-        logger.info("table name {}", tableName);
-
-        String sql = "INSERT INTO " + tableName + " (" +
-                HASH +", " +
-                BLOCK_NUMBER +", " +
-                SIZE +", " +
-                POSITION_IN_BLOCK +", " +
-                FROM_ADDRESS +", " +
-                TO_ADDRESS +", " +
-                TIMESTAMP +", " +
-                VALUE +", " +
-                TXN_FEE +", " +
-                TXN_DATA +", " +
-                TXN_TYPE +", " +
-                AMOUNT_USD_VALUE +", " +
-                FEE_USD_VALUE +", " +
-                SUCCESS +", " +
-                ERROR_MESSAGE+
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
-
-        try(Connection conn = getConnection();
-            PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setString(1, hash);
-            preparedStatement.setLong(2, blockNumber);
-            preparedStatement.setInt(3, size);
-            preparedStatement.setInt(4, positionInBlock);
-            preparedStatement.setString(5, fromAddress);
-            preparedStatement.setString(6, toAddress);
-            preparedStatement.setLong(7, timestamp);
-            preparedStatement.setLong(8, value);
-            preparedStatement.setLong(9, txnFee);
-            preparedStatement.setBytes(10, txnData);
-            preparedStatement.setString(11, txnType);
-            preparedStatement.setLong(12, amountUsdValue);
-            preparedStatement.setLong(13, feeUsdValue);
-            preparedStatement.setObject(14, success);
-            preparedStatement.setString(15, errorMessage);
-
-            logger.info("QUERY: {}", preparedStatement.toString());
-
-            preparedStatement.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
-        }
-    }
-
     public static Txn getDbTxn(String hash) {
         Txn txn = null;
         String tableName = getTransactionsTableName(hash);
@@ -278,7 +484,6 @@ public class Queries {
         }
         return txn;
     }
-
     public static List<Txn> getTransactions(int limit, int offset) {
         List<Txn> txns = new ArrayList<>();
         String tableName = getTransactionsTableName("0");
@@ -310,20 +515,35 @@ public class Queries {
     public static List<Txn> getLastXTransactions(int x) {
         List<Txn> txns = new ArrayList<>();
         String tableName = getTransactionsTableName("0");
-        String sql = "SELECT * FROM " + tableName +
-                " ORDER BY " + BLOCK_NUMBER + " DESC, " + POSITION_IN_BLOCK + " DESC " +
-                "LIMIT ?;";
+
+        // Query to get the highest block number
+        String getMaxBlockNumberSql = "SELECT MAX(" + BLOCK_NUMBER + ") AS max_block_number FROM " + tableName;
 
         try (Connection conn = getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setInt(1, x);
+             Statement stmt = conn.createStatement();
+             ResultSet rsMax = stmt.executeQuery(getMaxBlockNumberSql)) {
 
-            logger.info("QUERY: {}", preparedStatement.toString());
+            if (rsMax.next()) {
+                int maxBlockNumber = rsMax.getInt("max_block_number");
 
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                while (rs.next()) {
-                    Txn txn = populateTxnObject(rs);
-                    txns.add(txn);
+                // Query to get transactions from the highest block number
+                String sql = "SELECT * FROM " + tableName +
+                        " WHERE " + BLOCK_NUMBER + " = ? " +
+                        " ORDER BY " + TIMESTAMP + " DESC " +
+                        " LIMIT ?;";
+
+                try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+                    preparedStatement.setInt(1, maxBlockNumber);
+                    preparedStatement.setInt(2, x);
+
+                    logger.info("QUERY: {}", preparedStatement.toString());
+
+                    try (ResultSet rs = preparedStatement.executeQuery()) {
+                        while (rs.next()) {
+                            Txn txn = populateTxnObject(rs);
+                            txns.add(txn);
+                        }
+                    }
                 }
             }
         } catch (Exception e) {
@@ -366,7 +586,6 @@ public class Queries {
 
         return blocks;
     }
-
     public static List<Txn> getBlockTxns(String blockNumberString) {
         long blockNumber = Long.parseLong(blockNumberString);
         List<Txn> txns = new ArrayList<>();
@@ -421,35 +640,6 @@ public class Queries {
 
         return txns;
     }
-
-    public static void updateUserInDatabase(String address, byte[] firstSentTxn, byte[] lastSentTxn, byte[][] transactionHashes, int transactionsCount) {
-        String sql = "UPDATE \"User\" SET " +
-                "\"first_sent_txn\" = ?, " +
-                "\"last_sent_txn\" = ?, " +
-                "\"transaction_hashes\" = ?, " +
-                "\"transactions_count\" = ? " +
-                "WHERE \"address\" = ?";
-        Connection conn = null;
-        try {
-            conn = getConnection();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-        try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setBytes(1, firstSentTxn);
-            preparedStatement.setBytes(2, lastSentTxn);
-            preparedStatement.setArray(3, conn.createArrayOf("BYTEA", transactionHashes));
-            preparedStatement.setInt(4, transactionsCount);
-            preparedStatement.setString(5, address);
-
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            // Handle the exception appropriately (e.g., log, throw, etc.)
-        }
-    }
-
     public static double getAverageTransactionFeePercentageChange() {
         double percentageChange = 0.0;
         String tableName = getTransactionsTableName("0");
@@ -480,9 +670,6 @@ public class Queries {
 
         return percentageChange;
     }
-
-
-
     public static double getTotalTransactionFeesPercentageChange() {
         double percentageChange = 0.0;
         String tableName = getTransactionsTableName("0");
@@ -513,7 +700,6 @@ public class Queries {
 
         return percentageChange;
     }
-
     public static BigInteger getAverageTransactionFeePast24Hours() {
         BigInteger averageFee = BigInteger.ZERO;
         String tableName = getTransactionsTableName("0");
@@ -545,8 +731,6 @@ public class Queries {
 
         return averageFee;
     }
-
-
     public static BigInteger getTotalTransactionFeesPast24Hours() {
         BigInteger totalFees = BigInteger.ZERO;
         String tableName = getTransactionsTableName("0");
@@ -578,8 +762,6 @@ public class Queries {
 
         return totalFees;
     }
-
-
     public static int getTransactionCountPast24Hours() {
         int transactionCount = 0;
         String tableName = getTransactionsTableName("0");
@@ -606,9 +788,6 @@ public class Queries {
 
         return transactionCount;
     }
-
-
-
     public static double getTransactionCountPercentageChangeComparedToPreviousDay() {
         double percentageChange = 0.0;
         String tableName = getTransactionsTableName("0");
@@ -639,8 +818,6 @@ public class Queries {
 
         return percentageChange;
     }
-
-
     public static int getTotalTransactionCount() {
         int totalCount = 0;
         String tableName = getTransactionsTableName("0");
@@ -659,7 +836,6 @@ public class Queries {
 
         return totalCount;
     }
-
     public static int getTotalTxnCount(String address) {
         int totalCount = 0;
 
@@ -741,7 +917,7 @@ public class Queries {
 //        }
 
 
-    //============================helpers=============================================
+    //============================HELPERS=============================================
     private static Txn populateTxnObject(ResultSet rs) throws SQLException {
         return new Txn(
                 rs.getString(HASH),
@@ -760,8 +936,6 @@ public class Queries {
                 rs.getString(ERROR_MESSAGE)
         );
     }
-
-
     private static String getTransactionsTableName(String hash) {
         int shardIndex = Math.abs(hash.hashCode()) % NUMBER_OF_SHARDS;
         return "\"Transactions_Shard_" + shardIndex + "\"";

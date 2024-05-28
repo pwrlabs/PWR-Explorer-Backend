@@ -28,63 +28,69 @@ public class Synchronizer {
             while (true) {
                 try {
                     Thread.sleep(1000);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    logger.error("Thread sleep interrupted", e);
                 }
 
                 try {
                     long latestBlockNumber = pwrj.getLatestBlockNumber();
                     while (blockToCheck <= latestBlockNumber) {
                         logger.info("Checking block: {}", blockToCheck);
-                        Block block = pwrj.getBlockByNumber(blockToCheck);
 
-
-                        insertBlock(block.getNumber(), block.getHash(), Hex.decode(block.getSubmitter().substring(2)),
-                                block.getTimestamp(), block.getTransactionCount(), block.getReward(), block.getSize());
-
-                        for (Transaction txn : block.getTransactions()) {
-                            long value = txn.getValue();
-                            byte[] data = null;
-
-                            if (txn instanceof VmDataTransaction) {
-                                VmDataTransaction vmDataTxn = (VmDataTransaction) txn;
-                                data = Hex.decode(vmDataTxn.getData());
-
-                            } else if (txn instanceof DelegateTransaction) {
-                                DelegateTransaction delegateTxn = (DelegateTransaction) txn;
-                                updateInitialDelegations(delegateTxn.getReceiver(),delegateTxn.getSender(),delegateTxn.getValue());
-//                                User user = Users.getUserCreateIfMissing(delegateTxn.getSender());
-//                                user.addDelegation(delegateTxn.getTo(), delegateTxn.getAmount());
-                            } else if (txn instanceof WithdrawTransaction) {
-                                WithdrawTransaction withdrawTxn = (WithdrawTransaction) txn;
-                                updateInitialDelegations(withdrawTxn.getReceiver(),withdrawTxn.getSender(),withdrawTxn.getValue());
-//                                User user = Users.getUserCreateIfMissing(withdrawTxn.getSender());
-//                                user.checkDelegation(pwrj, withdrawTxn.getReceiver(),withdrawTxn.getValidator());
-                            } else if (txn instanceof JoinTransaction) {
-                                JoinTransaction joinTxn = (JoinTransaction) txn;
-                                Validators.add(joinTxn.getSender(), block.getTimestamp());
-                            }
+                        try {
+                            Block block = pwrj.getBlockByNumber(blockToCheck);
+                            logger.info("Block hash: {}", block.getHash());
 
                             try {
-                                new Txn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(), block.getNumber(), txn.getSender().substring(2),
-                                        txn.getReceiver(),txn.getTimestamp(), value, txn.getFee(), data, txn.getType(), txn.getNonce() + "", true,"No message for now");
-                                insertTxn(txn.getHash(), block.getNumber(), txn.getSize(), txn.getPositionInTheBlock(),
-                                       txn.getSender().substring(2), txn.getReceiver(), block.getTimestamp(),
-                                        value, txn.getFee(), data, txn.getType(), 0, 0,true,null);
-//                                User user = Users.getUserCreateIfMissing(txn.getSender());
-//                                user.addTxn(new Txn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(),
-//                                        block.getNumber(), Hex.decode(txn.getSender().substring(2)), txn.getTo(),
-//                                        block.getTimestamp(), value, txn.getFee(), data, txn.getType(), txn.getNonce() + ""));
+                                insertBlock(block.getNumber(), block.getHash(), Hex.decode(block.getSubmitter().substring(2)),
+                                        block.getTimestamp(), block.getTransactionCount(), block.getReward(), block.getSize(),block.processedWithoutCriticalErrors());
                             } catch (Exception e) {
-                                e.printStackTrace();
+                                logger.error("Error inserting block: {}", blockToCheck, e);
                             }
+
+                            for (Transaction txn : block.getTransactions()) {
+                                long value = txn.getValue();
+                                byte[] data = null;
+
+                                if (txn instanceof VmDataTransaction) {
+                                    VmDataTransaction vmDataTxn = (VmDataTransaction) txn;
+                                    data = Hex.decode(vmDataTxn.getData());
+
+                                } else if (txn instanceof DelegateTransaction) {
+                                    DelegateTransaction delegateTxn = (DelegateTransaction) txn;
+                                    updateInitialDelegations(delegateTxn.getReceiver(), delegateTxn.getSender(), delegateTxn.getValue());
+                                } else if (txn instanceof WithdrawTransaction) {
+                                    WithdrawTransaction withdrawTxn = (WithdrawTransaction) txn;
+                                    updateInitialDelegations(withdrawTxn.getReceiver(), withdrawTxn.getSender(), withdrawTxn.getValue());
+                                } else if (txn instanceof JoinTransaction) {
+                                    JoinTransaction joinTxn = (JoinTransaction) txn;
+                                    Validators.add(joinTxn.getSender(), block.getTimestamp());
+                                }
+
+                                try {
+                                    new Txn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(), block.getNumber(), txn.getSender().substring(2),
+                                            txn.getReceiver(), txn.getTimestamp(), value, txn.getFee(), data, txn.getType(), txn.getNonce() + "", true, "No message for now");
+                                    insertTxn(txn.getHash(), block.getNumber(), txn.getSize(), txn.getPositionInTheBlock(),
+                                            txn.getSender().substring(2), txn.getReceiver(), block.getTimestamp(),
+                                            value, txn.getFee(), data, txn.getType(), 0, 0, !txn.hasError(), txn.getErrorMessage(), String.valueOf(txn.toJSON()),txn.getNonce(),0,false,null);
+                                } catch (Exception e) {
+                                    logger.error("Error inserting transaction: {}", txn.getHash(), e);
+                                }
+                            }
+
+                        } catch (Exception e) {
+                            logger.error("Error processing block: {}", blockToCheck, e);
                         }
 
                         ++blockToCheck;
-                        Thread.sleep(10);
+                        try {
+                            Thread.sleep(10);
+                        } catch (InterruptedException e) {
+                            logger.error("Thread sleep interrupted", e);
+                        }
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.error("Error getting latest block number", e);
                 }
             }
         }).start();

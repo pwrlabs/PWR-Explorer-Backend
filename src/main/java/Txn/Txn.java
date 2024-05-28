@@ -41,12 +41,13 @@ public class Txn {
         this.toAddress = toAddress;
         this.timestamp = timestamp;
         this.value = value;
-        this.txnFee = txnFee;
+        this.txnFee =txnFee;
         this.txnData = txnData;
         this.txnType = txnType;
         this.nonceOrValidationHash = nonceOrValidationHash;
         this.success = success;
         this.errorMessage = errorMessage;
+        Txns.add(this);
     }
 
 
@@ -75,7 +76,10 @@ public class Txn {
         return blockNumber;
     }
 
-    public String getFromAddress() {
+    public String
+
+
+    getFromAddress() {
         return fromAddress;
     }
 

@@ -18,9 +18,11 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 import static Core.Sql.Queries.*;
 import static spark.Spark.get;
@@ -261,7 +263,6 @@ public class GET {
                 int txnsCount = 0;
                 JSONArray txns = new JSONArray();
                 Transaction[] txnsArray = block.getTransactions();
-                //Txn[] txnsArray = block.getTxns();
 
                 if(txnsArray == null) totalTxnCount = 0;
                 else totalTxnCount = txnsArray.length;
@@ -412,7 +413,6 @@ public class GET {
                 JSONArray transactions = new JSONArray();
 
                 for (Txn txn : txnsList) {
-                    System.out.println(">>>txn"+txn.getHash());
                     JSONObject object = new JSONObject();
                     object.put("txnHash", txn.getHash());
                     object.put("txnType", txn.getTxnType());
@@ -452,7 +452,14 @@ public class GET {
 //                response.put("metadata", metadata);
 //                response.put("transactions", transactions);
 
-                return getSuccess("metadata", metadata,"transactions",transactions);
+                return getSuccess("metadata", metadata,
+                        "transactionCountPast24Hours", Txns.getTxnCountPast24Hours(),
+                        "transactionCountPercentageChangeComparedToPreviousDay", Txns.getTxnCountPercentageChangeComparedToPreviousDay(),
+                        "totalTransactionFeesPast24Hours", Txns.getTotalTxnFeesPast24Hours(),
+                        "totalTransactionFeesPercentageChangeComparedToPreviousDay", Txns.getTotalTxnFeesPercentageChangeComparedToPreviousDay(),
+                        "averageTransactionFeePast24Hours", Txns.getAverageTxnFeePast24Hours(),
+                        "averageTransactionFeePercentageChangeComparedToPreviousDay", Txns.getAverageTxnFeePercentageChangeComparedToPreviousDay(),
+                        "transactions",transactions);
             } catch (Exception e) {
                 e.printStackTrace();
                 return getError(response, e.getLocalizedMessage());
@@ -470,7 +477,6 @@ public class GET {
                 String data;
                 if(txn.getTxnData() == null) data = "0x";
                 else data = "0x" + bytesToHex(txn.getTxnData());
-                System.out.println(">>>hellooo");
 
                 return getSuccess(
                         "txnHash", txnHash,
@@ -526,6 +532,47 @@ public class GET {
             }
         });
 
+//        get("/transactionHistory/", (request, response) -> {
+//            try {
+//                response.type("application/json");
+//                response.header("Content-Encoding", "gzip");
+//
+//                String address = request.queryParams("address").toLowerCase();
+//                int count = Integer.parseInt(request.queryParams("count"));
+//                int page = Integer.parseInt(request.queryParams("page"));
+//
+//                address = address.substring(2);
+//
+//                long startFetchTime = System.currentTimeMillis();
+//                List<Txn> txns = getUserTxns(address, page, count);
+//                long endFetchTime = System.currentTimeMillis();
+//                logger.info(">>>Time taken for getUserTxns: " + (endFetchTime - startFetchTime) + " ms");
+//
+//                response.raw().setHeader("Transfer-Encoding", "chunked");
+//
+//                try (PrintWriter writer = new PrintWriter(new GZIPOutputStream(response.raw().getOutputStream()))) {
+//                    writer.write("[");
+//                    boolean first = true;
+//                    for (Txn txn : txns) {
+//                        if (!first) {
+//                            writer.write(",");
+//                        } else {
+//                            first = false;
+//                        }
+//                        writer.write(JsonUtil.toJson(txn));
+//                        writer.flush(); // Ensure data is sent to the client as it's written
+//                    }
+//                    writer.write("]");
+//                }
+//                long end = System.currentTimeMillis();
+//                logger.info(">>>Time taken to stream data: " + (end - endFetchTime) + " ms");
+//                return null;
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                return getError(response, e.getLocalizedMessage());
+//            }
+//        });
+
         get("/transactionHistory/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
@@ -534,11 +581,16 @@ public class GET {
                 int count = Integer.parseInt(request.queryParams("count"));
                 int page = Integer.parseInt(request.queryParams("page"));
 
-                logger.info(">>we want to fetch");
                 address = address.substring(2);
+                long startCountTimeOne = System.currentTimeMillis();
                 List<Txn> txns = getUserTxns(address, page, count);
-                logger.info(">>we fetched");
+                long endCountTimeOne = System.currentTimeMillis();
+                logger.info(">>>Time taken for userTxns: " + (endCountTimeOne - startCountTimeOne) + " ms");
+
+                long startCountTimeTwo = System.currentTimeMillis();
                 int totalTxnCount = getTotalTxnCount(address);
+                long endCountTimeTwo = System.currentTimeMillis();
+                logger.info(">>>Time taken for getTotalTxnCount: " + (endCountTimeTwo - startCountTimeTwo) + " ms");
                 int totalPages = (int) Math.ceil((double) totalTxnCount / count);
 
                 if (page > totalPages) {
@@ -546,6 +598,7 @@ public class GET {
                 }
 
                 JSONArray txnsArray = new JSONArray();
+                long start = System.currentTimeMillis();
 
                 for (Txn txn : txns) {
                     JSONObject object = new JSONObject();
@@ -576,7 +629,8 @@ public class GET {
                 metadata.put("endIndex", Math.min(page * count, totalTxnCount));
                 metadata.put("nextPage", page < totalPages ? page + 1 : -1);
                 metadata.put("previousPage", page > 1 ? page - 1 : -1);
-
+                long end = System.currentTimeMillis();
+                logger.info(">>>Time taken for loops: " + (end - start) + " ms");
                 return getSuccess("transactions", txnsArray, "metadata", metadata);
             } catch (Exception e) {
                 e.printStackTrace();

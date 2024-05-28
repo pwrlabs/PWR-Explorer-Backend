@@ -7,39 +7,33 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DatabaseConnection {
-//    private static HikariDataSource dataSource;
+    private static HikariDataSource dataSource;
+
+    static {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:postgresql://localhost:5432/pwrexplorer?characterEncoding=UTF-8");
+        config.setUsername("postgres");
+        config.setPassword("bXgzfYVU49ki");
+        config.setMaximumPoolSize(10);
+
+        dataSource = new HikariDataSource(config);
+    }
+
+    public static HikariDataSource getPool() {
+        return dataSource;
+    }
+
+    public static Connection getConnection() throws SQLException {
+        return dataSource.getConnection();
+    }
+
+
+//        private static final String url = "jdbc:postgresql://localhost:5432/pwrexplorer?characterEncoding=UTF-8";
+//        private static final String user = "postgres";
+//        private static final String password = "bXgzfYVU49ki";
 //
-//    static {
-//        HikariConfig config = new HikariConfig();
-//        config.setJdbcUrl("jdbc:postgresql://localhost:5432/pwrexplorer?characterEncoding=UTF-8");
-//        config.setUsername("postgres");
-//        config.setPassword("bXgzfYVU49ki");
-//        config.setMaximumPoolSize(10);
-//        // Set other configuration properties as needed
-//
-//        dataSource = new HikariDataSource(config);
-//    }
-//
-//    public static HikariDataSource getPool() {
-//        return dataSource;
-//    }
-//
-//    public static Connection getConnection() throws SQLException {
-//        return dataSource.getConnection();
-//    }
-
-
-
-//    private static final String url = "jdbc:postgresql://localhost:5432/pwrmail";
-//    private static final String user = "pwradmin";
-//    private static final String password = "5SUX5lo9kNKDERi";
-
-        private static final String url = "jdbc:postgresql://localhost:5432/pwrexplorer?characterEncoding=UTF-8";
-        private static final String user = "postgres";
-        private static final String password = "bXgzfYVU49ki";
-
-        public static Connection getConnection() throws SQLException {
-            return DriverManager.getConnection(url, user, password);
-        }
+//        public static Connection getConnection() throws SQLException {
+//            return DriverManager.getConnection(url, user, password);
+//        }
 
 }

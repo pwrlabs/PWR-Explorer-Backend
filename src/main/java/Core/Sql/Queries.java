@@ -24,7 +24,7 @@ import static Core.DatabaseConnection.getConnection;
 
 public class Queries {
     private static final Logger logger = LogManager.getLogger(Queries.class);
-    private static final int NUMBER_OF_SHARDS = 1;
+    private static final int NUMBER_OF_SHARDS = 1 ;
 
     //>>>>>>>INSERT<<<<<<<<
     public static void insertUser(String address, byte[] firstSentTxn, byte[] lastSentTxn, byte[][] transactionHashes) {
@@ -52,7 +52,7 @@ public class Queries {
     }
     public static void insertBlock(long blockNumber, String blockHash, byte[] feeRecipient, long timestamp, int transactionsCount, long blockReward, int size, boolean success) {
         String blockNumberStr = "" + blockNumber;
-        new Block(blockNumberStr, timestamp, feeRecipient, blockReward, size, transactionsCount);
+        new Block(blockNumberStr, timestamp, feeRecipient, blockReward, size, 0);
         String sql = "INSERT INTO \"Block\" ("+
                 BLOCK_NUMBER + ", " +
                 BLOCK_HASH + ", " +

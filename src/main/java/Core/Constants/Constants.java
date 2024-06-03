@@ -41,5 +41,9 @@ public class Constants {
     public static final String LIFETIME_REWARDS = "lifetime_rewards";
     public static final String SUBMITTED_BLOCKS = "submitted_blocks";
     public static final String BLOCKS_SUBMITTED = "blocks_submitted";
+    public static final String VM_ID = "vm_id";
+    public static final String TRANSACTION_HASH = "transaction_hash";
+    public static final String FIRST_SENT_TXN_HASH= "first_sent_txn_hash";
+    public static final String LAST_SENT_TXN_HASH= "last_sent_txn_hash";
 
 }

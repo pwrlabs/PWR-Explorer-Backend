@@ -245,6 +245,28 @@ public class GET {
                 return getError(response, e.getLocalizedMessage());
             }
         });
+
+        get("/block/", (request, response) -> {
+            try {
+                response.header("Content-Type", "application/json");
+
+                long blockNumber = Long.parseLong(request.queryParams("blockNumber"));
+
+                String blockHash = getBlockHash(blockNumber);
+                if (blockHash == null) {
+                    return getError(response, "Invalid Block Number");
+                }
+
+                return getSuccess(
+                        "blockNumber", blockNumber,
+                        "blockHash", blockHash
+                );
+            } catch (Exception e) {
+                e.printStackTrace();
+                return getError(response, e.getLocalizedMessage());
+            }
+        });
+
         get("/blockTransactions/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");

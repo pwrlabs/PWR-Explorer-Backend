@@ -141,27 +141,13 @@ public class Queries {
             logger.error(e.toString());
         }
     }
-    public static void insertVM(long id, byte[] firstSentTxn, byte[] lastSentTxn, byte[][] transactionHashes, int transactionsCount, long totalRevenue) {
-        String sql = "INSERT INTO \"VM\" (" +
-                ID + ", " +
-                FIRST_SENT_TXN + ", " +
-                LAST_SENT_TXN + ", " +
-                TRANSACTION_HASHES + ", " +
-                TRANSACTIONS_COUNT + ", " +
-                TOTAL_REVENUE +
-                ") VALUES (?, ?, ?, ?, ?, ?);";
-
-        try (Connection conn = getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+    public static void insertVM(long id, String firstSentTxn, String lastSentTxn) {
+        String sql = "INSERT INTO \"VM\" (" + ID + ", " + FIRST_SENT_TXN_HASH + ", " + LAST_SENT_TXN_HASH + ") VALUES (?, ?, ?);";
+        try (Connection conn = getConnection(); PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setLong(1, id);
-            preparedStatement.setBytes(2, firstSentTxn);
-            preparedStatement.setBytes(3, lastSentTxn);
-            preparedStatement.setArray(4, conn.createArrayOf("BYTEA", transactionHashes));
-            preparedStatement.setInt(5, transactionsCount);
-            preparedStatement.setLong(6, totalRevenue);
-
+            preparedStatement.setString(2, firstSentTxn);
+            preparedStatement.setString(3, lastSentTxn);
             logger.info("QUERY: {}", preparedStatement.toString());
-
             preparedStatement.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
@@ -264,23 +250,15 @@ public class Queries {
             logger.error(e.toString());
         }
     }
-    public static void updateVM(long id, byte[] firstSentTxn, byte[] lastSentTxn, byte[][] transactionHashes, int transactionsCount, long totalRevenue) {
+    public static void updateVMLastTxn(long id, String lastSentTxn) {
         String sql = "UPDATE \"VM\" SET " +
-                FIRST_SENT_TXN + " = ?, " +
-                LAST_SENT_TXN + " = ?, " +
-                TRANSACTION_HASHES + " = ?, " +
-                TRANSACTIONS_COUNT + " = ?, " +
-                TOTAL_REVENUE + " = ? " +
+                LAST_SENT_TXN_HASH + " = ? " +
                 "WHERE " + ID + " = ?;";
 
         try (Connection conn = getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setBytes(1, firstSentTxn);
-            preparedStatement.setBytes(2, lastSentTxn);
-            preparedStatement.setArray(3, conn.createArrayOf("BYTEA", transactionHashes));
-            preparedStatement.setInt(4, transactionsCount);
-            preparedStatement.setLong(5, totalRevenue);
-            preparedStatement.setLong(6, id);
+            preparedStatement.setString(1, lastSentTxn);
+            preparedStatement.setLong(2, id);
 
             logger.info("QUERY: {}", preparedStatement.toString());
 
@@ -484,6 +462,28 @@ public class Queries {
         }
         return txn;
     }
+    public static String getBlockHash(long blockNumber) {
+        String blockHash = null;
+        String sql = "SELECT \"block_hash\" FROM \"Block\" WHERE \"block_number\" = ?;";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setLong(1, blockNumber);
+
+            logger.info("QUERY: {}", preparedStatement.toString());
+
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                if (rs.next()) {
+                    blockHash = rs.getString("block_hash");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+        }
+
+        return blockHash;
+    }
     public static List<Txn> getTransactions(int limit, int offset) {
         List<Txn> txns = new ArrayList<>();
         String tableName = getTransactionsTableName("0");
@@ -610,6 +610,75 @@ public class Queries {
             logger.error(e.toString());
         }
         return txns;
+    }
+    public static List<Txn> getTransactionsByAddressAndBlockRange(String address, long startBlockNumber, long endBlockNumber) {
+        List<Txn> txns = new ArrayList<>();
+
+        String tableName = getTransactionsTableName("0");
+
+        String sql = "SELECT * FROM " + tableName +
+                " WHERE (" + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ?)" +
+                " AND " + BLOCK_NUMBER + " BETWEEN ? AND ?" +
+                " ORDER BY " + BLOCK_NUMBER + " ASC;";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, address);
+            preparedStatement.setString(2, address);
+            preparedStatement.setLong(3, startBlockNumber);
+            preparedStatement.setLong(4, endBlockNumber);
+
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                while (rs.next()) {
+                    Txn txn = populateTxnObject(rs);
+                    txns.add(txn);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+        }
+
+        return txns;
+    }
+    public static List<Txn> getTxnsByAddressAndBlockRangeSortedByPrefix(String address, long startBlock, long endBlock, byte[] bytePrefix) {
+        List<Txn> txns = new ArrayList<>();
+
+        String tableName = getTransactionsTableName("0");
+
+        String sql = "SELECT * FROM " + tableName +
+                " WHERE (" + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ?)" +
+                " AND " + BLOCK_NUMBER + " BETWEEN ? AND ?" +
+                " AND " + HASH + " LIKE ?" +
+                " ORDER BY " + HASH + " ASC;";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, address);
+            preparedStatement.setString(2, address);
+            preparedStatement.setLong(3, startBlock);
+            preparedStatement.setLong(4, endBlock);
+            preparedStatement.setString(5, bytePrefixToLikePattern(bytePrefix));
+
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                while (rs.next()) {
+                    Txn txn = populateTxnObject(rs);
+                    txns.add(txn);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.toString());
+        }
+
+        return txns;
+    }
+    private static String bytePrefixToLikePattern(byte[] bytePrefix) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytePrefix) {
+            sb.append(String.format("%02X", b));
+        }
+        return sb.toString() + "%";
     }
     public static List<Txn> getUserTxns(String address, int page, int pageSize) {
         List<Txn> txns = new ArrayList<>();

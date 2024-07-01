@@ -6,6 +6,7 @@ import API.POST;
 import API.RateLimiter;
 import Core.DatabaseConnection;
 import Core.DatabaseInitialization;
+import DailyActivity.Stats;
 import PWRChain.Synchronizer;
 import User.User;
 import VM.VM;

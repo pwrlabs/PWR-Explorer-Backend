@@ -1,5 +1,6 @@
 package PWRChain;
 
+import DailyActivity.Stats;
 import Main.Hex;
 import Main.Settings;
 import Txn.Txn;
@@ -12,7 +13,8 @@ import com.github.pwrlabs.pwrj.record.block.Block;
 import com.github.pwrlabs.pwrj.record.transaction.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import java.util.*;
+import java.math.BigDecimal;
 import java.sql.SQLOutput;
 
 import static Core.Sql.Queries.*;
@@ -68,11 +70,16 @@ public class Synchronizer {
                                 }
 
                                 try {
-                                    new Txn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(), block.getNumber(), txn.getSender().substring(2),
-                                            txn.getReceiver(), txn.getTimestamp(), value, txn.getFee(), data, txn.getType(), txn.getNonce() + "", true, "No message for now");
+                                    long blockNumber = (long) block.getNumber();
+                                    List<Validators> validatorList = new ArrayList<>();
+
+                                    new Txn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(),(int) block.getNumber(), txn.getSender().substring(2),
+                                            txn.getReceiver(), txn.getTimestamp(), value, txn.getFee(), txn.getType(), !txn.hasError(),txn.getErrorMessage(),txn.getNonce(), 0, false,"No message for now");
+                                    Stats.getInstance().processBlock(txn.getSender(), block.getTransactionCount(), block.getReward(), block.getTimestamp(), block.getSize());
+
                                     insertTxn(txn.getHash(), block.getNumber(), txn.getSize(), txn.getPositionInTheBlock(),
                                             txn.getSender().substring(2), txn.getReceiver(), block.getTimestamp(),
-                                            value, txn.getFee(), data, txn.getType(), 0, 0, !txn.hasError(), txn.getErrorMessage(), String.valueOf(txn.toJSON()),txn.getNonce(),0,false,null);
+                                            value, txn.getFee(), txn.getType(), !txn.hasError(), txn.getErrorMessage(),txn.getNonce(),0,false,txn.getSender());
                                 } catch (Exception e) {
                                     logger.error("Error inserting transaction: {}", txn.getHash(), e);
                                 }

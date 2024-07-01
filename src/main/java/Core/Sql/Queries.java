@@ -53,6 +53,52 @@ public class Queries {
             logger.error(e.toString());
         }
     }
+    public static void insertTxn(String hash, long blockNumber, int size, int positionInBlock, String fromAddress, String toAddress, long timestamp, long value, long txnFee, String txnType, Boolean success, String errorMessage, long nonce, long actionFee, boolean paid, String feePayer) {
+        String tableName = getTransactionsTableName("0");
+        logger.info("table name {}", tableName);
+        String sql = "INSERT INTO " + tableName + " (" +
+                "\"hash\", " +
+                "\"block_number\", " +
+                "\"size\", " +
+                "\"position_in_block\", " +
+                "\"from_address\", " +
+                "\"to_address\", " +
+                "\"timestamp\", " +
+                "\"value\", " +
+                "\"txn_fee\", " +
+                "\"txn_type\", " +
+                "\"success\", " +
+                "\"error_message\", " +
+                "\"nonce\", " +
+                "\"action_fee\", " +
+                "\"paid\", " +
+                "\"feePayer\"" +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, hash);
+            preparedStatement.setLong(2, blockNumber);
+            preparedStatement.setInt(3, size);
+            preparedStatement.setInt(4, positionInBlock);
+            preparedStatement.setString(5, fromAddress);
+            preparedStatement.setString(6, toAddress);
+            preparedStatement.setLong(7, timestamp);
+            preparedStatement.setLong(8, value);
+            preparedStatement.setLong(9, txnFee);
+            preparedStatement.setString(10, txnType);
+            preparedStatement.setBoolean(11, success);
+            preparedStatement.setString(12, errorMessage);
+            preparedStatement.setLong(13, nonce);
+            preparedStatement.setLong(14, actionFee);
+            preparedStatement.setBoolean(15, paid);
+            preparedStatement.setString(16, feePayer);
+            logger.info("QUERY: {}", preparedStatement.toString());
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("Error inserting transaction: {}", e.getMessage());
+        }
+    }
     public static void insertBlock(long blockNumber, String blockHash, byte[] feeRecipient, long timestamp, int transactionsCount, long blockReward, int size, boolean success) {
         String blockNumberStr = "" + blockNumber;
         new Block(blockNumberStr, timestamp, feeRecipient, blockReward, size, 0);
@@ -77,64 +123,6 @@ public class Queries {
             preparedStatement.setLong(6, blockReward);
             preparedStatement.setInt(7, size);
             preparedStatement.setBoolean(8, success);  // Set the success parameter
-
-            logger.info("QUERY: {}", preparedStatement.toString());
-
-            preparedStatement.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
-        }
-    }
-    public static void insertTxn(String hash, long blockNumber, int size, int positionInBlock, String fromAddress, String toAddress, long timestamp, long value, long txnFee, byte[] txnData, String txnType, long amountUsdValue, long feeUsdValue, Boolean success, String errorMessage,  String extraData, long nonce, long actionFee, boolean paid, String feePayer) {
-        String tableName = getTransactionsTableName("0");
-        logger.info("table name {}", tableName);
-
-        String sql = "INSERT INTO " + tableName + " (" +
-                HASH +", " +
-                BLOCK_NUMBER +", " +
-                SIZE +", " +
-                POSITION_IN_BLOCK +", " +
-                FROM_ADDRESS +", " +
-                TO_ADDRESS +", " +
-                TIMESTAMP +", " +
-                VALUE +", " +
-                TXN_FEE +", " +
-                TXN_DATA +", " +
-                TXN_TYPE +", " +
-                AMOUNT_USD_VALUE +", " +
-                FEE_USD_VALUE +", " +
-                SUCCESS +", " +
-                ERROR_MESSAGE +", " +
-                EXTRA_DATA +", " +
-                NONCE +", " +
-                ACTION_FEE +", " +
-                PAID +", " +
-                FEEPAYER +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON), ?, ?, ?, ?);";
-
-        try(Connection conn = getConnection();
-            PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setString(1, hash);
-            preparedStatement.setLong(2, blockNumber);
-            preparedStatement.setInt(3, size);
-            preparedStatement.setInt(4, positionInBlock);
-            preparedStatement.setString(5, fromAddress);
-            preparedStatement.setString(6, toAddress);
-            preparedStatement.setLong(7, timestamp);
-            preparedStatement.setLong(8, value);
-            preparedStatement.setLong(9, txnFee);
-            preparedStatement.setBytes(10, txnData);
-            preparedStatement.setString(11, txnType);
-            preparedStatement.setLong(12, amountUsdValue);
-            preparedStatement.setLong(13, feeUsdValue);
-            preparedStatement.setObject(14, success);
-            preparedStatement.setString(15, errorMessage);
-            preparedStatement.setObject(14, extraData);  // Set JSON data
-            preparedStatement.setLong(15, nonce);
-            preparedStatement.setLong(16, actionFee);
-            preparedStatement.setBoolean(17, paid);
-            preparedStatement.setString(18, feePayer);
 
             logger.info("QUERY: {}", preparedStatement.toString());
 
@@ -1645,19 +1633,21 @@ public class Queries {
     private static Txn populateTxnObject(ResultSet rs) throws SQLException {
         return new Txn(
                 rs.getString(HASH),
+                rs.getLong(BLOCK_NUMBER),
                 rs.getInt(SIZE),
                 rs.getInt(POSITION_IN_BLOCK),
-                rs.getLong(BLOCK_NUMBER),
                 rs.getString(FROM_ADDRESS),
                 rs.getString(TO_ADDRESS),
                 rs.getLong(TIMESTAMP),
                 rs.getLong(VALUE),
                 rs.getLong(TXN_FEE),
-                rs.getBytes(TXN_DATA),
                 rs.getString(TXN_TYPE),
-                "0",
                 rs.getBoolean(SUCCESS),
-                rs.getString(ERROR_MESSAGE)
+                rs.getString(ERROR_MESSAGE),
+                rs.getLong(NONCE),
+                rs.getLong(ACTION_FEE),
+                rs.getBoolean(PAID),
+                rs.getString(FEEPAYER)
         );
     }
 

@@ -3,6 +3,7 @@ package API;
 
 import Block.Block;
 import Block.Blocks;
+import DailyActivity.Stats;
 import Main.Settings;
 import Txn.Txn;
 import Txn.Txns;
@@ -497,8 +498,7 @@ public class GET {
                 if (txn == null) return getError(response, "Invalid Txn Hash");
 
                 String data;
-                if(txn.getTxnData() == null) data = "0x";
-                else data = "0x" + bytesToHex(txn.getTxnData());
+
 
                 return getSuccess(
                         "txnHash", txnHash,
@@ -512,8 +512,7 @@ public class GET {
                         "valueInUsd", txn.getValue(),
                         "txnFee", txn.getTxnFee(),
                         "txnFeeInUsd", txn.getTxnFee(),
-                        "data", data,
-                        "success", txn.getSuccess(),
+                        "success", txn.isSuccess(),
                         "error_message", txn.getErrorMessage()
                 );
             } catch (Exception e) {
@@ -635,8 +634,8 @@ public class GET {
                     object.put("value", txn.getValue());
                     object.put("valueInUsd", txn.getValue());
                     object.put("txnFeeInUsd", txn.getTxnFee());
-                    object.put("nonceOrValidationHash", txn.getNonceOrValidationHash());
-                    object.put("success",txn.getSuccess());
+                    object.put("nonceOrValidationHash", txn.getNonce());
+                    object.put("success",txn.isSuccess());
                     object.put("error_message", txn.getErrorMessage());
 
                     txnsArray.put(object);
@@ -916,6 +915,32 @@ public class GET {
             } catch (Exception e) {
                 e.printStackTrace();
                 return getError(response, e.getLocalizedMessage());
+            }
+        });
+
+        get("/stats", (request, response) -> {
+            try {
+                response.header("Content-Type", "application/json");
+                Stats stats = Stats.getInstance();
+
+                return new JSONObject()
+                        .put("success", true)
+                        .put("totalTransactionCount", stats.getTotalTransactionCount())
+                        .put("totalBlockCount", stats.getTotalBlockCount())
+                        .put("tps", stats.getTPS())
+                        .put("totalFees24h", stats.getTotalFees24h())
+                        .put("avgFeePerTransaction24h", stats.getAvgFeePerTransaction24h())
+                        .put("transactions24h", stats.getTransactions24h())
+                        .put("avgBlockSize24h", stats.getAvgBlockSize24h())
+                        .put("totalFees", stats.getTotalFees())
+                        .toString();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new JSONObject()
+                        .put("success", false)
+                        .put("error", e.getLocalizedMessage())
+                        .toString();
             }
         });
 

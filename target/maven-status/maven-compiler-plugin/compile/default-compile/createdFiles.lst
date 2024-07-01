@@ -1,8 +1,11 @@
 Core/DatabaseInitialization.class
 Block/Initializer$1.class
+Core/DataModel/TxnModel.class
 Main/Settings.class
 Main/Hex.class
 Main/Main.class
+Core/DataModel/BlockModel.class
+DailyActivity/Stats.class
 Block/Initializer.class
 API/RateLimiter.class
 Txn/Txn.class
@@ -16,7 +19,9 @@ PWRChain/Synchronizer.class
 Txn/Initializer.class
 Core/Sql/Queries.class
 Validator/Validators.class
+Core/DataModel/UserModel.class
 VM/VMs.class
+DailyActivity/Stats$BlockInfo.class
 User/Users.class
 Block/Blocks.class
 API/POST.class

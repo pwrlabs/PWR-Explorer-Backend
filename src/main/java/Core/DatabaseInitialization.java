@@ -216,11 +216,9 @@ public class DatabaseInitialization {
                 "    \"timestamp\" BIGINT,\n" +
                 "    \"value\" BIGINT,\n" +
                 "    \"txn_fee\" BIGINT,\n" +
-                "    \"txn_data\" BYTEA,\n" +
                 "    \"txn_type\" VARCHAR(256),\n" +
                 "    \"success\" BOOLEAN,\n" +
                 "    \"error_message\" VARCHAR(256),\n" +
-                "    \"extra_data\" JSONB,\n" +
                 "    \"nonce\" BIGINT NOT NULL,\n" +
                 "    \"action_fee\" BIGINT,\n" +
                 "    \"paid\" BOOLEAN,\n" +

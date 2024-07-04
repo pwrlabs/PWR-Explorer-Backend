@@ -164,53 +164,38 @@ public class GET {
         get("/latestBlocks/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
-
                 int count = Integer.parseInt(request.queryParams("count"));
                 int page = Integer.parseInt(request.queryParams("page"));
 
-                //Metadata variables
-                long previousBlocksCount = (page - 1) * count;
-                int totalBlockCount, totalPages;
-
-                int blocksCount = 0;
-                JSONArray blocksArray = new JSONArray();
+                int offset = (page - 1) * count;
 
                 long latestBlockNumber = Blocks.getLatestBlockNumber();
+                int totalBlockCount = (int) latestBlockNumber;
+                int totalPages = (int) Math.ceil((double) totalBlockCount / count);
 
-                totalPages = (int) (latestBlockNumber / count);
-                if(latestBlockNumber % count != 0) ++totalPages;
-
-                totalBlockCount = (int) latestBlockNumber;
-                List<Block> blockList = getLastXBlocks(count);
+                List<Block> blockList = getLastXBlocks(count, offset);
+                System.out.println(">>>blockList: "+ blockList);
+                JSONArray blocksArray = new JSONArray();
                 for(Block block: blockList){
-
                     JSONObject object = new JSONObject();
-
-                    object.put("blockHeight", block.getBlockSize());
+                    object.put("blockHeight", block.getBlockNumber());
                     object.put("timeStamp", block.getTimeStamp());
                     object.put("txnsCount", block.getTxnCount());
                     object.put("blockReward", block.getBlockReward());
                     object.put("blockSubmitter", "0x" + bytesToHex(block.getBlockSubmitter()));
-
                     blocksArray.put(object);
                 }
 
                 JSONObject metadata = new JSONObject();
-                metadata.put("totalBlocks", Blocks.getLatestBlockNumber());
+                metadata.put("totalBlocks", totalBlockCount);
                 metadata.put("totalPages", totalPages);
                 metadata.put("currentPage", page);
                 metadata.put("itemsPerPage", count);
                 metadata.put("totalItems", totalBlockCount);
-                metadata.put("startIndex", previousBlocksCount + 1);
-
-                if(previousBlocksCount + count <= totalBlockCount) metadata.put("endIndex", previousBlocksCount + count);
-                else metadata.put("endIndex", totalBlockCount);
-
-                if(page < totalPages) metadata.put("nextPage", page + 1);
-                else metadata.put("nextPage", -1);
-
-                if(page > 1) metadata.put("previousPage", page - 1);
-                else metadata.put("previousPage", -1);
+                metadata.put("startIndex", offset + 1);
+                metadata.put("endIndex", Math.min(offset + count, totalBlockCount));
+                metadata.put("nextPage", page < totalPages ? page + 1 : -1);
+                metadata.put("previousPage", page > 1 ? page - 1 : -1);
 
                 return getSuccess(
                         "networkUtilizationPast24Hours", Blocks.getNetworkUtilizationPast24Hours(),
@@ -218,7 +203,6 @@ public class GET {
                         "totalBlockRewardsPast24Hours", Blocks.getTotalBlockRewardsPast24Hours(),
                         "blocks", blocksArray,
                         "metadata", metadata);
-
             } catch (Exception e) {
                 e.printStackTrace();
                 return getError(response, e.getLocalizedMessage());
@@ -553,41 +537,95 @@ public class GET {
             }
         });
 
+
+//
 //        get("/transactionHistory/", (request, response) -> {
 //            try {
-//                response.type("application/json");
-//                response.header("Content-Encoding", "gzip");
+//                response.header("Content-Type", "application/json");
 //
-//                String address = request.queryParams("address").toLowerCase();
-//                int count = Integer.parseInt(request.queryParams("count"));
-//                int page = Integer.parseInt(request.queryParams("page"));
-//
+//                String address = request.queryParams("address");
+//                if (address == null) {
+//                    return getError(response, "Address is required");
+//                }
 //                address = address.substring(2);
 //
-//                long startFetchTime = System.currentTimeMillis();
-//                List<Txn> txns = getUserTxns(address, page, count);
-//                long endFetchTime = System.currentTimeMillis();
-//                logger.info(">>>Time taken for getUserTxns: " + (endFetchTime - startFetchTime) + " ms");
-//
-//                response.raw().setHeader("Transfer-Encoding", "chunked");
-//
-//                try (PrintWriter writer = new PrintWriter(new GZIPOutputStream(response.raw().getOutputStream()))) {
-//                    writer.write("[");
-//                    boolean first = true;
-//                    for (Txn txn : txns) {
-//                        if (!first) {
-//                            writer.write(",");
-//                        } else {
-//                            first = false;
-//                        }
-//                        writer.write(JsonUtil.toJson(txn));
-//                        writer.flush(); // Ensure data is sent to the client as it's written
-//                    }
-//                    writer.write("]");
+//                String countStr = request.queryParams("count");
+//                if (countStr == null) {
+//                    return getError(response, "Count is required");
 //                }
+//                int count;
+//                try {
+//                    count = Integer.parseInt(countStr);
+//                } catch (NumberFormatException e) {
+//                    return getError(response, "Invalid count");
+//                }
+//
+//                String pageStr = request.queryParams("page");
+//                if (pageStr == null) {
+//                    return getError(response, "Page is required");
+//                }
+//                int page;
+//                try {
+//                    page = Integer.parseInt(pageStr);
+//                } catch (NumberFormatException e) {
+//                    return getError(response, "Invalid page");
+//                }
+//
+//                long startCountTimeOne = System.currentTimeMillis();
+//                List<Txn> txns = getUserTxns(address, page, count);
+//                long endCountTimeOne = System.currentTimeMillis();
+//                logger.info(">>>Time taken for userTxns: " + (endCountTimeOne - startCountTimeOne) + " ms");
+//
+//                long startCountTimeTwo = System.currentTimeMillis();
+//                int totalTxnCount = getTotalTxnCount(address);
+//                System.out.println(">>total txn count: "+ totalTxnCount);
+//                long endCountTimeTwo = System.currentTimeMillis();
+//                logger.info(">>>Time taken for getTotalTxnCount: " + (endCountTimeTwo - startCountTimeTwo) + " ms");
+//
+//                int totalPages = (int) Math.ceil((double) totalTxnCount / count);
+//                System.out.println(">>total pages: "+ totalPages);
+//                if (page > totalPages) {
+//                    return getError(response, "Page number is greater than addresses' total pages");
+//                }
+//
+//                JSONArray txnsArray = new JSONArray();
+//                long start = System.currentTimeMillis();
+//
+//                for (Txn txn : txns) {
+//                    JSONObject object = new JSONObject();
+//                    object.put("txnHash", txn.getHash());
+//                    object.put("block", txn.getBlockNumber());
+//                    object.put("size", txn.getSize());
+//                    object.put("positionInBlock", txn.getPositionInBlock());
+//                    object.put("timeStamp", txn.getTimestamp());
+//                    object.put("from", "0x" + txn.getFromAddress());
+//                    object.put("to", txn.getToAddress());
+//                    object.put("txnFee", txn.getTxnFee());
+//                    object.put("value", txn.getValue());
+//                    object.put("txnType", txn.getTxnType());
+//                    object.put("success", txn.isSuccess());
+//                    object.put("error_message", txn.getErrorMessage());
+//                    object.put("nonce", txn.getNonce());
+//                    object.put("actionFee", txn.getActionFee());
+//                    object.put("paid", txn.isPaid());
+//                    object.put("feePayer", txn.getFeePayer());
+//
+//                    txnsArray.put(object);
+//                }
+//
+//                JSONObject metadata = new JSONObject();
+//                metadata.put("totalPages", totalPages);
+//                metadata.put("currentPage", page);
+//                metadata.put("itemsPerPage", count);
+//                metadata.put("totalItems", totalTxnCount);
+//                metadata.put("startIndex", (page - 1) * count + 1);
+//                metadata.put("endIndex", Math.min(page * count, totalTxnCount));
+//                metadata.put("nextPage", page < totalPages ? page + 1 : -1);
+//                metadata.put("previousPage", page > 1 ? page - 1 : -1);
 //                long end = System.currentTimeMillis();
-//                logger.info(">>>Time taken to stream data: " + (end - endFetchTime) + " ms");
-//                return null;
+//                logger.info(">>>Time taken for loops: " + (end - start) + " ms");
+//
+//                return getSuccess("transactions", txnsArray, "metadata", metadata);
 //            } catch (Exception e) {
 //                e.printStackTrace();
 //                return getError(response, e.getLocalizedMessage());
@@ -598,11 +636,34 @@ public class GET {
             try {
                 response.header("Content-Type", "application/json");
 
-                String address = request.queryParams("address").toLowerCase();
-                int count = Integer.parseInt(request.queryParams("count"));
-                int page = Integer.parseInt(request.queryParams("page"));
-
+                String address = request.queryParams("address");
+                if (address == null) {
+                    return getError(response, "Address is required");
+                }
                 address = address.substring(2);
+
+                String countStr = request.queryParams("count");
+                if (countStr == null) {
+                    return getError(response, "Count is required");
+                }
+                int count;
+                try {
+                    count = Integer.parseInt(countStr);
+                } catch (NumberFormatException e) {
+                    return getError(response, "Invalid count");
+                }
+
+                String pageStr = request.queryParams("page");
+                if (pageStr == null) {
+                    return getError(response, "Page is required");
+                }
+                int page;
+                try {
+                    page = Integer.parseInt(pageStr);
+                } catch (NumberFormatException e) {
+                    return getError(response, "Invalid page");
+                }
+
                 long startCountTimeOne = System.currentTimeMillis();
                 List<Txn> txns = getUserTxns(address, page, count);
                 long endCountTimeOne = System.currentTimeMillis();
@@ -610,10 +671,12 @@ public class GET {
 
                 long startCountTimeTwo = System.currentTimeMillis();
                 int totalTxnCount = getTotalTxnCount(address);
+                System.out.println(">>total txn count: "+ totalTxnCount);
                 long endCountTimeTwo = System.currentTimeMillis();
                 logger.info(">>>Time taken for getTotalTxnCount: " + (endCountTimeTwo - startCountTimeTwo) + " ms");
-                int totalPages = (int) Math.ceil((double) totalTxnCount / count);
 
+                int totalPages = (int) Math.ceil((double) totalTxnCount / count);
+                System.out.println(">>total pages: "+ totalPages);
                 if (page > totalPages) {
                     return getError(response, "Page number is greater than addresses' total pages");
                 }
@@ -623,20 +686,22 @@ public class GET {
 
                 for (Txn txn : txns) {
                     JSONObject object = new JSONObject();
-
                     object.put("txnHash", txn.getHash());
                     object.put("block", txn.getBlockNumber());
-                    object.put("txnType", txn.getTxnType());
+                    object.put("size", txn.getSize());
+                    object.put("positionInBlock", txn.getPositionInBlock());
                     object.put("timeStamp", txn.getTimestamp());
-                    object.put("from", "0x" +txn.getFromAddress());
+                    object.put("from", "0x" + txn.getFromAddress());
                     object.put("to", txn.getToAddress());
                     object.put("txnFee", txn.getTxnFee());
                     object.put("value", txn.getValue());
-                    object.put("valueInUsd", txn.getValue());
-                    object.put("txnFeeInUsd", txn.getTxnFee());
-                    object.put("nonceOrValidationHash", txn.getNonce());
-                    object.put("success",txn.isSuccess());
+                    object.put("txnType", txn.getTxnType());
+                    object.put("success", txn.isSuccess());
                     object.put("error_message", txn.getErrorMessage());
+                    object.put("nonce", txn.getNonce());
+                    object.put("actionFee", txn.getActionFee());
+                    object.put("paid", txn.isPaid());
+                    object.put("feePayer", txn.getFeePayer());
 
                     txnsArray.put(object);
                 }
@@ -652,7 +717,28 @@ public class GET {
                 metadata.put("previousPage", page > 1 ? page - 1 : -1);
                 long end = System.currentTimeMillis();
                 logger.info(">>>Time taken for loops: " + (end - start) + " ms");
-                return getSuccess("transactions", txnsArray, "metadata", metadata);
+
+                // Get first and last transactions
+                Pair<Txn, Txn> firstLastTxns = getFirstAndLastTransactionsByAddress("0x" + address);
+                JSONObject firstLastTxnsObject = new JSONObject();
+
+                if (firstLastTxns.first != null) {
+                    JSONObject firstTxnObject = new JSONObject();
+                    firstTxnObject.put("txnHash", firstLastTxns.first.getHash());
+                    firstTxnObject.put("block", firstLastTxns.first.getBlockNumber());
+                    firstTxnObject.put("timeStamp", firstLastTxns.first.getTimestamp());
+                    firstLastTxnsObject.put("firstTransaction", firstTxnObject);
+                }
+
+                if (firstLastTxns.second != null) {
+                    JSONObject lastTxnObject = new JSONObject();
+                    lastTxnObject.put("txnHash", firstLastTxns.second.getHash());
+                    lastTxnObject.put("block", firstLastTxns.second.getBlockNumber());
+                    lastTxnObject.put("timeStamp", firstLastTxns.second.getTimestamp());
+                    firstLastTxnsObject.put("lastTransaction", lastTxnObject);
+                }
+
+                return getSuccess("transactions", txnsArray, "metadata", metadata, "firstLastTransactions", firstLastTxnsObject);
             } catch (Exception e) {
                 e.printStackTrace();
                 return getError(response, e.getLocalizedMessage());

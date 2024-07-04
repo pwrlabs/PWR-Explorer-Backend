@@ -80,8 +80,8 @@ public class Queries {
             preparedStatement.setLong(2, blockNumber);
             preparedStatement.setInt(3, size);
             preparedStatement.setInt(4, positionInBlock);
-            preparedStatement.setString(5, fromAddress);
-            preparedStatement.setString(6, toAddress);
+            preparedStatement.setString(5, fromAddress.toLowerCase());
+            preparedStatement.setString(6, toAddress.toLowerCase());
             preparedStatement.setLong(7, timestamp);
             preparedStatement.setLong(8, value);
             preparedStatement.setLong(9, txnFee);
@@ -577,6 +577,47 @@ public class Queries {
 
         return blocks;
     }
+    public static List<Block> getLastXBlocks(int limit, int offset) {
+        List<Block> blocks = new ArrayList<>();
+        String sql = "SELECT * FROM \"Block\" " +
+                "ORDER BY \"block_number\" DESC " +
+                "LIMIT ? OFFSET ?;";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setInt(1, limit);
+            preparedStatement.setInt(2, offset);
+
+            logger.info("QUERY: {}", preparedStatement);
+
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                while (rs.next()) {
+                    long blockNumber = rs.getLong(BLOCK_NUMBER);
+                    String blockHash = rs.getString(BLOCK_HASH);
+                    byte[] feeRecipient = rs.getBytes(FEE_RECIPIENT);
+                    long timestamp = rs.getLong(TIMESTAMP);
+                    int transactionsCount = rs.getInt(TRANSACTIONS_COUNT);
+                    long blockReward = rs.getLong(BLOCK_REWARD);
+                    int size = rs.getInt(BLOCK_SIZE);
+
+                    Block block = new Block(
+                            String.valueOf(blockNumber),
+                            timestamp,
+                            feeRecipient,
+                            blockReward,
+                            size,
+                            transactionsCount
+                    );
+                    blocks.add(block);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error retrieving blocks: {}", e.getMessage(), e);
+        }
+
+        return blocks;
+    }
+
     public static List<Txn> getBlockTxns(String blockNumberString) {
         long blockNumber = Long.parseLong(blockNumberString);
         List<Txn> txns = new ArrayList<>();
@@ -899,6 +940,7 @@ public class Queries {
     public static int getTotalTxnCount(String address) {
         int totalCount = 0;
 
+
         String tableName = getTransactionsTableName("0");
 
         String sql = "SELECT COUNT(*) AS total_count FROM " + tableName +
@@ -921,658 +963,59 @@ public class Queries {
 
         return totalCount;
     }
-    //============================helpers=============================================
+    public static Pair<Txn, Txn> getFirstAndLastTransactionsByAddress(String address) {
+        Txn firstTxn = null;
+        Txn lastTxn = null;
 
-//        public static List<DailyActivity> getDailyActivity() {
-//            String sql = "SELECT " +
-//                    "    DATE_TRUNC('day', TO_TIMESTAMP(\"timestamp\" / 1000)) AS day, " +
-//                    "    COUNT(*) AS transaction_count, " +
-//                    "    SUM(\"value\") AS total_value, " +
-//                    "    SUM(\"txn_fee\") AS total_fee, " +
-//                    "    SUM(\"amount_usd_value\") AS total_amount_usd, " +
-//                    "    SUM(\"fee_usd_value\") AS total_fee_usd " +
-//                    "FROM " +
-//                    "    ( " +
-//                    "        SELECT * FROM \"Transactions_Shard_0\" " +
-//                    "        UNION ALL " +
-//                    "        SELECT * FROM \"Transactions_Shard_1\" " +
-//                    "        UNION ALL " +
-//                    "        SELECT * FROM \"Transactions_Shard_2\" " +
-//                    "        UNION ALL " +
-//                    "        SELECT * FROM \"Transactions_Shard_3\" " +
-//                    "        UNION ALL " +
-//                    "        SELECT * FROM \"Transactions_Shard_4\" " +
-//                    "    ) AS transactions " +
-//                    "GROUP BY " +
-//                    "    day " +
-//                    "ORDER BY " +
-//                    "    day;";
-//
-//            List<DailyActivity> dailyActivities = new ArrayList<>();
-//
-//            try (Connection conn = getConnection();
-//                 PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-//
-//                logger.info("QUERY: {}", preparedStatement.toString());
-//
-//                try (ResultSet rs = preparedStatement.executeQuery()) {
-//                    while (rs.next()) {
-//                        Date day = rs.getDate("day");
-//                        int transactionCount = rs.getInt("transaction_count");
-//                        long totalValue = rs.getLong("total_value");
-//                        long totalFee = rs.getLong("total_fee");
-//                        long totalAmountUsd = rs.getLong("total_amount_usd");
-//                        long totalFeeUsd = rs.getLong("total_fee_usd");
-//
-//                        DailyActivity dailyActivity = new DailyActivity(day, transactionCount, totalValue, totalFee, totalAmountUsd, totalFeeUsd);
-//                        dailyActivities.add(dailyActivity);
-//                    }
-//                }
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                logger.error(e.toString());
-//            }
-//
-//            return dailyActivities;
-//        }
-
-    //>>>>>>>>>> ADJUSTED GETS <<<<<<<<<<<<
-    public static JSONObject adjustedGetInitialDelegations(String userAddress) {
-        String sql = "SELECT "+INITIAL_DELEGATION+" FROM \"InitialDelegation\" WHERE "+USER_ADDRESS+" = ?;";
-        JSONObject jsonObject = new JSONObject();
-        try(Connection conn = getConnection();
-            PreparedStatement preparedStatement = conn.prepareStatement(sql)){
-            preparedStatement.setString(1, userAddress);
-
-            logger.info("QUERY: {}", preparedStatement.toString());
-
-            try (ResultSet rs =  preparedStatement.executeQuery()) {
-                while(rs.next()) {
-                    long initialDelegation = rs.getLong(INITIAL_DELEGATION);
-                    jsonObject.put(rs.getString(VALIDATOR_ADDRESS), initialDelegation);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
-        }
-        return jsonObject;
-    }
-    public static UserModel adjustedGetDbUser(String address) {
-        String sql = "SELECT \"address\", \"first_sent_txn\", \"last_sent_txn\", \"transaction_hashes\" FROM \"User\" WHERE \"address\" = ?;";
-        UserModel userModel = null;
-        try(Connection conn = getConnection();
-            PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setString(1, address);
-
-            logger.info("QUERY: {}", preparedStatement.toString());
-
-            try(ResultSet rs = preparedStatement.executeQuery()) {
-                if(rs.next()) {
-                    byte[] firstSentTxn = rs.getBytes("first_sent_txn");
-                    byte[] lastSentTxn = rs.getBytes("last_sent_txn");
-                    byte[][] transactionHashes = (byte[][]) rs.getArray("transaction_hashes").getArray();
-                    userModel = new UserModel(address, firstSentTxn, lastSentTxn, transactionHashes);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
-        }
-        return userModel;
-    }
-    public static boolean adjustedDbUserExists(String address) {
-        String sql = "SELECT EXISTS (SELECT 1 FROM \"User\" WHERE \"address\" = ?);";
-        try(Connection conn = getConnection();
-            PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setString(1, address);
-            try(ResultSet rs = preparedStatement.executeQuery()) {
-                rs.next();
-                return rs.getBoolean(1);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
-        }
-        return false;
-    }
-    public static BlockModel adjustedGetDbBlock(long blockNumber) {
-        String sql = "SELECT \"block_number\", \"block_hash\", \"fee_recipient\", \"timestamp\", \"transactions_count\", \"block_reward\", \"size\" FROM \"Block\" WHERE \"block_number\" = ?;";
-        BlockModel blockModel = null;
-        try(Connection conn = getConnection();
-            PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setLong(1, blockNumber);
-
-            logger.info("QUERY: {}", preparedStatement.toString());
-
-            try(ResultSet rs = preparedStatement.executeQuery()) {
-                if(rs.next()) {
-                    String blockHash = rs.getString("block_hash");
-                    byte[] feeRecipient = rs.getBytes("fee_recipient");
-                    long timestamp = rs.getLong("timestamp");
-                    int transactionsCount = rs.getInt("transactions_count");
-                    long blockReward = rs.getLong("block_reward");
-                    int size = rs.getInt("size");
-                    blockModel = new BlockModel(blockNumber, blockHash, feeRecipient, timestamp, transactionsCount, blockReward, size);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.getMessage());
-        }
-        return blockModel;
-    }
-    public static long adjustedGetLastBlockNumber() {
-        String sql = "SELECT MAX("+BLOCK_NUMBER+") FROM \"Block\";";
-
-        try(Connection conn = getConnection();
-            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-            ResultSet rs = preparedStatement.executeQuery()) {
-            if(rs.next()) {
-                return rs.getLong(1);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.getMessage());
-        }
-        return 0;
-    }
-    public static String adjustedGetBlockHash(long blockNumber) {
-        String blockHash = null;
-        String sql = "SELECT \"block_hash\" FROM \"Block\" WHERE \"block_number\" = ?;";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setLong(1, blockNumber);
-
-            logger.info("QUERY: {}", preparedStatement.toString());
-
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                if (rs.next()) {
-                    blockHash = rs.getString("block_hash");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
-        }
-
-        return blockHash;
-    }
-    public static List<Block> adjustedGetLastXBlocks(int x) {
-        List<Block> blocks = new ArrayList<>();
-        String sql = "SELECT * FROM \"Block\" " +
-                "ORDER BY \"block_number\" DESC " +
-                "LIMIT ?;";
-
-        try (Connection conn = getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setInt(1, x);
-
-            logger.info("QUERY: {}", preparedStatement.toString());
-
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                while (rs.next()) {
-                    long blockNumber = rs.getLong(BLOCK_NUMBER);
-                    String blockHash = rs.getString(BLOCK_HASH);
-                    byte[] feeRecipient = rs.getBytes(FEE_RECIPIENT);
-                    long timestamp = rs.getLong(TIMESTAMP);
-                    int transactionsCount = rs.getInt(TRANSACTIONS_COUNT);
-                    long blockReward = rs.getLong(BLOCK_REWARD);
-                    int size = rs.getInt(BLOCK_SIZE);
-                    String blockNumberString = "" + blockNumber;
-                    Block block = new Block(blockNumberString, timestamp, feeRecipient, blockReward, size, transactionsCount);
-                    blocks.add(block);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.getMessage());
-        }
-
-        return blocks;
-    }
-    private static String adjustedBytePrefixToLikePattern(byte[] bytePrefix) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytePrefix) {
-            sb.append(String.format("%02X", b));
-        }
-        return sb.toString() + "%";
-    }
-    public static double adjustedGetAverageTransactionFeePercentageChange() {
-        double percentageChange = 0.0;
         String tableName = getTransactionsTableName("0");
 
-        String sql = "SELECT " +
-                "CASE WHEN COUNT(*) FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) = 0 THEN 0 " +
-                "ELSE ((AVG(\"" + TXN_FEE + "\") FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) / " +
-                "AVG(\"" + TXN_FEE + "\") FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '48 hours')) * 1000 AND \"" + TIMESTAMP + "\" < EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) - 1) * 100) " +
-                "END AS percentage_change " +
-                "FROM " + tableName + ";";
+        String sql = "SELECT * FROM " + tableName +
+                " WHERE (" + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ?)" +
+                " ORDER BY " + TIMESTAMP + " ASC" +
+                " LIMIT 1";
+
+        String sql2 = "SELECT * FROM " + tableName +
+                " WHERE (" + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ?)" +
+                " ORDER BY " + TIMESTAMP + " DESC" +
+                " LIMIT 1";
 
         try (Connection conn = getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            logger.info("QUERY: {}", preparedStatement.toString());
-
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                if (rs.next()) {
-                    percentageChange = rs.getDouble("percentage_change");
-                    logger.info("Average Transaction Fee Percentage Change: {}", percentageChange);
-                } else {
-                    logger.info("No data found for Average Transaction Fee Percentage Change");
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Error while calculating Average Transaction Fee Percentage Change: {}", e.toString());
-            e.printStackTrace();
-        }
-
-        return percentageChange;
-    }
-    public static double adjustedGetTotalTransactionFeesPercentageChange() {
-        double percentageChange = 0.0;
-        String tableName = getTransactionsTableName("0");
-
-        String sql = "SELECT " +
-                "CASE WHEN COUNT(*) FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) = 0 THEN 0 " +
-                "ELSE ((SUM(\"" + TXN_FEE + "\") FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) / " +
-                "SUM(\"" + TXN_FEE + "\") FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '48 hours')) * 1000 AND \"" + TIMESTAMP + "\" < EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) - 1) * 100) " +
-                "END AS percentage_change " +
-                "FROM " + tableName + ";";
-
-        try (Connection conn = getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            logger.info("QUERY: {}", preparedStatement.toString());
-
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                if (rs.next()) {
-                    percentageChange = rs.getDouble("percentage_change");
-                    logger.info("Total Transaction Fees Percentage Change: {}", percentageChange);
-                } else {
-                    logger.info("No data found for Total Transaction Fees Percentage Change");
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Error while calculating Total Transaction Fees Percentage Change: {}", e.toString());
-            e.printStackTrace();
-        }
-
-        return percentageChange;
-    }
-    public static BigInteger adjustedGetAverageTransactionFeePast24Hours() {
-        BigInteger averageFee = BigInteger.ZERO;
-        String tableName = getTransactionsTableName("0");
-
-        String sql = "SELECT AVG(\"" + TXN_FEE + "\") AS average_fee FROM " + tableName +
-                " WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000;";
-
-        try (Connection conn = getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            logger.info("QUERY: {}", preparedStatement.toString());
-
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                if (rs.next()) {
-                    BigDecimal averageFeeDecimal = rs.getBigDecimal("average_fee");
-                    if (averageFeeDecimal != null) {
-                        averageFee = averageFeeDecimal.toBigInteger();
-                        logger.info("Average Transaction Fee Past 24 Hours: {}", averageFee);
-                    } else {
-                        logger.info("No data found for Average Transaction Fee Past 24 Hours");
-                    }
-                } else {
-                    logger.info("No data found for Average Transaction Fee Past 24 Hours");
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Error while calculating Average Transaction Fee Past 24 Hours: {}", e.toString());
-            e.printStackTrace();
-        }
-
-        return averageFee;
-    }
-    public static BigInteger adjustedGetTotalTransactionFeesPast24Hours() {
-        BigInteger totalFees = BigInteger.ZERO;
-        String tableName = getTransactionsTableName("0");
-
-        String sql = "SELECT SUM(\"" + TXN_FEE + "\") AS total_fees FROM " + tableName +
-                " WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000;";
-
-        try (Connection conn = getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            logger.info("QUERY: {}", preparedStatement.toString());
-
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                if (rs.next()) {
-                    BigDecimal totalFeesDecimal = rs.getBigDecimal("total_fees");
-                    if (totalFeesDecimal != null) {
-                        totalFees = totalFeesDecimal.toBigInteger();
-                        logger.info("Total Transaction Fees Past 24 Hours: {}", totalFees);
-                    } else {
-                        logger.info("No data found for Total Transaction Fees Past 24 Hours");
-                    }
-                } else {
-                    logger.info("No data found for Total Transaction Fees Past 24 Hours");
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Error while calculating Total Transaction Fees Past 24 Hours: {}", e.toString());
-            e.printStackTrace();
-        }
-
-        return totalFees;
-    }
-    public static int adjustedGetTransactionCountPast24Hours() {
-        int transactionCount = 0;
-        String tableName = getTransactionsTableName("0");
-
-        String sql = "SELECT COUNT(*) AS transaction_count FROM " + tableName +
-                " WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000;";
-
-        try (Connection conn = getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            logger.info("QUERY: {}", preparedStatement.toString());
-
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                if (rs.next()) {
-                    transactionCount = rs.getInt("transaction_count");
-                    logger.info("Transaction Count Past 24 Hours: {}", transactionCount);
-                } else {
-                    logger.info("No data found for Transaction Count Past 24 Hours");
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Error while calculating Transaction Count Past 24 Hours: {}", e.toString());
-            e.printStackTrace();
-        }
-
-        return transactionCount;
-    }
-    public static double adjustedGetTransactionCountPercentageChangeComparedToPreviousDay() {
-        double percentageChange = 0.0;
-        String tableName = getTransactionsTableName("0");
-
-        String sql = "SELECT CASE " +
-                "WHEN COUNT(*) FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '48 hours')) * 1000 AND \"" + TIMESTAMP + "\" < EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) = 0 THEN 0 " +
-                "ELSE (COUNT(*) FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) * 1.0 / " +
-                "COUNT(*) FILTER (WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '48 hours')) * 1000 AND \"" + TIMESTAMP + "\" < EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) - 1) * 100 " +
-                "END AS percentage_change " +
-                "FROM " + tableName + ";";
-
-        try (Connection conn = getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            logger.info("QUERY: {}", preparedStatement.toString());
-
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                if (rs.next()) {
-                    percentageChange = rs.getDouble("percentage_change");
-                    logger.info("Transaction Count Percentage Change Compared to Previous Day: {}", percentageChange);
-                } else {
-                    logger.info("No data found for Transaction Count Percentage Change Compared to Previous Day");
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Error while calculating Transaction Count Percentage Change Compared to Previous Day: {}", e.toString());
-            e.printStackTrace();
-        }
-
-        return percentageChange;
-    }
-    public static int adjustedGetTotalTransactionCount() {
-        int totalCount = 0;
-        String tableName = getTransactionsTableName("0");
-        String sql = "SELECT COUNT(*) AS total_count FROM " + tableName;
-
-        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql);
-             ResultSet rs = preparedStatement.executeQuery()) {
-            if (rs.next()) {
-                totalCount = rs.getInt("total_count");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
-        }
+             PreparedStatement preparedStatement2 = conn.prepareStatement(sql2)) {
 
-        return totalCount;
-    }
-    public static int adjustedGetTotalTxnCount(String address) {
-        int totalCount = 0;
-
-        String tableName = getTransactionsTableName("0");
-
-        String sql = "SELECT COUNT(*) AS total_count FROM " + tableName +
-                " WHERE " + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ?;";
-
-        try (Connection conn = getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, address);
             preparedStatement.setString(2, address);
+            preparedStatement2.setString(1, address);
+            preparedStatement2.setString(2, address);
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
-                    totalCount = rs.getInt("total_count");
+                    firstTxn = populateTxnObject(rs);
+                }
+            }
+
+            try (ResultSet rs = preparedStatement2.executeQuery()) {
+                if (rs.next()) {
+                    lastTxn = populateTxnObject(rs);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            logger.error(e.toString());
+            logger.error("Error querying first and last transactions for address {}: {}", address, e.getMessage());
         }
 
-        return totalCount;
+        return new Pair<>(firstTxn, lastTxn);
     }
-    public static TxnModel adjustedGetDbTxn(String hash) {
-        TxnModel txn = null;
-        String tableName = getTransactionsTableName(hash);
 
-        String sql = "SELECT * FROM " + tableName + " WHERE " + HASH + " = ?;";
+    public static class Pair<T, U> {
+        public final T first;
+        public final U second;
 
-        try(Connection conn = getConnection();
-            PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setString(1, hash);
-
-            try(ResultSet rs = preparedStatement.executeQuery()) {
-                if(rs.next()) {
-                    txn = populateTxnModel(rs);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
+        public Pair(T first, U second) {
+            this.first = first;
+            this.second = second;
         }
-        return txn;
     }
-
-    public static List<TxnModel> adjustedGetTransactions(int limit, int offset) {
-        List<TxnModel> txns = new ArrayList<>();
-        String tableName = getTransactionsTableName("0");
-        String sql = "SELECT * " +
-                "FROM " + tableName +
-                " ORDER BY " + BLOCK_NUMBER + " DESC, " + POSITION_IN_BLOCK + " DESC " +
-                "LIMIT ? OFFSET ?;";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setInt(1, limit);
-            preparedStatement.setInt(2, offset);
-
-            logger.info("QUERY: {}", preparedStatement.toString());
-
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                while (rs.next()) {
-                    TxnModel txn = populateTxnModel(rs);
-                    txns.add(txn);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
-        }
-
-        return txns;
-    }
-
-    public static List<TxnModel> adjustedGetLastXTransactions(int x) {
-        List<TxnModel> txns = new ArrayList<>();
-        String tableName = getTransactionsTableName("0");
-
-        // Query to get the highest block number
-        String getMaxBlockNumberSql = "SELECT MAX(" + BLOCK_NUMBER + ") AS max_block_number FROM " + tableName;
-
-        try (Connection conn = getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rsMax = stmt.executeQuery(getMaxBlockNumberSql)) {
-
-            if (rsMax.next()) {
-                int maxBlockNumber = rsMax.getInt("max_block_number");
-
-                // Query to get transactions from the highest block number
-                String sql = "SELECT * FROM " + tableName +
-                        " WHERE " + BLOCK_NUMBER + " = ? " +
-                        " ORDER BY " + TIMESTAMP + " DESC " +
-                        " LIMIT ?;";
-
-                try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-                    preparedStatement.setInt(1, maxBlockNumber);
-                    preparedStatement.setInt(2, x);
-
-                    logger.info("QUERY: {}", preparedStatement.toString());
-
-                    try (ResultSet rs = preparedStatement.executeQuery()) {
-                        while (rs.next()) {
-                            TxnModel txn = populateTxnModel(rs);
-                            txns.add(txn);
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
-        }
-
-        return txns;
-    }
-
-    public static List<TxnModel> adjustedGetBlockTxns(String blockNumberString) {
-        long blockNumber = Long.parseLong(blockNumberString);
-        List<TxnModel> txns = new ArrayList<>();
-        String tableName = getTransactionsTableName("0");
-        String sql = "SELECT * FROM " + tableName + " WHERE " + BLOCK_NUMBER + " = ? " +
-                "ORDER BY " + POSITION_IN_BLOCK + " ASC;";
-
-        try (Connection conn = getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setLong(1, blockNumber);
-
-            logger.info("QUERY: {}", preparedStatement.toString());
-
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                while (rs.next()) {
-                    TxnModel txn = populateTxnModel(rs);
-                    txns.add(txn);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
-        }
-        return txns;
-    }
-
-    public static List<TxnModel> adjustedGetTransactionsByAddressAndBlockRange(String address, long startBlockNumber, long endBlockNumber) {
-        List<TxnModel> txns = new ArrayList<>();
-
-        String tableName = getTransactionsTableName("0");
-
-        String sql = "SELECT * FROM " + tableName +
-                " WHERE (" + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ?)" +
-                " AND " + BLOCK_NUMBER + " BETWEEN ? AND ?" +
-                " ORDER BY " + BLOCK_NUMBER + " ASC;";
-
-        try (Connection conn = getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setString(1, address);
-            preparedStatement.setString(2, address);
-            preparedStatement.setLong(3, startBlockNumber);
-            preparedStatement.setLong(4, endBlockNumber);
-
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                while (rs.next()) {
-                    TxnModel txn = populateTxnModel(rs);
-                    txns.add(txn);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
-        }
-
-        return txns;
-    }
-
-    public static List<TxnModel> adjustedGetTxnsByAddressAndBlockRangeSortedByPrefix(String address, long startBlock, long endBlock, byte[] bytePrefix) {
-        List<TxnModel> txns = new ArrayList<>();
-
-        String tableName = getTransactionsTableName("0");
-
-        String sql = "SELECT * FROM " + tableName +
-                " WHERE (" + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ?)" +
-                " AND " + BLOCK_NUMBER + " BETWEEN ? AND ?" +
-                " AND " + HASH + " LIKE ?" +
-                " ORDER BY " + HASH + " ASC;";
-
-        try (Connection conn = getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setString(1, address);
-            preparedStatement.setString(2, address);
-            preparedStatement.setLong(3, startBlock);
-            preparedStatement.setLong(4, endBlock);
-            preparedStatement.setString(5, bytePrefixToLikePattern(bytePrefix));
-
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                while (rs.next()) {
-                    TxnModel txn = populateTxnModel(rs);
-                    txns.add(txn);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
-        }
-
-        return txns;
-    }
-
-    public static List<TxnModel> adjustedGetUserTxns(String address, int page, int pageSize) {
-        List<TxnModel> txns = new ArrayList<>();
-
-        String tableName = getTransactionsTableName("0");
-
-        String sql = "SELECT * FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ? " +
-                "ORDER BY " + TIMESTAMP + " ASC " +
-                "LIMIT ? OFFSET ?;";
-
-        try (Connection conn = getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setString(1, address);
-            preparedStatement.setString(2, address);
-            preparedStatement.setInt(3, pageSize);
-            preparedStatement.setInt(4, (page - 1) * pageSize);
-
-            try (ResultSet rs = preparedStatement.executeQuery()) {
-                while (rs.next()) {
-                    TxnModel txn = populateTxnModel(rs);
-                    txns.add(txn);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
-        }
-
-        return txns;
-    }
-
     //============================helpers=============================================
 
 //        public static List<DailyActivity> getDailyActivity() {
@@ -1627,7 +1070,6 @@ public class Queries {
 //
 //            return dailyActivities;
 //        }
-
 
     //============================HELPERS=============================================
     private static Txn populateTxnObject(ResultSet rs) throws SQLException {

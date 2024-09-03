@@ -18,7 +18,7 @@ import static spark.Spark.*;
 public class Main {
 
     public static void main(String[] args) throws NoSuchMethodException {
-        port(8080);
+        port(8081);
 
         options("/*",
                 (request, response) -> {
@@ -52,7 +52,8 @@ public class Main {
         RateLimiter.initRateLimiter();
 
         DatabaseInitialization.initialize();
-        PWRJ pwrj = new PWRJ("https://pwrrpc.pwrlabs.io/");
+        PWRJ pwrj = new PWRJ("http://147.182.172.216:8085/");
+
         GET.run(pwrj);
         POST.run(pwrj);
 

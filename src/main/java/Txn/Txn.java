@@ -6,18 +6,18 @@ import org.apache.logging.log4j.Logger;
 public class Txn {
     private String hash;
     private long blockNumber;
-    private int size;
+    private Integer size;
     private int positionInBlock;
     private String fromAddress;
     private String toAddress;
     private long timestamp;
     private long value;
-    private long txnFee;
+    private Long txnFee;
     private String txnType;
     private boolean success;
     private String errorMessage;
-    private long nonce;
-    private long actionFee;
+    private Long nonce;
+    private Long actionFee;
     private boolean paid;
     private String feePayer;
 
@@ -42,7 +42,6 @@ public class Txn {
         this.actionFee = actionFee;
         this.paid = paid;
         this.feePayer = feePayer;
-        Txns.add(this);
     }
 
     // Getters

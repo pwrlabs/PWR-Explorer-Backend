@@ -1,13 +1,12 @@
 package Block;
 
-import java.util.ArrayList;
-import java.util.List;
 
-import Txn.Txn;
-import com.github.pwrlabs.dbm.DBM;
+import Txn.NewTxn;
+import Txn.Txns;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bouncycastle.util.encoders.Hex;
+
+import java.util.List;
 
 import static Core.Sql.Queries.getBlockTxns;
 
@@ -15,14 +14,14 @@ public class Block {
     private final Logger logger = LogManager.getLogger(Block.class);
     private String blockNumber;
     private final long timeStamp;
-    private byte[] blockSubmitter;
+    private String  blockSubmitter;
     private long blockReward;
     private int blockSize;
     private int txnCount;
 
-    private final Txn[] txns;
+    private final NewTxn[] txns;
 
-    public Block(String blockNumber, long timeStamp, byte[] blockSubmitter, long blockReward, int blockSize, int txnCount) {
+    public Block(String blockNumber, long timeStamp, String blockSubmitter, long blockReward, int blockSize, int txnCount) {
         this.blockNumber = blockNumber;
         this.timeStamp = timeStamp;
         this.blockSubmitter = blockSubmitter;
@@ -30,8 +29,8 @@ public class Block {
         this.blockSize = blockSize;
         this.txnCount = txnCount;
 
-        txns = new Txn[txnCount];
-        List<Txn> tempTxns = getBlockTxns(blockNumber);
+        txns = new NewTxn[txnCount];
+        List<NewTxn> tempTxns = getBlockTxns(blockNumber);
 
         for(int i = 0; i < tempTxns.size(); i++) {
             txns[i] = tempTxns.get(i);
@@ -40,7 +39,7 @@ public class Block {
         Blocks.add(this);
     }
 
-    public void addTxn(Txn txn, int positionInTheBlock) {
+    public void addTxn(NewTxn txn, int positionInTheBlock) {
         txns[positionInTheBlock] = txn;
     }
 
@@ -56,11 +55,11 @@ public class Block {
         return timeStamp;
     }
 
-    public byte[] getBlockSubmitter() {
+    public String getBlockSubmitter() {
         return blockSubmitter;
     }
 
-    public void setBlockSubmitter(byte[] blockSubmitter) {
+    public void setBlockSubmitter(String blockSubmitter) {
         this.blockSubmitter = blockSubmitter;
     }
 
@@ -88,7 +87,7 @@ public class Block {
         this.txnCount = txnCount;
     }
 
-    public Txn[] getTxns() {
+    public NewTxn[] getTxns() {
         return txns;
     }
 

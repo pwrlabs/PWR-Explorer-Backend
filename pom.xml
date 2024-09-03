@@ -19,7 +19,7 @@
         <dependency>
             <groupId>com.github.pwrlabs</groupId>
             <artifactId>pwrj</artifactId>
-            <version>7.5.5</version>
+            <version>7.12.0</version>
         </dependency>
 
         <dependency>
@@ -46,9 +46,24 @@
             <version>42.7.1</version>
         </dependency>
 
+        <!-- Log4j 2 Core -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
+            <version>2.17.0</version>
+        </dependency>
+
+        <!-- SLF4J API -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.32</version>
+        </dependency>
+
+        <!-- Log4j 2 SLF4J Binding -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
             <version>2.17.0</version>
         </dependency>
 

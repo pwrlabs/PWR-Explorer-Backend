@@ -1,15 +1,10 @@
 package Core.Sql;
 
 import Block.Block;
-import Core.DataModel.BlockModel;
 import Core.DataModel.TxnModel;
-import Core.DataModel.UserModel;
 import Core.DatabaseConnection;
-import DailyActivity.DailyActivity;
-import Main.Hex;
-import Main.Settings;
-import Txn.Txn;
-import Block.Block;
+import Txn.Txns;
+import Txn.NewTxn;
 import User.User;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,16 +13,14 @@ import org.json.JSONObject;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
-import java.text.DecimalFormat;
 import java.util.*;
 
 import static Core.Constants.Constants.*;
 import static Core.DatabaseConnection.getConnection;
-//import static Core.DatabaseConnection.getPool;
 
 public class Queries {
     private static final Logger logger = LogManager.getLogger(Queries.class);
-    private static final int NUMBER_OF_SHARDS = 1 ;
+    private static final int NUMBER_OF_SHARDS = 1;
 
     //>>>>>>>INSERT<<<<<<<<
     public static void insertUser(String address, byte[] firstSentTxn, byte[] lastSentTxn, byte[][] transactionHashes) {
@@ -53,56 +46,50 @@ public class Queries {
             logger.error(e.toString());
         }
     }
-    public static void insertTxn(String hash, long blockNumber, int size, int positionInBlock, String fromAddress, String toAddress, long timestamp, long value, long txnFee, String txnType, Boolean success, String errorMessage, long nonce, long actionFee, boolean paid, String feePayer) {
+
+    public static void insertTxn(
+            String hash, long blockNumber, int positionInBlock, String fromAddress, String toAddress,
+            long timestamp, long value, String txnType, long txnFee, Boolean success
+    ) {
         String tableName = getTransactionsTableName("0");
         logger.info("table name {}", tableName);
         String sql = "INSERT INTO " + tableName + " (" +
                 "\"hash\", " +
                 "\"block_number\", " +
-                "\"size\", " +
                 "\"position_in_block\", " +
                 "\"from_address\", " +
                 "\"to_address\", " +
                 "\"timestamp\", " +
                 "\"value\", " +
-                "\"txn_fee\", " +
                 "\"txn_type\", " +
-                "\"success\", " +
-                "\"error_message\", " +
-                "\"nonce\", " +
-                "\"action_fee\", " +
-                "\"paid\", " +
-                "\"feePayer\"" +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+                "\"txn_fee\", " +
+                "\"success\"" +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?);";
         try (Connection conn = getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, hash);
             preparedStatement.setLong(2, blockNumber);
-            preparedStatement.setInt(3, size);
-            preparedStatement.setInt(4, positionInBlock);
-            preparedStatement.setString(5, fromAddress.toLowerCase());
-            preparedStatement.setString(6, toAddress.toLowerCase());
-            preparedStatement.setLong(7, timestamp);
-            preparedStatement.setLong(8, value);
+            preparedStatement.setInt(3, positionInBlock);
+            preparedStatement.setString(4, fromAddress.toLowerCase());
+            preparedStatement.setString(5, toAddress.toLowerCase());
+            preparedStatement.setLong(6, timestamp);
+            preparedStatement.setLong(7, value);
+            preparedStatement.setString(8, txnType);
             preparedStatement.setLong(9, txnFee);
-            preparedStatement.setString(10, txnType);
-            preparedStatement.setBoolean(11, success);
-            preparedStatement.setString(12, errorMessage);
-            preparedStatement.setLong(13, nonce);
-            preparedStatement.setLong(14, actionFee);
-            preparedStatement.setBoolean(15, paid);
-            preparedStatement.setString(16, feePayer);
-            logger.info("QUERY: {}", preparedStatement.toString());
+            preparedStatement.setBoolean(10, success);
+//            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("Inserted Txn {} Successfully", hash);
             preparedStatement.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("Error inserting transaction: {}", e.getMessage());
         }
     }
-    public static void insertBlock(long blockNumber, String blockHash, byte[] feeRecipient, long timestamp, int transactionsCount, long blockReward, int size, boolean success) {
+
+    public static void insertBlock(long blockNumber, String blockHash, String feeRecipient, long timestamp, int transactionsCount, long blockReward, int size, boolean success) {
         String blockNumberStr = "" + blockNumber;
-        new Block(blockNumberStr, timestamp, feeRecipient, blockReward, size, 0);
-        String sql = "INSERT INTO \"Block\" ("+
+        new Block(blockNumberStr, timestamp, feeRecipient, blockReward, size, transactionsCount);
+        String sql = "INSERT INTO \"Block\" (" +
                 BLOCK_NUMBER + ", " +
                 BLOCK_HASH + ", " +
                 FEE_RECIPIENT + ", " +
@@ -117,14 +104,15 @@ public class Queries {
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setLong(1, blockNumber);
             preparedStatement.setString(2, blockHash);
-            preparedStatement.setBytes(3, feeRecipient);
+            preparedStatement.setString(3, feeRecipient);
             preparedStatement.setLong(4, timestamp);
             preparedStatement.setInt(5, transactionsCount);
             preparedStatement.setLong(6, blockReward);
             preparedStatement.setInt(7, size);
             preparedStatement.setBoolean(8, success);  // Set the success parameter
 
-            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("Inserted Block {} Successfully", blockNumber);
 
             preparedStatement.executeUpdate();
         } catch (Exception e) {
@@ -132,6 +120,7 @@ public class Queries {
             logger.error(e.toString());
         }
     }
+
     public static void insertVM(long id, String firstSentTxn, String lastSentTxn) {
         String sql = "INSERT INTO \"VM\" (" + ID + ", " + FIRST_SENT_TXN_HASH + ", " + LAST_SENT_TXN_HASH + ") VALUES (?, ?, ?);";
         try (Connection conn = getConnection(); PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
@@ -145,6 +134,7 @@ public class Queries {
             logger.error(e.toString());
         }
     }
+
     public static void insertInitialDelegation(String userAddress, String validatorAddress, long initialDelegation) {
         String sql = "INSERT INTO \"InitialDelegation\" (" +
                 USER_ADDRESS + ", " +
@@ -170,12 +160,12 @@ public class Queries {
 
     //>>>>>>>UPDATE<<<<<<<<
     public static void updateInitialDelegations(String userAddress, String validatorAddress, long initialDelegation) {
-        String sql = "INSERT INTO \"InitialDelegation\" ("+USER_ADDRESS+", "+VALIDATOR_ADDRESS+", "+INITIAL_DELEGATION+") " +
+        String sql = "INSERT INTO \"InitialDelegation\" (" + USER_ADDRESS + ", " + VALIDATOR_ADDRESS + ", " + INITIAL_DELEGATION + ") " +
                 "VALUES (?, ?, ?) " +
-                "ON CONFLICT ("+USER_ADDRESS+", "+VALIDATOR_ADDRESS+") DO UPDATE SET "+INITIAL_DELEGATION+" = ?;";
+                "ON CONFLICT (" + USER_ADDRESS + ", " + VALIDATOR_ADDRESS + ") DO UPDATE SET " + INITIAL_DELEGATION + " = ?;";
 
-        try(Connection conn = getConnection();
-            PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, userAddress);
             preparedStatement.setString(2, validatorAddress);
             preparedStatement.setLong(3, initialDelegation);
@@ -189,6 +179,7 @@ public class Queries {
             logger.error(e.toString());
         }
     }
+
     public static void updateBlock(long blockNumber, String blockHash, byte[] feeRecipient, long timestamp, int transactionsCount, long blockReward, int size, boolean success) {
         String sql = "UPDATE \"Block\" SET " +
                 BLOCK_HASH + " = ?, " +
@@ -219,6 +210,7 @@ public class Queries {
             logger.error(e.toString());
         }
     }
+
     public static void updateUser(String address, byte[] firstSentTxn, byte[] lastSentTxn, byte[][] transactionHashes) {
         String sql = "UPDATE \"User\" SET " +
                 FIRST_SENT_TXN + " = ?, " +
@@ -241,6 +233,7 @@ public class Queries {
             logger.error(e.toString());
         }
     }
+
     public static void updateVMLastTxn(long id, String lastSentTxn) {
         String sql = "UPDATE \"VM\" SET " +
                 LAST_SENT_TXN_HASH + " = ? " +
@@ -259,6 +252,7 @@ public class Queries {
             logger.error(e.toString());
         }
     }
+
     public static void updateInitialDelegation(String userAddress, String validatorAddress, long initialDelegation) {
         String sql = "UPDATE \"InitialDelegation\" SET " +
                 INITIAL_DELEGATION + " = ? " +
@@ -278,6 +272,7 @@ public class Queries {
             logger.error(e.toString());
         }
     }
+
     public static void updateValidator(String address, long lifetimeRewards, int submittedBlocks, Object[] blocksSubmitted) {
         String sql = "UPDATE \"Validator\" SET " +
                 LIFETIME_REWARDS + " = ?, " +
@@ -300,6 +295,7 @@ public class Queries {
             logger.error(e.toString());
         }
     }
+
     public static void updateUserInDatabase(String address, byte[] firstSentTxn, byte[] lastSentTxn, byte[][] transactionHashes, int transactionsCount) {
         String sql = "UPDATE \"User\" SET " +
                 "\"first_sent_txn\" = ?, " +
@@ -331,16 +327,16 @@ public class Queries {
 
     //>>>>>>>GET<<<<<<<<
     public static JSONObject getInitialDelegations(String userAddress) {
-        String sql = "SELECT "+INITIAL_DELEGATION+" FROM \"InitialDelegation\" WHERE "+USER_ADDRESS+" = ?;";
+        String sql = "SELECT " + INITIAL_DELEGATION + " FROM \"InitialDelegation\" WHERE " + USER_ADDRESS + " = ?;";
         JSONObject jsonObject = new JSONObject();
-        try(Connection conn = getConnection();
-            PreparedStatement preparedStatement = conn.prepareStatement(sql)){
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, userAddress);
 
             logger.info("QUERY: {}", preparedStatement.toString());
 
-            try (ResultSet rs =  preparedStatement.executeQuery()) {
-                while(rs.next()) {
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                while (rs.next()) {
                     long initialDelegation = rs.getLong(INITIAL_DELEGATION);
                     jsonObject.put(rs.getString(VALIDATOR_ADDRESS), initialDelegation);
                 }
@@ -351,17 +347,18 @@ public class Queries {
         }
         return jsonObject;
     }
+
     public static User getDbUser(String address) {
-        String sql = "SELECT * FROM \"User\" WHERE "+ADDRESS+" = ?;";
+        String sql = "SELECT * FROM \"User\" WHERE " + ADDRESS + " = ?;";
         User user = null;
-        try(Connection conn = getConnection();
-            PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, address);
 
             logger.info("QUERY: {}", preparedStatement.toString());
 
-            try(ResultSet rs = preparedStatement.executeQuery()) {
-                if(rs.next()) {
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                if (rs.next()) {
                     byte[] firstSentTxn = rs.getBytes(FIRST_SENT_TXN);
                     byte[] lastSentTxn = rs.getBytes(LAST_SENT_TXN);
                     byte[][] transactionHashes = (byte[][]) rs.getArray(TRANSACTION_HASHES).getArray();
@@ -375,12 +372,13 @@ public class Queries {
         }
         return user;
     }
+
     public static boolean dbUserExists(String address) {
-        String sql = "SELECT EXISTS (SELECT 1 FROM \"User\" WHERE "+ADDRESS+" = ?);";
-        try(Connection conn = getConnection();
-            PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+        String sql = "SELECT EXISTS (SELECT 1 FROM \"User\" WHERE " + ADDRESS + " = ?);";
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, address);
-            try(ResultSet rs = preparedStatement.executeQuery()) {
+            try (ResultSet rs = preparedStatement.executeQuery()) {
                 rs.next();
                 return rs.getBoolean(1);
             }
@@ -390,25 +388,26 @@ public class Queries {
         }
         return false;
     }
+
     public static Block getDbBlock(long blockNumber) {
-        String sql = "SELECT * FROM \"Block\" WHERE "+BLOCK_NUMBER+" = ?;";
+        String sql = "SELECT * FROM \"Block\" WHERE " + BLOCK_NUMBER + " = ?;";
         Block block = null;
-        try(Connection conn = getConnection();
-            PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setLong(1, blockNumber);
 
-            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("QUERY: {}", preparedStatement.toString());
 
-            try(ResultSet rs = preparedStatement.executeQuery()) {
-                if(rs.next()) {
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                if (rs.next()) {
                     String blockHash = rs.getString(BLOCK_HASH);
-                    byte[] feeRecipient = rs.getBytes(FEE_RECIPIENT);
+                    String feeRecipient = rs.getString(FEE_RECIPIENT);
                     long timestamp = rs.getLong(TIMESTAMP);
                     int transactionsCount = rs.getInt(TRANSACTIONS_COUNT);
                     long blockReward = rs.getLong(BLOCK_REWARD);
                     int size = rs.getInt(BLOCK_SIZE);
-                    String blockNumberString = ""+blockNumber;
-                    block = new Block(blockNumberString, timestamp,feeRecipient, blockReward, size,transactionsCount);
+                    String blockNumberString = "" + blockNumber;
+                    block = new Block(blockNumberString, timestamp, feeRecipient, blockReward, size, transactionsCount);
                 }
             }
         } catch (Exception e) {
@@ -417,13 +416,14 @@ public class Queries {
         }
         return block;
     }
-    public static long getLastBlockNumber() {
-        String sql = "SELECT MAX("+BLOCK_NUMBER+") FROM \"Block\";";
 
-        try(Connection conn = getConnection();
-            PreparedStatement preparedStatement = conn.prepareStatement(sql);
-            ResultSet rs = preparedStatement.executeQuery()) {
-            if(rs.next()) {
+    public static long getLastBlockNumber() {
+        String sql = "SELECT MAX(" + BLOCK_NUMBER + ") FROM \"Block\";";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql);
+             ResultSet rs = preparedStatement.executeQuery()) {
+            if (rs.next()) {
                 return rs.getLong(1);
             }
         } catch (Exception e) {
@@ -432,19 +432,20 @@ public class Queries {
         }
         return 0;
     }
-    public static Txn getDbTxn(String hash) {
-        Txn txn = null;
+
+    public static NewTxn getDbTxn(String hash) {
+        NewTxn txn = null;
         String tableName = getTransactionsTableName(hash);
 
         String sql = "SELECT * FROM " + tableName + " WHERE " + HASH + " = ?;";
 
-        try(Connection conn = getConnection();
-            PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, hash);
 
-            try(ResultSet rs = preparedStatement.executeQuery()) {
-                if(rs.next()) {
-                    txn = populateTxnObject(rs);
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                if (rs.next()) {
+                    txn = populateNewTxnObject(rs);
                 }
             }
         } catch (Exception e) {
@@ -453,6 +454,7 @@ public class Queries {
         }
         return txn;
     }
+
     public static String getBlockHash(long blockNumber) {
         String blockHash = null;
         String sql = "SELECT \"block_hash\" FROM \"Block\" WHERE \"block_number\" = ?;";
@@ -475,8 +477,9 @@ public class Queries {
 
         return blockHash;
     }
-    public static List<Txn> getTransactions(int limit, int offset) {
-        List<Txn> txns = new ArrayList<>();
+
+    public static List<NewTxn> getTransactions(int limit, int offset) {
+        List<NewTxn> txns = new ArrayList<>();
         String tableName = getTransactionsTableName("0");
         String sql = "SELECT * " +
                 "FROM " + tableName +
@@ -492,7 +495,7 @@ public class Queries {
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 while (rs.next()) {
-                    Txn txn = populateTxnObject(rs);
+                    NewTxn txn = populateNewTxnObject(rs);
                     txns.add(txn);
                 }
             }
@@ -503,8 +506,9 @@ public class Queries {
 
         return txns;
     }
-    public static List<Txn> getLastXTransactions(int x) {
-        List<Txn> txns = new ArrayList<>();
+
+    public static List<NewTxn> getLastXTransactions(int x) {
+        List<NewTxn> txns = new ArrayList<>();
         String tableName = getTransactionsTableName("0");
 
         // Query to get the highest block number
@@ -531,7 +535,7 @@ public class Queries {
 
                     try (ResultSet rs = preparedStatement.executeQuery()) {
                         while (rs.next()) {
-                            Txn txn = populateTxnObject(rs);
+                            NewTxn txn = populateNewTxnObject(rs);
                             txns.add(txn);
                         }
                     }
@@ -544,6 +548,7 @@ public class Queries {
 
         return txns;
     }
+
     public static List<Block> getLastXBlocks(int x) {
         List<Block> blocks = new ArrayList<>();
         String sql = "SELECT * FROM \"Block\" " +
@@ -560,7 +565,7 @@ public class Queries {
                 while (rs.next()) {
                     long blockNumber = rs.getLong(BLOCK_NUMBER);
                     String blockHash = rs.getString(BLOCK_HASH);
-                    byte[] feeRecipient = rs.getBytes(FEE_RECIPIENT);
+                    String feeRecipient = rs.getString(FEE_RECIPIENT);
                     long timestamp = rs.getLong(TIMESTAMP);
                     int transactionsCount = rs.getInt(TRANSACTIONS_COUNT);
                     long blockReward = rs.getLong(BLOCK_REWARD);
@@ -577,6 +582,7 @@ public class Queries {
 
         return blocks;
     }
+
     public static List<Block> getLastXBlocks(int limit, int offset) {
         List<Block> blocks = new ArrayList<>();
         String sql = "SELECT * FROM \"Block\" " +
@@ -594,11 +600,13 @@ public class Queries {
                 while (rs.next()) {
                     long blockNumber = rs.getLong(BLOCK_NUMBER);
                     String blockHash = rs.getString(BLOCK_HASH);
-                    byte[] feeRecipient = rs.getBytes(FEE_RECIPIENT);
+                    String feeRecipient = rs.getString(FEE_RECIPIENT);
                     long timestamp = rs.getLong(TIMESTAMP);
                     int transactionsCount = rs.getInt(TRANSACTIONS_COUNT);
                     long blockReward = rs.getLong(BLOCK_REWARD);
                     int size = rs.getInt(BLOCK_SIZE);
+
+                    logger.info("count {}", transactionsCount);
 
                     Block block = new Block(
                             String.valueOf(blockNumber),
@@ -618,11 +626,11 @@ public class Queries {
         return blocks;
     }
 
-    public static List<Txn> getBlockTxns(String blockNumberString) {
+    public static List<NewTxn> getBlockTxns(String blockNumberString) {
         long blockNumber = Long.parseLong(blockNumberString);
-        List<Txn> txns = new ArrayList<>();
+        List<NewTxn> txns = new ArrayList<>();
         String tableName = getTransactionsTableName("0");
-        String sql = "SELECT * FROM "+tableName+" WHERE " + BLOCK_NUMBER + " = ? " +
+        String sql = "SELECT * FROM " + tableName + " WHERE " + BLOCK_NUMBER + " = ? " +
                 "ORDER BY " + POSITION_IN_BLOCK + " ASC;";
 
         try (Connection conn = getConnection();
@@ -633,7 +641,7 @@ public class Queries {
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 while (rs.next()) {
-                    Txn txn = populateTxnObject(rs);
+                    NewTxn txn = populateNewTxnObject(rs);
                     txns.add(txn);
                 }
             }
@@ -643,8 +651,9 @@ public class Queries {
         }
         return txns;
     }
-    public static List<Txn> getTransactionsByAddressAndBlockRange(String address, long startBlockNumber, long endBlockNumber) {
-        List<Txn> txns = new ArrayList<>();
+
+    public static List<NewTxn> getTransactionsByAddressAndBlockRange(String address, long startBlockNumber, long endBlockNumber) {
+        List<NewTxn> txns = new ArrayList<>();
 
         String tableName = getTransactionsTableName("0");
 
@@ -662,7 +671,7 @@ public class Queries {
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 while (rs.next()) {
-                    Txn txn = populateTxnObject(rs);
+                    NewTxn txn = populateNewTxnObject(rs);
                     txns.add(txn);
                 }
             }
@@ -673,8 +682,9 @@ public class Queries {
 
         return txns;
     }
-    public static List<Txn> getTxnsByAddressAndBlockRangeSortedByPrefix(String address, long startBlock, long endBlock, byte[] bytePrefix) {
-        List<Txn> txns = new ArrayList<>();
+
+    public static List<NewTxn> getTxnsByAddressAndBlockRangeSortedByPrefix(String address, long startBlock, long endBlock, byte[] bytePrefix) {
+        List<NewTxn> txns = new ArrayList<>();
 
         String tableName = getTransactionsTableName("0");
 
@@ -694,7 +704,7 @@ public class Queries {
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 while (rs.next()) {
-                    Txn txn = populateTxnObject(rs);
+                    NewTxn txn = populateNewTxnObject(rs);
                     txns.add(txn);
                 }
             }
@@ -705,6 +715,7 @@ public class Queries {
 
         return txns;
     }
+
     private static String bytePrefixToLikePattern(byte[] bytePrefix) {
         StringBuilder sb = new StringBuilder();
         for (byte b : bytePrefix) {
@@ -712,8 +723,9 @@ public class Queries {
         }
         return sb.toString() + "%";
     }
-    public static List<Txn> getUserTxns(String address, int page, int pageSize) {
-        List<Txn> txns = new ArrayList<>();
+
+    public static List<NewTxn> getUserTxns(String address, int page, int pageSize) {
+        List<NewTxn> txns = new ArrayList<>();
 
         String tableName = getTransactionsTableName("0");
 
@@ -730,7 +742,7 @@ public class Queries {
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 while (rs.next()) {
-                    Txn txn = populateTxnObject(rs);
+                    NewTxn txn = populateNewTxnObject(rs);
                     txns.add(txn);
                 }
             }
@@ -741,6 +753,7 @@ public class Queries {
 
         return txns;
     }
+
     public static double getAverageTransactionFeePercentageChange() {
         double percentageChange = 0.0;
         String tableName = getTransactionsTableName("0");
@@ -771,6 +784,7 @@ public class Queries {
 
         return percentageChange;
     }
+
     public static double getTotalTransactionFeesPercentageChange() {
         double percentageChange = 0.0;
         String tableName = getTransactionsTableName("0");
@@ -801,6 +815,7 @@ public class Queries {
 
         return percentageChange;
     }
+
     public static BigInteger getAverageTransactionFeePast24Hours() {
         BigInteger averageFee = BigInteger.ZERO;
         String tableName = getTransactionsTableName("0");
@@ -832,6 +847,7 @@ public class Queries {
 
         return averageFee;
     }
+
     public static BigInteger getTotalTransactionFeesPast24Hours() {
         BigInteger totalFees = BigInteger.ZERO;
         String tableName = getTransactionsTableName("0");
@@ -863,6 +879,7 @@ public class Queries {
 
         return totalFees;
     }
+
     public static int getTransactionCountPast24Hours() {
         int transactionCount = 0;
         String tableName = getTransactionsTableName("0");
@@ -889,6 +906,7 @@ public class Queries {
 
         return transactionCount;
     }
+
     public static double getTransactionCountPercentageChangeComparedToPreviousDay() {
         double percentageChange = 0.0;
         String tableName = getTransactionsTableName("0");
@@ -919,6 +937,7 @@ public class Queries {
 
         return percentageChange;
     }
+
     public static int getTotalTransactionCount() {
         int totalCount = 0;
         String tableName = getTransactionsTableName("0");
@@ -937,9 +956,9 @@ public class Queries {
 
         return totalCount;
     }
+
     public static int getTotalTxnCount(String address) {
         int totalCount = 0;
-
 
         String tableName = getTransactionsTableName("0");
 
@@ -963,9 +982,10 @@ public class Queries {
 
         return totalCount;
     }
-    public static Pair<Txn, Txn> getFirstAndLastTransactionsByAddress(String address) {
-        Txn firstTxn = null;
-        Txn lastTxn = null;
+
+    public static Pair<NewTxn, NewTxn> getFirstAndLastTransactionsByAddress(String address) {
+        NewTxn firstTxn = null;
+        NewTxn lastTxn = null;
 
         String tableName = getTransactionsTableName("0");
 
@@ -990,13 +1010,13 @@ public class Queries {
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
-                    firstTxn = populateTxnObject(rs);
+                    firstTxn = populateNewTxnObject(rs);
                 }
             }
 
             try (ResultSet rs = preparedStatement2.executeQuery()) {
                 if (rs.next()) {
-                    lastTxn = populateTxnObject(rs);
+                    lastTxn = populateNewTxnObject(rs);
                 }
             }
         } catch (Exception e) {
@@ -1072,25 +1092,42 @@ public class Queries {
 //        }
 
     //============================HELPERS=============================================
-    private static Txn populateTxnObject(ResultSet rs) throws SQLException {
-        return new Txn(
+//    private static Txn populateTxnObject(ResultSet rs) throws SQLException {
+//        return new Txn(
+//                rs.getString(HASH),
+//                rs.getLong(BLOCK_NUMBER),
+//                rs.getInt(SIZE),
+//                rs.getInt(POSITION_IN_BLOCK),
+//                rs.getString(FROM_ADDRESS),
+//                rs.getString(TO_ADDRESS),
+//                rs.getLong(TIMESTAMP),
+//                rs.getLong(VALUE),
+//                rs.getLong(TXN_FEE),
+//                rs.getString(TXN_TYPE),
+//                rs.getBoolean(SUCCESS),
+//                rs.getString(ERROR_MESSAGE),
+//                rs.getLong(NONCE),
+//                rs.getLong(ACTION_FEE),
+//                rs.getBoolean(PAID),
+//                rs.getString(FEEPAYER)
+//        );
+//    }
+
+    private static NewTxn populateNewTxnObject(ResultSet rs) throws SQLException {
+        NewTxn newTxn = new NewTxn(
                 rs.getString(HASH),
                 rs.getLong(BLOCK_NUMBER),
-                rs.getInt(SIZE),
                 rs.getInt(POSITION_IN_BLOCK),
                 rs.getString(FROM_ADDRESS),
                 rs.getString(TO_ADDRESS),
                 rs.getLong(TIMESTAMP),
                 rs.getLong(VALUE),
-                rs.getLong(TXN_FEE),
                 rs.getString(TXN_TYPE),
-                rs.getBoolean(SUCCESS),
-                rs.getString(ERROR_MESSAGE),
-                rs.getLong(NONCE),
-                rs.getLong(ACTION_FEE),
-                rs.getBoolean(PAID),
-                rs.getString(FEEPAYER)
+                rs.getLong(TXN_FEE),
+                rs.getBoolean(SUCCESS)
         );
+        Txns.add(newTxn);
+        return newTxn;
     }
 
     private static TxnModel populateTxnModel(ResultSet rs) throws SQLException {
@@ -1115,6 +1152,7 @@ public class Queries {
                 rs.getString(FEEPAYER)
         );
     }
+
     private static String getTransactionsTableName(String hash) {
         int shardIndex = Math.abs(hash.hashCode()) % NUMBER_OF_SHARDS;
         return "\"Transactions_Shard_" + shardIndex + "\"";

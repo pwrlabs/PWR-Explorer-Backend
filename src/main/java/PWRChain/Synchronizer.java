@@ -1,12 +1,8 @@
 package PWRChain;
 
 import DailyActivity.Stats;
-import Main.Hex;
-import Main.Settings;
-import Txn.Txn;
-
-import User.User;
-import User.Users;
+import Txn.NewTxn;
+import Txn.Txns;
 import Validator.Validators;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import com.github.pwrlabs.pwrj.record.block.Block;
@@ -14,9 +10,6 @@ import com.github.pwrlabs.pwrj.record.transaction.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import java.util.*;
-import java.math.BigDecimal;
-import java.sql.SQLOutput;
-
 import static Core.Sql.Queries.*;
 
 public class Synchronizer {
@@ -40,11 +33,12 @@ public class Synchronizer {
                         logger.info("Checking block: {}", blockToCheck);
 
                         try {
-                            Block block = pwrj.getBlockByNumber(blockToCheck);
+                            Block block = pwrj.getBlockByNumberExcludingDataAndExtraData(blockToCheck);
+                            logger.info("Scanned block: {} ",block);
                             logger.info("Block hash: {}", block.getHash());
 
                             try {
-                                insertBlock(block.getNumber(), block.getHash(), Hex.decode(block.getSubmitter().substring(2)),
+                                insertBlock(block.getNumber(), block.getHash(), block.getSubmitter().substring(2),
                                         block.getTimestamp(), block.getTransactionCount(), block.getReward(), block.getSize(),block.processedWithoutCriticalErrors());
                             } catch (Exception e) {
                                 logger.error("Error inserting block: {}", blockToCheck, e);
@@ -56,7 +50,7 @@ public class Synchronizer {
 
                                 if (txn instanceof VmDataTransaction) {
                                     VmDataTransaction vmDataTxn = (VmDataTransaction) txn;
-                                    data = Hex.decode(vmDataTxn.getData());
+//                                    data = Hex.decode(vmDataTxn.getData());
 
                                 } else if (txn instanceof DelegateTransaction) {
                                     DelegateTransaction delegateTxn = (DelegateTransaction) txn;
@@ -73,13 +67,14 @@ public class Synchronizer {
                                     long blockNumber = (long) block.getNumber();
                                     List<Validators> validatorList = new ArrayList<>();
 
-                                    new Txn(txn.getHash(), txn.getSize(), txn.getPositionInTheBlock(),(int) block.getNumber(), txn.getSender().substring(2),
-                                            txn.getReceiver(), txn.getTimestamp(), value, txn.getFee(), txn.getType(), !txn.hasError(),txn.getErrorMessage(),txn.getNonce(), 0, false,"No message for now");
+                                    NewTxn newTxn = new NewTxn(txn.getHash(), (int) block.getNumber(), txn.getPositionInTheBlock(), txn.getSender().substring(2),
+                                            txn.getReceiver(), txn.getTimestamp(), txn.getValue(), txn.getType(), txn.getFee(), !txn.hasError());
+                                    Txns.add(newTxn);
                                     Stats.getInstance().processBlock(txn.getSender(), block.getTransactionCount(), block.getReward(), block.getTimestamp(), block.getSize());
 
-                                    insertTxn(txn.getHash(), block.getNumber(), txn.getSize(), txn.getPositionInTheBlock(),
+                                    insertTxn(txn.getHash(), block.getNumber(), txn.getPositionInTheBlock(),
                                             txn.getSender().substring(2), txn.getReceiver(), block.getTimestamp(),
-                                            value, txn.getFee(), txn.getType(), !txn.hasError(), txn.getErrorMessage(),txn.getNonce(),0,false,txn.getSender());
+                                            value, txn.getType(), txn.getFee(), !txn.hasError());
                                 } catch (Exception e) {
                                     logger.error("Error inserting transaction: {}", txn.getHash(), e);
                                 }

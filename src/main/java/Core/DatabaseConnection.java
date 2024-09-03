@@ -11,9 +11,12 @@ public class DatabaseConnection {
 
     static {
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:postgresql://localhost:5432/pwrexplorer?characterEncoding=UTF-8");
+        config.setJdbcUrl("jdbc:postgresql://localhost:5432/explorer?characterEncoding=UTF-8");
         config.setUsername("postgres");
-        config.setPassword("bXgzfYVU49ki");
+        config.setPassword("Kriko2004");
+//        config.setJdbcUrl("jdbc:postgresql://localhost:5432/pwrexplorer?characterEncoding=UTF-8");
+//        config.setUsername("postgres");
+//        config.setPassword("bXgzfYVU49ki");
         config.setMaximumPoolSize(10);
 
         dataSource = new HikariDataSource(config);

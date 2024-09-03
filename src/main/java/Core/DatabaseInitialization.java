@@ -138,7 +138,7 @@ public class DatabaseInitialization {
     private static final String initializeBlock = "CREATE TABLE IF NOT EXISTS \"Block\" (\n" +
             "    \"block_number\" BIGINT PRIMARY KEY,\n" +
             "    \"block_hash\" VARCHAR(256),\n" +
-            "    \"fee_recipient\" BYTEA,\n" +
+            "    \"fee_recipient\" TEXT,\n" +
             "    \"timestamp\" BIGINT,\n" +
             "    \"transactions_count\" INTEGER,\n" +
             "    \"block_reward\" BIGINT,\n" +
@@ -209,20 +209,14 @@ public class DatabaseInitialization {
         String sql = "CREATE TABLE IF NOT EXISTS " + tableName + " (\n" +
                 "    \"hash\" VARCHAR(256),\n" +
                 "    \"block_number\" BIGINT,\n" +
-                "    \"size\" INTEGER,\n" +
                 "    \"position_in_block\" INTEGER,\n" +
                 "    \"from_address\" VARCHAR(256),\n" +
                 "    \"to_address\" VARCHAR(256),\n" +
                 "    \"timestamp\" BIGINT,\n" +
                 "    \"value\" BIGINT,\n" +
-                "    \"txn_fee\" BIGINT,\n" +
                 "    \"txn_type\" VARCHAR(256),\n" +
+                "    \"txn_fee\" BIGINT,\n" +
                 "    \"success\" BOOLEAN,\n" +
-                "    \"error_message\" VARCHAR(256),\n" +
-                "    \"nonce\" BIGINT NOT NULL,\n" +
-                "    \"action_fee\" BIGINT,\n" +
-                "    \"paid\" BOOLEAN,\n" +
-                "    \"feePayer\" VARCHAR(256),\n" +
                 "    PRIMARY KEY (\"hash\", \"block_number\"),\n" +
                 "    FOREIGN KEY (\"block_number\") REFERENCES \"Block\"(\"block_number\")\n" +
                 ");\n" +

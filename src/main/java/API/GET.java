@@ -21,12 +21,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.web3j.protocol.core.Ethereum;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import static Core.Sql.Queries.*;
 import static spark.Spark.get;
@@ -84,6 +86,8 @@ public class GET {
                     txns.put(object);
                 }
 
+                Map<Long, Integer> sevenDaysTxn = getSevenDaysTxns();
+
                 return getSuccess(
                         "price", Settings.getPrice(),
                         "priceChange", 2.5,
@@ -93,13 +97,11 @@ public class GET {
                         "validators", pwrj.getActiveValidatorsCount(),
                         "tps", Blocks.getAverageTps(100),
                         "txns", txns,
-                        "blocks", blocks
+                        "blocks", blocks,
+                        "sevenDaysTxn", sevenDaysTxn
                 );
-
-
             } catch (Exception e) {
-                e.printStackTrace();
-                return getError(response, e.getLocalizedMessage());
+                return getError(response, e.getMessage());
             }
         });
 
@@ -234,7 +236,6 @@ public class GET {
                 return getError(response, e.getLocalizedMessage());
             }
         });
-
         get("/block/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
@@ -255,7 +256,6 @@ public class GET {
                 return getError(response, e.getLocalizedMessage());
             }
         });
-
         get("/blockTransactions/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
@@ -322,87 +322,50 @@ public class GET {
                 return getError(response, e.getLocalizedMessage());
             }
         });
+        get("/blocksCreated/", ((request, response) -> {
+            response.type("application/json");
+            String address = request.queryParams("validatorAddress");
+            int count = Integer.parseInt(request.queryParams("count"));
+            int page = Integer.parseInt(request.queryParams("page"));
 
-//        get("/latestTransactions/", (request, response) -> {
-//            try {
-//                response.header("Content-Type", "application/json");
-//
-//                int count = Integer.parseInt(request.queryParams("count"));
-//                int page = Integer.parseInt(request.queryParams("page"));
-//                int previousTxnsCount = (page - 1) * count;
-//
-//                int fetchedTxns = 0;
-//                JSONArray txnsArray = new JSONArray();
-//
-//                for(int t=0; fetchedTxns < count + previousTxnsCount; ++t) {
-//                    long blockNumber = getLastBlockNumber();
-//
-//                    List<Txn> txns = getBlockTxns(""+blockNumber);
-//                    for(Txn txn : txns) {
-//                        if(txn == null) continue;
-//
-//                        if(fetchedTxns < previousTxnsCount) {
-//                            ++fetchedTxns;
-//                            continue;
-//                        }
-//
-//                        JSONObject object = new JSONObject();
-//
-//                        object.put("txnHash", txn.getHash());
-//                        object.put("block", blockNumber);
-//                        object.put("txnType", txn.getTxnType());
-//                        object.put("timeStamp", txn.getTimestamp());
-//                        object.put("from", "0x" + bytesToHex(txn.getFromAddress()));
-//                        object.put("to", txn.getToAddress());
-//                        object.put("txnFee", txn.getTxnFee());
-//                        object.put("value", txn.getValue());
-//                        object.put("valueInUsd", txn.getValue());
-//                        object.put("txnFeeInUsd", txn.getTxnFee());
-//                        object.put("nonceOrValidationHash", txn.getNonceOrValidationHash());
-//                        object.put("positionInBlock", txn.getPositionInBlock());
-//
-//                        txnsArray.put(object);
-//                        ++fetchedTxns;
-//                        if(fetchedTxns == count + previousTxnsCount) break;
-//                    }
-//                }
-//
-//                int totalTxnCount = Txns.getTxnCount(); //TODO: what is this intended to return
-//                int totalPages = totalTxnCount / count;
-//                if(totalTxnCount % count != 0) ++totalPages;
-//
-//                JSONObject metadata = new JSONObject();
-//                metadata.put("totalTxns", Txns.getTxnCount());
-//                metadata.put("totalPages", totalPages);
-//                metadata.put("currentPage", page);
-//                metadata.put("itemsPerPage", count);
-//                metadata.put("totalItems", totalTxnCount);
-//                metadata.put("startIndex", previousTxnsCount + 1);
-//
-//                if(previousTxnsCount + count <= totalTxnCount) metadata.put("endIndex", previousTxnsCount + count);
-//                else metadata.put("endIndex", totalTxnCount);
-//
-//                if(page < totalPages) metadata.put("nextPage", page + 1);
-//                else metadata.put("nextPage", -1);
-//
-//                if(page > 1) metadata.put("previousPage", page - 1);
-//                else metadata.put("previousPage", -1);
-//
-//
-//                return getSuccess(
-//                        "transactionCountPast24Hours", Txns.getTxnCountPast24Hours(),
-//                        "transactionCountPercentageChangeComparedToPreviousDay", Txns.getTxnCountPercentageChangeComparedToPreviousDay(),
-//                        "totalTransactionFeesPast24Hours", Txns.getTotalTxnFeesPast24Hours(),
-//                        "totalTransactionFeesPercentageChangeComparedToPreviousDay", Txns.getTotalTxnFeesPercentageChangeComparedToPreviousDay(),
-//                        "averageTransactionFeePast24Hours", Txns.getAverageTxnFeePast24Hours(),
-//                        "averageTransactionFeePercentageChangeComparedToPreviousDay", Txns.getAverageTxnFeePercentageChangeComparedToPreviousDay(),
-//                        "transactions", txnsArray,
-//                        "metadata", metadata);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                return getError(response, e.getLocalizedMessage());
-//            }
-//        });
+            //Metadata variables
+            int previousBlocksCount = (page - 1) * count;
+            int totalBlocksCount, totalPages;
+
+            try {
+                JSONArray blocks = getBlocksCreated(address.toLowerCase().substring(2));
+                JSONObject metadata = new JSONObject();
+
+                if (blocks.isEmpty()) totalBlocksCount = 0;
+                else totalBlocksCount = blocks.length();
+
+                totalPages = totalBlocksCount / count;
+                if (totalBlocksCount % count != 0) ++totalPages;
+
+                metadata.put("totalBlocksCreatedByValidator", blocks.length());
+                metadata.put("totalPages", totalPages);
+                metadata.put("currentPage", page);
+                metadata.put("itemsPerPage", count);
+                metadata.put("totalItems", totalBlocksCount);
+                metadata.put("startIndex", previousBlocksCount + 1);
+
+                if (previousBlocksCount + count <= totalBlocksCount)
+                    metadata.put("endIndex", previousBlocksCount + count);
+                else metadata.put("endIndex", totalBlocksCount);
+
+                if (page < totalPages) metadata.put("nextPage", page + 1);
+                else metadata.put("nextPage", -1);
+
+                if (page > 1) metadata.put("previousPage", page - 1);
+                else metadata.put("previousPage", -1);
+
+                return getSuccess("blocks", blocks,
+                        "metadata", metadata
+                );
+            } catch (Exception e) {
+                return getError(response, e.getLocalizedMessage());
+            }
+        }));
 
         get("/latestTransactions/", (request, response) -> {
             try {
@@ -514,7 +477,6 @@ public class GET {
                 BigDecimal pwrAmount = sparks.divide(BigDecimal.valueOf(1000000000L), 9, RoundingMode.HALF_EVEN);
 
                 BigDecimal feeValueInUSD = pwrAmount.multiply(ONE_PWR_TO_USD).setScale(9, RoundingMode.HALF_EVEN);
-
                 return getSuccess(
                         "txnHash", txnHash,
                         "txnType", txn.getType(),
@@ -528,7 +490,9 @@ public class GET {
                         "txnFee", txnFee,
                         "txnFeeInUsd", feeValueInUSD,
                         "data", data == null ? data : data.toLowerCase(),
-                        "size", txn.getSize()
+                        "size", txn.getSize(),
+                        "errorMessage", txn.getErrorMessage() != null ? txn.getErrorMessage() : null,
+                        "extraData", txn.getExtraData()
                 );
             } catch (Exception e) {
                 e.printStackTrace();
@@ -566,100 +530,76 @@ public class GET {
             }
         });
 
+        get("/nodesInfo/", ((request, response) -> {
+            int count = Integer.parseInt(request.queryParams("count"));
+            int page = Integer.parseInt(request.queryParams("page"));
 
-//
-//        get("/transactionHistory/", (request, response) -> {
-//            try {
-//                response.header("Content-Type", "application/json");
-//
-//                String address = request.queryParams("address");
-//                if (address == null) {
-//                    return getError(response, "Address is required");
-//                }
-//                address = address.substring(2);
-//
-//                String countStr = request.queryParams("count");
-//                if (countStr == null) {
-//                    return getError(response, "Count is required");
-//                }
-//                int count;
-//                try {
-//                    count = Integer.parseInt(countStr);
-//                } catch (NumberFormatException e) {
-//                    return getError(response, "Invalid count");
-//                }
-//
-//                String pageStr = request.queryParams("page");
-//                if (pageStr == null) {
-//                    return getError(response, "Page is required");
-//                }
-//                int page;
-//                try {
-//                    page = Integer.parseInt(pageStr);
-//                } catch (NumberFormatException e) {
-//                    return getError(response, "Invalid page");
-//                }
-//
-//                long startCountTimeOne = System.currentTimeMillis();
-//                List<Txn> txns = getUserTxns(address, page, count);
-//                long endCountTimeOne = System.currentTimeMillis();
-//                logger.info(">>>Time taken for userTxns: " + (endCountTimeOne - startCountTimeOne) + " ms");
-//
-//                long startCountTimeTwo = System.currentTimeMillis();
-//                int totalTxnCount = getTotalTxnCount(address);
-//                System.out.println(">>total txn count: "+ totalTxnCount);
-//                long endCountTimeTwo = System.currentTimeMillis();
-//                logger.info(">>>Time taken for getTotalTxnCount: " + (endCountTimeTwo - startCountTimeTwo) + " ms");
-//
-//                int totalPages = (int) Math.ceil((double) totalTxnCount / count);
-//                System.out.println(">>total pages: "+ totalPages);
-//                if (page > totalPages) {
-//                    return getError(response, "Page number is greater than addresses' total pages");
-//                }
-//
-//                JSONArray txnsArray = new JSONArray();
-//                long start = System.currentTimeMillis();
-//
-//                for (Txn txn : txns) {
-//                    JSONObject object = new JSONObject();
-//                    object.put("txnHash", txn.getHash());
-//                    object.put("block", txn.getBlockNumber());
-//                    object.put("size", txn.getSize());
-//                    object.put("positionInBlock", txn.getPositionInBlock());
-//                    object.put("timeStamp", txn.getTimestamp());
-//                    object.put("from", "0x" + txn.getFromAddress());
-//                    object.put("to", txn.getToAddress());
-//                    object.put("txnFee", txn.getTxnFee());
-//                    object.put("value", txn.getValue());
-//                    object.put("txnType", txn.getTxnType());
-//                    object.put("success", txn.isSuccess());
-//                    object.put("error_message", txn.getErrorMessage());
-//                    object.put("nonce", txn.getNonce());
-//                    object.put("actionFee", txn.getActionFee());
-//                    object.put("paid", txn.isPaid());
-//                    object.put("feePayer", txn.getFeePayer());
-//
-//                    txnsArray.put(object);
-//                }
-//
-//                JSONObject metadata = new JSONObject();
-//                metadata.put("totalPages", totalPages);
-//                metadata.put("currentPage", page);
-//                metadata.put("itemsPerPage", count);
-//                metadata.put("totalItems", totalTxnCount);
-//                metadata.put("startIndex", (page - 1) * count + 1);
-//                metadata.put("endIndex", Math.min(page * count, totalTxnCount));
-//                metadata.put("nextPage", page < totalPages ? page + 1 : -1);
-//                metadata.put("previousPage", page > 1 ? page - 1 : -1);
-//                long end = System.currentTimeMillis();
-//                logger.info(">>>Time taken for loops: " + (end - start) + " ms");
-//
-//                return getSuccess("transactions", txnsArray, "metadata", metadata);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                return getError(response, e.getLocalizedMessage());
-//            }
-//        });
+            //Metadata variables
+            int previousNodesCount = (page - 1) * count;
+            int totalNodesCount, totalPages;
+
+            try {
+                JSONArray nodesArray = new JSONArray();
+                int standbyNodesCount = pwrj.getStandbyValidatorsCount();
+                int activeNodesCount = pwrj.getActiveValidatorsCount();
+                long totalVotingPower = pwrj.getTotalVotingPower();
+
+                List<Validator> nodes = pwrj.getAllValidators();
+                for (Validator node : nodes) {
+                    JSONObject nodeObj = new JSONObject();
+                    String address = node.getAddress();
+                    long shares = node.getShares();
+                    BigDecimal sparks = new BigDecimal(shares);
+                    BigDecimal sharesInPwr = sparks.divide(BigDecimal.valueOf(1000000000L), 9, RoundingMode.HALF_EVEN);
+
+                    BigDecimal votingPowerSparks = new BigDecimal(node.getVotingPower());
+                    BigDecimal activeVotingPower = new BigDecimal(pwrj.getActiveVotingPower());
+                    BigDecimal votingPower = votingPowerSparks.divide(activeVotingPower, 7, RoundingMode.HALF_UP)
+                            .multiply(new BigDecimal("100"))
+                            .setScale(5, RoundingMode.HALF_UP);
+
+                    nodeObj.put("address", "0x" + address);
+                    nodeObj.put("host", node.getIp());
+                    nodeObj.put("votingPower", votingPower);
+                    nodeObj.put("earnings", sharesInPwr);
+                    nodeObj.put("blocksSubmitted", getBlocksSubmitted(address.toLowerCase()));
+                    nodesArray.put(nodeObj);
+                }
+
+                JSONObject metadata = new JSONObject();
+
+                if (nodesArray.isEmpty()) totalNodesCount = 0;
+                else totalNodesCount = nodesArray.length();
+
+                totalPages = totalNodesCount / count;
+                if (totalNodesCount % count != 0) ++totalPages;
+
+                metadata.put("totalNodesCount", nodesArray.length());
+                metadata.put("totalPages", totalPages);
+                metadata.put("currentPage", page);
+                metadata.put("itemsPerPage", count);
+                metadata.put("totalItems", totalNodesCount);
+                metadata.put("startIndex", previousNodesCount + 1);
+
+                if (previousNodesCount + count <= totalNodesCount) metadata.put("endIndex", previousNodesCount + count);
+                else metadata.put("endIndex", totalNodesCount);
+
+                if (page < totalPages) metadata.put("nextPage", page + 1);
+                else metadata.put("nextPage", -1);
+
+                if (page > 1) metadata.put("previousPage", page - 1);
+                else metadata.put("previousPage", -1);
+
+                return getSuccess("nodes", nodesArray,
+                        "metadata", metadata,
+                        "totalActiveNodes", activeNodesCount,
+                        "totalStandbyNodes", standbyNodesCount,
+                        "totalVotingPower", totalVotingPower
+                );
+            } catch (Exception e) {
+                return getError(response, e.getLocalizedMessage());
+            }
+        }));
 
         get("/transactionHistory/", (request, response) -> {
             try {

@@ -8,12 +8,19 @@ import Txn.NewTxn;
 import User.User;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static Core.Constants.Constants.*;
 import static Core.DatabaseConnection.getConnection;
@@ -38,7 +45,7 @@ public class Queries {
             preparedStatement.setBytes(3, lastSentTxn);
             preparedStatement.setArray(4, conn.createArrayOf("BYTEA", transactionHashes));
 
-            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("QUERY: {}", preparedStatement.toString());
 
             preparedStatement.executeUpdate();
         } catch (Exception e) {
@@ -52,7 +59,7 @@ public class Queries {
             long timestamp, long value, String txnType, long txnFee, Boolean success
     ) {
         String tableName = getTransactionsTableName("0");
-        logger.info("table name {}", tableName);
+//        logger.info("table name {}", tableName);
         String sql = "INSERT INTO " + tableName + " (" +
                 "\"hash\", " +
                 "\"block_number\", " +
@@ -127,7 +134,7 @@ public class Queries {
             preparedStatement.setLong(1, id);
             preparedStatement.setString(2, firstSentTxn);
             preparedStatement.setString(3, lastSentTxn);
-            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("QUERY: {}", preparedStatement.toString());
             preparedStatement.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
@@ -148,7 +155,7 @@ public class Queries {
             preparedStatement.setString(2, validatorAddress);
             preparedStatement.setLong(3, initialDelegation);
 
-            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("QUERY: {}", preparedStatement.toString());
 
             preparedStatement.executeUpdate();
         } catch (Exception e) {
@@ -171,7 +178,7 @@ public class Queries {
             preparedStatement.setLong(3, initialDelegation);
             preparedStatement.setLong(4, initialDelegation);
 
-            logger.info("QUERY: {}", preparedStatement);
+//            logger.info("QUERY: {}", preparedStatement);
 
             preparedStatement.executeUpdate();
         } catch (Exception e) {
@@ -202,7 +209,7 @@ public class Queries {
             preparedStatement.setBoolean(7, success);
             preparedStatement.setLong(8, blockNumber);
 
-            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("QUERY: {}", preparedStatement.toString());
 
             preparedStatement.executeUpdate();
         } catch (Exception e) {
@@ -333,7 +340,7 @@ public class Queries {
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, userAddress);
 
-            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("QUERY: {}", preparedStatement.toString());
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 while (rs.next()) {
@@ -355,7 +362,7 @@ public class Queries {
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, address);
 
-            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("QUERY: {}", preparedStatement.toString());
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
@@ -463,7 +470,7 @@ public class Queries {
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setLong(1, blockNumber);
 
-            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("QUERY: {}", preparedStatement.toString());
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
@@ -491,7 +498,7 @@ public class Queries {
             preparedStatement.setInt(1, limit);
             preparedStatement.setInt(2, offset);
 
-            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("QUERY: {}", preparedStatement.toString());
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 while (rs.next()) {
@@ -531,7 +538,7 @@ public class Queries {
                     preparedStatement.setInt(1, maxBlockNumber);
                     preparedStatement.setInt(2, x);
 
-                    logger.info("QUERY: {}", preparedStatement.toString());
+//                    logger.info("QUERY: {}", preparedStatement.toString());
 
                     try (ResultSet rs = preparedStatement.executeQuery()) {
                         while (rs.next()) {
@@ -559,7 +566,7 @@ public class Queries {
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setInt(1, x);
 
-            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("QUERY: {}", preparedStatement.toString());
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 while (rs.next()) {
@@ -594,7 +601,7 @@ public class Queries {
             preparedStatement.setInt(1, limit);
             preparedStatement.setInt(2, offset);
 
-            logger.info("QUERY: {}", preparedStatement);
+//            logger.info("QUERY: {}", preparedStatement);
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 while (rs.next()) {
@@ -637,7 +644,7 @@ public class Queries {
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setLong(1, blockNumber);
 
-            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("QUERY: {}", preparedStatement.toString());
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 while (rs.next()) {
@@ -767,7 +774,7 @@ public class Queries {
 
         try (Connection conn = getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("QUERY: {}", preparedStatement.toString());
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
@@ -798,7 +805,7 @@ public class Queries {
 
         try (Connection conn = getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("QUERY: {}", preparedStatement.toString());
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
@@ -825,7 +832,7 @@ public class Queries {
 
         try (Connection conn = getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("QUERY: {}", preparedStatement.toString());
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
@@ -857,7 +864,7 @@ public class Queries {
 
         try (Connection conn = getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("QUERY: {}", preparedStatement.toString());
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
@@ -889,7 +896,7 @@ public class Queries {
 
         try (Connection conn = getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("QUERY: {}", preparedStatement.toString());
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
@@ -920,7 +927,7 @@ public class Queries {
 
         try (Connection conn = getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            logger.info("QUERY: {}", preparedStatement.toString());
+//            logger.info("QUERY: {}", preparedStatement.toString());
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
@@ -1025,6 +1032,103 @@ public class Queries {
         }
 
         return new Pair<>(firstTxn, lastTxn);
+    }
+
+    public static Map<Long, Integer> getSevenDaysTxns() {
+        String tableName = getTransactionsTableName("0");
+
+        String sql = "SELECT FLOOR(" + TIMESTAMP + " / 86400) * 86400 as day_start, COUNT(*) as count " +
+                "FROM " + tableName + " " +
+                "WHERE " + TIMESTAMP + " BETWEEN ? AND ? " +
+                "GROUP BY day_start " +
+                "ORDER BY day_start DESC";
+
+        Map<Long, Integer> txns = new HashMap<>();
+
+        ZonedDateTime currentTime = ZonedDateTime.now(ZoneOffset.UTC);
+        ZonedDateTime sevenDaysAgo = currentTime.minusDays(7).withHour(0).withMinute(0).withSecond(0).withNano(0);
+
+        try (Connection connection = getConnection();
+             PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setLong(1, sevenDaysAgo.toEpochSecond());
+            stmt.setLong(2, currentTime.toEpochSecond());
+
+            // Initialize the map with all 7 days, setting count to 0
+            for (int i = 0; i < 7; i++) {
+                long dayStart = currentTime.minusDays(i).withHour(0).withMinute(0).withSecond(0).toEpochSecond();
+                txns.put(dayStart, 0);
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    long dayStart = rs.getLong("day_start");
+                    int count = rs.getInt("count");
+                    txns.put(dayStart, count);
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error fetching seven days txns {}", e.getMessage());
+        }
+
+        return txns.entrySet().stream()
+                .sorted(Map.Entry.<Long, Integer>comparingByKey().reversed())
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new
+                ));
+    }
+
+    public static JSONArray getBlocksCreated(String address) {
+        String sql = "SELECT block_number, timestamp, success, block_reward, transactions_count FROM \"Block\" WHERE LOWER(fee_recipient) = ?";
+        JSONArray blocks = new JSONArray();
+        try (Connection connection = getConnection();
+        PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, address);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    JSONObject block = new JSONObject();
+                    long blockNumber = rs.getLong(BLOCK_NUMBER);
+                    long timestamp = rs.getLong(TIMESTAMP);
+                    int transactionsCount = rs.getInt(TRANSACTIONS_COUNT);
+                    long blockReward = rs.getLong(BLOCK_REWARD);
+                    boolean success = rs.getBoolean(SUCCESS);
+
+                    block.put("blockHeight", blockNumber);
+                    block.put("timeStamp", timestamp);
+                    block.put("txnsCount", transactionsCount);
+                    block.put("blockReward", blockReward);
+                    block.put("blockSubmitter", "0x" + address);
+                    block.put("error", !success);
+
+                    blocks.put(block);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to fetch created blocks {}", e.getLocalizedMessage());
+        }
+        return blocks;
+    }
+
+    public static int getBlocksSubmitted(String address) {
+        String sql = "SELECT COUNT(block_hash) FROM \"Block\" WHERE LOWER(fee_recipient) = ?";
+
+        try (Connection connection = getConnection();
+        PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, address);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+                return 0;
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to fetch submitted blocks {}", e.getLocalizedMessage());
+            return 0;
+        }
     }
 
     public static class Pair<T, U> {

@@ -30,7 +30,7 @@ public class Synchronizer {
                 try {
                     long latestBlockNumber = pwrj.getLatestBlockNumber();
                     while (blockToCheck <= latestBlockNumber) {
-                        logger.info("Checking block: {}", blockToCheck);
+//                        logger.info("Checking block: {}", blockToCheck);
 
                         try {
                             Block block = pwrj.getBlockByNumberExcludingDataAndExtraData(blockToCheck);
@@ -39,7 +39,9 @@ public class Synchronizer {
 
                             try {
                                 insertBlock(block.getNumber(), block.getHash(), block.getSubmitter().substring(2),
-                                        block.getTimestamp(), block.getTransactionCount(), block.getReward(), block.getSize(),block.processedWithoutCriticalErrors());
+                                        block.getTimestamp(), block.getTransactionCount(), block.getReward(), block.getSize(),block.processedWithoutCriticalErrors()
+                                );
+                                logger.info("-------------------- {}", block.getSize());
                             } catch (Exception e) {
                                 logger.error("Error inserting block: {}", blockToCheck, e);
                             }

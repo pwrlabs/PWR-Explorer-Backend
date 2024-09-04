@@ -67,7 +67,6 @@ public class Txns {
                 try {
                     totalTxnFeesPast24Hours += txn.txnFee();
                 } catch (Exception e) {
-                    e.printStackTrace();
                 }
             }
         }

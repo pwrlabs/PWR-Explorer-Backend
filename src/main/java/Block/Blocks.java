@@ -77,6 +77,8 @@ public class Blocks {
             if(block == null) {
                 System.out.println(">>Block is null for block number: " + (blockNumberToCheck + 1));
                 break;
+            } else {
+                System.out.println(">>Block is not null , block number: " + (blockNumberToCheck +1 ));
             }
 
             long blockTimestamp = block.getTimeStamp();
@@ -85,10 +87,10 @@ public class Blocks {
                 break;
             }
 
-            System.out.println(">>Block number: " + block.getBlockNumber());
-            System.out.println(">>Block size: " + block.getBlockSize());
-            System.out.println(">>Block reward: " + block.getBlockReward());
-            System.out.println(">>Block count: " + (totalBlockCountPast24Hours + 1));
+//            System.out.println(">>Block number: " + block.getBlockNumber());
+//            System.out.println(">>Block size: " + block.getBlockSize());
+//            System.out.println(">>Block reward: " + block.getBlockReward());
+//            System.out.println(">>Block count: " + (totalBlockCountPast24Hours + 1));
 
             totalBlockSizePast24Hours += block.getBlockSize();
             totalBlockRewardsPast24Hours += block.getBlockReward();

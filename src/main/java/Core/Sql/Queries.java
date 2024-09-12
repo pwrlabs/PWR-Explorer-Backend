@@ -530,13 +530,11 @@ public class Queries {
 
                 // Query to get transactions from the highest block number
                 String sql = "SELECT * FROM " + tableName +
-                        " WHERE " + BLOCK_NUMBER + " = ? " +
                         " ORDER BY " + TIMESTAMP + " DESC " +
                         " LIMIT ?;";
 
                 try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-                    preparedStatement.setInt(1, maxBlockNumber);
-                    preparedStatement.setInt(2, x);
+                    preparedStatement.setInt(1, x);
 
 //                    logger.info("QUERY: {}", preparedStatement.toString());
 
@@ -737,7 +735,7 @@ public class Queries {
         String tableName = getTransactionsTableName("0");
 
         String sql = "SELECT * FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ? " +
-                "ORDER BY " + TIMESTAMP + " ASC " +
+                "ORDER BY " + TIMESTAMP + " DESC " +
                 "LIMIT ? OFFSET ?;";
 
         try (Connection conn = getConnection();
@@ -1034,7 +1032,7 @@ public class Queries {
         return new Pair<>(firstTxn, lastTxn);
     }
 
-    public static Map<Long, Integer> getSevenDaysTxns() {
+    public static Map<Long, Integer> getFourteenDaysTxn() {
         String tableName = getTransactionsTableName("0");
 
         String sql = "SELECT FLOOR(" + TIMESTAMP + " / 86400) * 86400 as day_start, COUNT(*) as count " +
@@ -1043,18 +1041,17 @@ public class Queries {
                 "GROUP BY day_start " +
                 "ORDER BY day_start DESC";
 
-        Map<Long, Integer> txns = new HashMap<>();
+        Map<Long, Integer> txns = new LinkedHashMap<>();
 
         ZonedDateTime currentTime = ZonedDateTime.now(ZoneOffset.UTC);
-        ZonedDateTime sevenDaysAgo = currentTime.minusDays(7).withHour(0).withMinute(0).withSecond(0).withNano(0);
-
+        ZonedDateTime fourteenDaysAgo = currentTime.minusDays(13).withHour(0).withMinute(0).withSecond(0).withNano(0);
         try (Connection connection = getConnection();
              PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setLong(1, sevenDaysAgo.toEpochSecond());
+            stmt.setLong(1, fourteenDaysAgo.toEpochSecond());
             stmt.setLong(2, currentTime.toEpochSecond());
 
-            // Initialize the map with all 7 days, setting count to 0
-            for (int i = 0; i < 7; i++) {
+            // Initialize the map with all 14 days, setting count to 0
+            for (int i = 0; i < 14; i++) {
                 long dayStart = currentTime.minusDays(i).withHour(0).withMinute(0).withSecond(0).toEpochSecond();
                 txns.put(dayStart, 0);
             }
@@ -1071,6 +1068,7 @@ public class Queries {
             logger.error("Error fetching seven days txns {}", e.getMessage());
         }
 
+
         return txns.entrySet().stream()
                 .sorted(Map.Entry.<Long, Integer>comparingByKey().reversed())
                 .collect(Collectors.toMap(
@@ -1081,12 +1079,19 @@ public class Queries {
                 ));
     }
 
-    public static JSONArray getBlocksCreated(String address) {
-        String sql = "SELECT block_number, timestamp, success, block_reward, transactions_count FROM \"Block\" WHERE LOWER(fee_recipient) = ?";
+    public static JSONArray getBlocksCreated(String address, int limit, int offset) {
+        String sql = "SELECT block_number, timestamp, success, block_reward, transactions_count " +
+                "FROM \"Block\" WHERE LOWER(fee_recipient) = ? " +
+                "ORDER BY timestamp DESC " +
+                "LIMIT ? OFFSET ?";
+
         JSONArray blocks = new JSONArray();
         try (Connection connection = getConnection();
-        PreparedStatement stmt = connection.prepareStatement(sql)) {
+             PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, address);
+            stmt.setInt(2, limit);
+            stmt.setInt(3, offset);
+
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     JSONObject block = new JSONObject();
@@ -1116,7 +1121,7 @@ public class Queries {
         String sql = "SELECT COUNT(block_hash) FROM \"Block\" WHERE LOWER(fee_recipient) = ?";
 
         try (Connection connection = getConnection();
-        PreparedStatement stmt = connection.prepareStatement(sql)) {
+             PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, address);
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -1230,7 +1235,6 @@ public class Queries {
                 rs.getLong(TXN_FEE),
                 rs.getBoolean(SUCCESS)
         );
-        Txns.add(newTxn);
         return newTxn;
     }
 

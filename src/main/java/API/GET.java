@@ -25,6 +25,9 @@ import org.web3j.protocol.core.Ethereum;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -86,7 +89,7 @@ public class GET {
                     txns.put(object);
                 }
 
-                Map<Long, Integer> sevenDaysTxn = getSevenDaysTxns();
+                Map<Long, Integer> fourteenDaysTxn = getFourteenDaysTxn();
 
                 return getSuccess(
                         "price", Settings.getPrice(),
@@ -98,7 +101,7 @@ public class GET {
                         "tps", Blocks.getAverageTps(100),
                         "txns", txns,
                         "blocks", blocks,
-                        "sevenDaysTxn", sevenDaysTxn
+                        "fourteenDaysTxn", fourteenDaysTxn
                 );
             } catch (Exception e) {
                 return getError(response, e.getMessage());
@@ -327,22 +330,23 @@ public class GET {
             String address = request.queryParams("validatorAddress");
             int count = Integer.parseInt(request.queryParams("count"));
             int page = Integer.parseInt(request.queryParams("page"));
+            int offset = (page - 1) * count;
 
-            //Metadata variables
+            // Metadata variables
             int previousBlocksCount = (page - 1) * count;
             int totalBlocksCount, totalPages;
 
             try {
-                JSONArray blocks = getBlocksCreated(address.toLowerCase().substring(2));
+                JSONArray blocks = getBlocksCreated(address.toLowerCase().substring(2), count, offset);
                 JSONObject metadata = new JSONObject();
 
                 if (blocks.isEmpty()) totalBlocksCount = 0;
-                else totalBlocksCount = blocks.length();
+                else totalBlocksCount = getBlocksSubmitted(address.toLowerCase().substring(2));
 
                 totalPages = totalBlocksCount / count;
                 if (totalBlocksCount % count != 0) ++totalPages;
 
-                metadata.put("totalBlocksCreatedByValidator", blocks.length());
+                metadata.put("totalBlocksCreatedByValidator", totalBlocksCount);
                 metadata.put("totalPages", totalPages);
                 metadata.put("currentPage", page);
                 metadata.put("itemsPerPage", count);
@@ -531,21 +535,43 @@ public class GET {
         });
 
         get("/nodesInfo/", ((request, response) -> {
+            Instant overallStart = Instant.now();
+            Instant sectionStart;
+
             int count = Integer.parseInt(request.queryParams("count"));
             int page = Integer.parseInt(request.queryParams("page"));
+            int offset = (page - 1) * count;
 
-            //Metadata variables
             int previousNodesCount = (page - 1) * count;
             int totalNodesCount, totalPages;
 
             try {
+                // Section 1: Initial data fetching
+                sectionStart = Instant.now();
                 JSONArray nodesArray = new JSONArray();
+                List<Validator> nodes = pwrj.getAllValidators();
+                totalNodesCount = nodes.size();
+                logger.info("Section 1 (Initial data fetching) duration: {} ms", Duration.between(sectionStart, Instant.now()).toMillis());
+
+                sectionStart = Instant.now();
+                BigDecimal activeVotingPower = new BigDecimal(pwrj.getActiveVotingPower());
                 int standbyNodesCount = pwrj.getStandbyValidatorsCount();
                 int activeNodesCount = pwrj.getActiveValidatorsCount();
                 long totalVotingPower = pwrj.getTotalVotingPower();
+                logger.info("Section middle (Middle data fetching) duration: {} ms", Duration.between(sectionStart, Instant.now()).toMillis());
 
-                List<Validator> nodes = pwrj.getAllValidators();
-                for (Validator node : nodes) {
+                // Section 2: Pagination
+                sectionStart = Instant.now();
+                List<Validator> paginatedNodes = nodes.subList(
+                        Math.min(offset, totalNodesCount),
+                        Math.min(offset + count, totalNodesCount)
+                );
+                logger.info("Section 2 (Pagination) duration: {} ms", Duration.between(sectionStart, Instant.now()).toMillis());
+
+                // Section 3: Node processing
+                sectionStart = Instant.now();
+                for (Validator node : paginatedNodes) {
+                    Instant nodeStart = Instant.now();
                     JSONObject nodeObj = new JSONObject();
                     String address = node.getAddress();
                     long shares = node.getShares();
@@ -553,49 +579,52 @@ public class GET {
                     BigDecimal sharesInPwr = sparks.divide(BigDecimal.valueOf(1000000000L), 9, RoundingMode.HALF_EVEN);
 
                     BigDecimal votingPowerSparks = new BigDecimal(node.getVotingPower());
-                    BigDecimal activeVotingPower = new BigDecimal(pwrj.getActiveVotingPower());
                     BigDecimal votingPower = votingPowerSparks.divide(activeVotingPower, 7, RoundingMode.HALF_UP)
                             .multiply(new BigDecimal("100"))
                             .setScale(5, RoundingMode.HALF_UP);
 
-                    nodeObj.put("address", "0x" + address);
-                    nodeObj.put("host", node.getIp());
-                    nodeObj.put("votingPower", votingPower);
-                    nodeObj.put("earnings", sharesInPwr);
-                    nodeObj.put("blocksSubmitted", getBlocksSubmitted(address.toLowerCase()));
+                    nodeObj.put("address", "0x" + address)
+                            .put("host", node.getIp())
+                            .put("votingPowerInPercentage", votingPower)
+                            .put("votingPowerInPwr", node.getVotingPower())
+                            .put("earnings", sharesInPwr)
+                            .put("blocksSubmitted", getBlocksSubmitted(address.toLowerCase()));
+
                     nodesArray.put(nodeObj);
+
+                    logger.info("Processing time for node {}: {} ms", address, Duration.between(nodeStart, Instant.now()).toMillis());
                 }
+                logger.info("Section 3 (Node processing) total duration: {} ms", Duration.between(sectionStart, Instant.now()).toMillis());
 
-                JSONObject metadata = new JSONObject();
-
-                if (nodesArray.isEmpty()) totalNodesCount = 0;
-                else totalNodesCount = nodesArray.length();
-
+                // Section 4: Metadata calculation
+                sectionStart = Instant.now();
                 totalPages = totalNodesCount / count;
                 if (totalNodesCount % count != 0) ++totalPages;
 
-                metadata.put("totalNodesCount", nodesArray.length());
-                metadata.put("totalPages", totalPages);
-                metadata.put("currentPage", page);
-                metadata.put("itemsPerPage", count);
-                metadata.put("totalItems", totalNodesCount);
-                metadata.put("startIndex", previousNodesCount + 1);
+                JSONObject metadata = new JSONObject()
+                        .put("totalNodesCount", nodesArray.length())
+                        .put("totalPages", totalPages)
+                        .put("currentPage", page)
+                        .put("itemsPerPage", count)
+                        .put("totalItems", totalNodesCount)
+                        .put("startIndex", previousNodesCount + 1)
+                        .put("endIndex", Math.min(previousNodesCount + count, totalNodesCount))
+                        .put("nextPage", page < totalPages ? page + 1 : -1)
+                        .put("previousPage", page > 1 ? page - 1 : -1);
+                logger.info("Section 4 (Metadata calculation) duration: {} ms", Duration.between(sectionStart, Instant.now()).toMillis());
 
-                if (previousNodesCount + count <= totalNodesCount) metadata.put("endIndex", previousNodesCount + count);
-                else metadata.put("endIndex", totalNodesCount);
-
-                if (page < totalPages) metadata.put("nextPage", page + 1);
-                else metadata.put("nextPage", -1);
-
-                if (page > 1) metadata.put("previousPage", page - 1);
-                else metadata.put("previousPage", -1);
-
-                return getSuccess("nodes", nodesArray,
+                // Section 5: Response preparation
+                sectionStart = Instant.now();
+                Object result = getSuccess("nodes", nodesArray,
                         "metadata", metadata,
                         "totalActiveNodes", activeNodesCount,
                         "totalStandbyNodes", standbyNodesCount,
                         "totalVotingPower", totalVotingPower
                 );
+                logger.info("Section 5 (Response preparation) duration: {} ms", Duration.between(sectionStart, Instant.now()).toMillis());
+
+                logger.info("Overall function duration: {} ms", Duration.between(overallStart, Instant.now()).toMillis());
+                return result;
             } catch (Exception e) {
                 return getError(response, e.getLocalizedMessage());
             }
@@ -646,14 +675,20 @@ public class GET {
 
                 int totalPages = (int) Math.ceil((double) totalTxnCount / count);
                 System.out.println(">>total pages: " + totalPages);
-                if (page > totalPages) {
-                    return getError(response, "Page number is greater than addresses' total pages");
-                }
 
                 JSONArray txnsArray = new JSONArray();
                 long start = System.currentTimeMillis();
 
+                BigDecimal ONE_PWR_TO_USD = BigDecimal.ONE;
+
                 for (NewTxn txn : txns) {
+                    Transaction subTxn = pwrj.getTransactionByHash(txn.hash());
+
+                    BigDecimal sparks = new BigDecimal(txn.txnFee());
+                    BigDecimal pwrAmount = sparks.divide(BigDecimal.valueOf(1000000000L), 9, RoundingMode.HALF_EVEN);
+
+                    BigDecimal feeValueInUSD = pwrAmount.multiply(ONE_PWR_TO_USD).setScale(9, RoundingMode.HALF_EVEN);
+
                     JSONObject object = new JSONObject();
                     object.put("txnHash", txn.hash());
                     object.put("block", txn.blockNumber());
@@ -664,6 +699,9 @@ public class GET {
                     object.put("value", txn.value());
                     object.put("txnType", txn.txnType());
                     object.put("success", txn.success());
+                    object.put("txnFee", txn.txnFee());
+                    object.put("txnFeeInUsd", feeValueInUSD);
+                    object.put("nonceOrValidationHash", subTxn.getNonce());
 
                     txnsArray.put(object);
                 }
@@ -671,7 +709,7 @@ public class GET {
                 JSONObject metadata = new JSONObject();
                 metadata.put("totalPages", totalPages);
                 metadata.put("currentPage", page);
-                metadata.put("itemsPerPage", count);
+                metadata.put("itemsPerPage", page > totalPages ? 0: count);
                 metadata.put("totalItems", totalTxnCount);
                 metadata.put("startIndex", (page - 1) * count + 1);
                 metadata.put("endIndex", Math.min(page * count, totalTxnCount));
@@ -681,7 +719,7 @@ public class GET {
                 logger.info(">>>Time taken for loops: " + (end - start) + " ms");
 
                 // Get first and last transactions
-                Pair<NewTxn, NewTxn> firstLastTxns = getFirstAndLastTransactionsByAddress("0x" + address);
+                Pair<NewTxn, NewTxn> firstLastTxns = getFirstAndLastTransactionsByAddress(address);
                 JSONObject firstLastTxnsObject = new JSONObject();
 
                 if (firstLastTxns.first != null) {
@@ -838,7 +876,8 @@ public class GET {
                 int count = Integer.parseInt(request.queryParams("count"));
                 int page = Integer.parseInt(request.queryParams("page"));
 
-                Validator v = pwrj.getValidator(validatorAddress);
+
+                Validator v =  pwrj.getValidator(validatorAddress);
                 System.out.println(">>Validator address " + v.getAddress());
                 if (v == null) return getError(response, "Invalid Validator Address");
 

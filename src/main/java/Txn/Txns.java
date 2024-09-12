@@ -104,7 +104,7 @@ public class Txns {
         else
             averageTxnFeePercentageChangeComparedToPreviousDay = BigDecimal.valueOf((averageTxnFeePast24Hours - averageTxnFeeThe24HoursBefore) / (double) averageTxnFeeThe24HoursBefore * 100).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
 
-        logger.info(">>txn count las 24 hours {}", txnCountPast24Hours);
+        logger.info(">>txn count last 24 hours {}", txnCountPast24Hours);
         logger.info(">>totalTxnFeesPast24Hours las 24 hours {}", totalTxnFeesPast24Hours);
         logger.info(">>averageTxnFeePast24Hours {}", averageTxnFeePast24Hours);
         //Update the static variables

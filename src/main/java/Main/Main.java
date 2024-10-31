@@ -4,20 +4,21 @@ package Main;
 import API.GET;
 import API.POST;
 import API.RateLimiter;
-import Core.DatabaseConnection;
 import Core.DatabaseInitialization;
-import DailyActivity.Stats;
 import PWRChain.Synchronizer;
-import User.User;
 import VM.VM;
 import com.github.pwrlabs.dbm.DBM;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
+import com.github.pwrlabs.pwrj.record.validator.Validator;
+
+import java.io.IOException;
+import java.util.List;
 
 import static spark.Spark.*;
 
 public class Main {
 
-    public static void main(String[] args) throws NoSuchMethodException {
+    public static void main(String[] args) throws NoSuchMethodException, IOException {
         port(8081);
 
         options("/*",
@@ -52,7 +53,10 @@ public class Main {
         RateLimiter.initRateLimiter();
 
         DatabaseInitialization.initialize();
-        PWRJ pwrj = new PWRJ("http://147.182.172.216:8085/");
+//        PWRJ pwrj = new PWRJ("http://147.182.172.216:8085/");
+        // test explorer
+        PWRJ pwrj = new PWRJ("http://167.172.183.252:8085/");
+
 
         GET.run(pwrj);
         POST.run(pwrj);

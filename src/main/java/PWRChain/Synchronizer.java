@@ -33,8 +33,10 @@ public class Synchronizer {
 //           nfo             logger.info("Checking block: {}", blockToCheck);
 
                         try {
+                            logger.info("--------------------- {}", blockToCheck);
                             Block block = pwrj.getBlockByNumberExcludingDataAndExtraData(blockToCheck);
-                            logger.info("Scanned block: {} ",block);
+                            logger.info("----------------------------------");
+                            logger.info("Scanned block -------------------------- : {} ",block);
                             logger.info("Block hash: {}", block.getHash());
 
                             try {

@@ -23,6 +23,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.web3j.protocol.core.Ethereum;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
@@ -32,6 +33,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import static Core.Sql.Queries.*;
 import static spark.Spark.get;
@@ -53,57 +55,89 @@ public class GET {
 
         //Explorer Calls
         get("/explorerInfo/", (request, response) -> {
+            Instant serverStart = Instant.now();
             try {
                 response.header("Content-Type", "application/json");
 
-                JSONArray blocks = new JSONArray();
-                JSONArray txns = new JSONArray();
+                CompletableFuture<JSONArray> blocksFuture = CompletableFuture.supplyAsync(() -> {
+                    Instant start = Instant.now();
+                    JSONArray blocks = new JSONArray();
+                    long blockNumberToCheck = Blocks.getLatestBlockNumber();
+                    System.out.println("------------------- " + blockNumberToCheck);
+                    List<Block> blockList = getLastXBlocks(5);
+                    for (Block block : blockList) {
+                        JSONObject object = new JSONObject();
+                        object.put("blockNumber", block.getBlockNumber());
+                        object.put("blockHeight", blockNumberToCheck);
+                        object.put("timeStamp", block.getTimeStamp());
+                        object.put("txnsCount", block.getTxnCount());
+                        object.put("blockReward", block.getBlockReward());
+                        object.put("blockSubmitter", "0x" + block.getBlockSubmitter());
+                        blocks.put(object);
+                    }
+                    long duration = Duration.between(start, Instant.now()).toMillis();
+                    return new JSONArray().put(blocks).put(duration);
+                });
 
-                //Fetch the latest 5 blocks
-                long blockNumberToCheck = Blocks.getLatestBlockNumber();
-                List<Block> blockList = getLastXBlocks(5);
-                for (Block block : blockList) {
+                CompletableFuture<JSONArray> txnsFuture = CompletableFuture.supplyAsync(() -> {
+                    Instant start = Instant.now();
+                    JSONArray txns = new JSONArray();
+                    List<NewTxn> txnsList = getLastXTransactions(5);
+                    for (NewTxn txn : txnsList) {
+                        if (txn == null) continue;
+                        JSONObject object = new JSONObject();
+                        object.put("txnHash", txn.hash());
+                        object.put("timeStamp", txn.timestamp());
+                        object.put("from", "0x" + txn.fromAddress());
+                        object.put("to", txn.toAddress());
+                        object.put("value", txn.value());
+                        txns.put(object);
+                    }
+                    long duration = Duration.between(start, Instant.now()).toMillis();
+                    return new JSONArray().put(txns).put(duration);
+                });
 
-                    JSONObject object = new JSONObject();
-                    object.put("blockNumber", block.getBlockNumber());
-                    object.put("blockHeight", blockNumberToCheck);
-                    object.put("timeStamp", block.getTimeStamp());
-                    object.put("txnsCount", block.getTxnCount());
-                    object.put("blockReward", block.getBlockReward());
-                    object.put("blockSubmitter", "0x" + block.getBlockSubmitter());
+                CompletableFuture<JSONObject> otherDataFuture = CompletableFuture.supplyAsync(() -> {
+                    JSONObject data = new JSONObject();
 
-                    blocks.put(object);
+                    data.put("fourteenDaysTxn", getFourteenDaysTxn());
+                    data.put("totalTransactionsCount", getTotalTransactionCount());
+
+                    try {
+                        data.put("validators", pwrj.getActiveValidatorsCount());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    data.put("tps", Blocks.getAverageTps(100));
+
+                    return data;
+                });
+
+                JSONArray blocksResult = blocksFuture.get();
+                JSONArray txnsResult = txnsFuture.get();
+                JSONObject otherData = otherDataFuture.get();
+                JSONArray arr = blocksResult != null ? blocksResult.optJSONArray(0) : null;
+
+                long blocksCount = 0;
+                if (arr != null && arr.length() > 0) {
+                    blocksCount = arr.optJSONObject(0).optLong("blockHeight", 0);
                 }
-
-                //Fetch the latest 5 txns
-                List<NewTxn> txnsList = getLastXTransactions(5);
-                for (NewTxn txn : txnsList) {
-                    if (txn == null) continue;
-                    JSONObject object = new JSONObject();
-                    object.put("txnHash", txn.hash());
-                    object.put("timeStamp", txn.timestamp());
-                    object.put("from", "0x" + txn.fromAddress());
-                    object.put("to", txn.toAddress());
-                    object.put("value", txn.value());
-
-                    txns.put(object);
-                }
-
-                Map<Long, Integer> fourteenDaysTxn = getFourteenDaysTxn();
 
                 return getSuccess(
                         "price", Settings.getPrice(),
                         "priceChange", 2.5,
                         "marketCap", 1000000000L,
-                        "totalTransactionsCount", getTotalTransactionCount(),
-                        "blocksCount", blockNumberToCheck,
-                        "validators", pwrj.getActiveValidatorsCount(),
-                        "tps", Blocks.getAverageTps(100),
-                        "txns", txns,
-                        "blocks", blocks,
-                        "fourteenDaysTxn", fourteenDaysTxn
+                        "totalTransactionsCount", otherData.getLong("totalTransactionsCount"),
+                        "blocksCount", blocksCount,
+                        "validators", otherData.getInt("validators"),
+                        "tps", otherData.getDouble("tps"),
+                        "txns", txnsResult.getJSONArray(0),
+                        "blocks", blocksResult.getJSONArray(0),
+                        "fourteenDaysTxn", otherData.get("fourteenDaysTxn"),
+                        "serverDuration", Duration.between(serverStart, Instant.now()).toMillis()
                 );
             } catch (Exception e) {
+                e.printStackTrace();
                 return getError(response, e.getMessage());
             }
         });
@@ -486,7 +520,7 @@ public class GET {
                         "txnType", txn.getType(),
                         "blockNumber", txn.getBlockNumber(),
                         "timeStamp", txn.getTimestamp(),
-                        "from", "0x" + txn.getSender(),
+                        "from", txn.getSender(),
                         "to", txn.getReceiver(),
                         "value", txn.getValue(),
                         "valueInUsd", txn.getValue(),
@@ -549,7 +583,7 @@ public class GET {
                 // Section 1: Initial data fetching
                 sectionStart = Instant.now();
                 JSONArray nodesArray = new JSONArray();
-                List<Validator> nodes = pwrj.getAllValidators();
+                List<Validator> nodes = pwrj.getActiveValidators();
                 totalNodesCount = nodes.size();
                 logger.info("Section 1 (Initial data fetching) duration: {} ms", Duration.between(sectionStart, Instant.now()).toMillis());
 
@@ -625,6 +659,34 @@ public class GET {
 
                 logger.info("Overall function duration: {} ms", Duration.between(overallStart, Instant.now()).toMillis());
                 return result;
+            } catch (Exception e) {
+                return getError(response, e.getLocalizedMessage());
+            }
+        }));
+
+        get("/nodesStatus/", ((request, response) -> {
+            response.header("Content-Type", "application/json");
+            String address = request.queryParams("userAddress").toLowerCase();
+
+            try {
+                Validator node = pwrj.getValidator(address);
+
+                BigDecimal sparks = new BigDecimal(node.getShares());
+                BigDecimal sharesInPwr = sparks.divide(BigDecimal.valueOf(1000000000L), 9, RoundingMode.HALF_EVEN);
+
+                BigDecimal votingPowerSparks = new BigDecimal(node.getVotingPower());
+                BigDecimal votingPowerInPwr = votingPowerSparks.divide(BigDecimal.valueOf(1000000000L), 9, RoundingMode.HALF_EVEN);
+
+                // Section 5: Response preparation
+                return getSuccess("address", address,
+                        "ipAddress", node.getIp(),
+                        "status", node.getStatus(),
+                        "votingPower", votingPowerInPwr,
+                        "numberOfDelegators", node.getDelegatorsCount(),
+                        "totalShares", sharesInPwr,
+                        "blocksCreated", getBlocksSubmitted(address),
+                        "timeOfLastBlock", getLatestBlockNumberForFeeRecipient(address.substring(2))
+                );
             } catch (Exception e) {
                 return getError(response, e.getLocalizedMessage());
             }
@@ -709,7 +771,7 @@ public class GET {
                 JSONObject metadata = new JSONObject();
                 metadata.put("totalPages", totalPages);
                 metadata.put("currentPage", page);
-                metadata.put("itemsPerPage", page > totalPages ? 0: count);
+                metadata.put("itemsPerPage", page > totalPages ? 0 : count);
                 metadata.put("totalItems", totalTxnCount);
                 metadata.put("startIndex", (page - 1) * count + 1);
                 metadata.put("endIndex", Math.min(page * count, totalTxnCount));
@@ -877,7 +939,7 @@ public class GET {
                 int page = Integer.parseInt(request.queryParams("page"));
 
 
-                Validator v =  pwrj.getValidator(validatorAddress);
+                Validator v = pwrj.getValidator(validatorAddress);
                 System.out.println(">>Validator address " + v.getAddress());
                 if (v == null) return getError(response, "Invalid Validator Address");
 

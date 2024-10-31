@@ -164,6 +164,28 @@ public class Queries {
         }
     }
 
+    public static long getLatestBlockNumberForFeeRecipient(String feeRecipient) {
+        String sql = "SELECT timestamp FROM \"Block\" " +
+                "WHERE LOWER(fee_recipient) = ? " +
+                "ORDER BY block_number DESC " +
+                "LIMIT 1";
+
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+
+            preparedStatement.setString(1, feeRecipient);
+
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong("timestamp");
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting latest block number for fee recipient {}: {}", feeRecipient, e.getMessage());
+        }
+
+        return -1; // Return -1 if no block found or in case of error
+    }
 
     //>>>>>>>UPDATE<<<<<<<<
     public static void updateInitialDelegations(String userAddress, String validatorAddress, long initialDelegation) {

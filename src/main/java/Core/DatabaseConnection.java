@@ -1,9 +1,9 @@
 package Core;
 
+import Main.Config;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DatabaseConnection {
@@ -13,14 +13,14 @@ public class DatabaseConnection {
         HikariConfig config = new HikariConfig();
 //        config.setJdbcUrl("jdbc:postgresql://localhost:5432/explorer?characterEncoding=UTF-8");
 //        config.setUsername("postgres");
-        config.setPassword("Kriko2004");
+        config.setPassword(Config.getDatabasePassword());
 
 //        config.setJdbcUrl("jdbc:postgresql://localhost:5432/pwrexplorer?characterEncoding=UTF-8");
 //        config.setUsername("postgres");
 //        config.setPassword("bXgzfYVU49ki");
 
-        config.setJdbcUrl("jdbc:postgresql://localhost:5432/testexplorer?characterEncoding=UTF-8");
-        config.setUsername("postgres");
+        config.setJdbcUrl("jdbc:postgresql://localhost:5432/" + Config.getDatabaseName() + "?characterEncoding=UTF-8");
+        config.setUsername(Config.getDatabaseUserName());
 //        config.setPassword("KUX3bgHxE4ksPRrpu");
         config.setMaximumPoolSize(10);
 

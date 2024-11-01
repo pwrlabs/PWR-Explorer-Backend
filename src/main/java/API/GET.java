@@ -63,7 +63,7 @@ public class GET {
                     Instant start = Instant.now();
                     JSONArray blocks = new JSONArray();
                     long blockNumberToCheck = Blocks.getLatestBlockNumber();
-                    System.out.println("------------------- " + blockNumberToCheck);
+                    logger.info("------------------- {}" , blockNumberToCheck);
                     List<Block> blockList = getLastXBlocks(5);
                     for (Block block : blockList) {
                         JSONObject object = new JSONObject();

@@ -75,10 +75,10 @@ public class Blocks {
         while(true) {
             Block block = Blocks.getBlock(blockNumberToCheck--);
             if(block == null) {
-                System.out.println(">>Block is null for block number: " + (blockNumberToCheck + 1));
+                System.out.println(">>Block is null for block number: " + (blockNumberToCheck));
                 break;
             } else {
-                System.out.println(">>Block is not null , block number: " + (blockNumberToCheck +1 ));
+                System.out.println(">>Block is not null , block number: " + (blockNumberToCheck));
             }
 
             long blockTimestamp = block.getTimeStamp();

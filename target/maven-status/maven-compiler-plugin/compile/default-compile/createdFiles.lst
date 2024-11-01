@@ -7,6 +7,7 @@ API\POST.class
 Block\Blocks.class
 Main\Settings.class
 API\IptablesBlocker.class
+Main\Config.class
 Main\OHTTP.class
 Core\Sql\Queries$Pair.class
 Core\Sql\Queries.class

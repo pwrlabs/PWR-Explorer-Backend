@@ -29,8 +29,9 @@ public class Synchronizer {
 
                 try {
                     long latestBlockNumber = pwrj.getLatestBlockNumber();
+                    logger.info("-------------------- {}", latestBlockNumber);
                     while (blockToCheck <= latestBlockNumber) {
-//           nfo             logger.info("Checking block: {}", blockToCheck);
+                        logger.info("Checking block: {}", blockToCheck);
 
                         try {
                             logger.info("--------------------- {}", blockToCheck);
@@ -84,6 +85,7 @@ public class Synchronizer {
                             }
 
                         } catch (Exception e) {
+                            e.printStackTrace();
                             logger.error("Error processing block: {}", blockToCheck, e);
                         }
 

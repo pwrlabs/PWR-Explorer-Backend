@@ -32,7 +32,6 @@ public class Block {
         txns = new NewTxn[txnCount];
         List<NewTxn> tempTxns = getBlockTxns(blockNumber);
 
-        logger.info("-------------------- size {}", tempTxns.size());
         for(int i = 0; i < tempTxns.size(); i++) {
             txns[i] = tempTxns.get(i);
         }

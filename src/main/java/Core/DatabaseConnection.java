@@ -11,37 +11,18 @@ public class DatabaseConnection {
 
     static {
         HikariConfig config = new HikariConfig();
-//        config.setJdbcUrl("jdbc:postgresql://localhost:5432/explorer?characterEncoding=UTF-8");
-//        config.setUsername("postgres");
         config.setPassword(Config.getDatabasePassword());
-
-//        config.setJdbcUrl("jdbc:postgresql://localhost:5432/pwrexplorer?characterEncoding=UTF-8");
-//        config.setUsername("postgres");
-//        config.setPassword("bXgzfYVU49ki");
 
         config.setJdbcUrl("jdbc:postgresql://localhost:5432/" + Config.getDatabaseName() + "?characterEncoding=UTF-8");
         config.setUsername(Config.getDatabaseUserName());
-//        config.setPassword("KUX3bgHxE4ksPRrpu");
         config.setMaximumPoolSize(10);
 
         dataSource = new HikariDataSource(config);
     }
 
-    public static HikariDataSource getPool() {
-        return dataSource;
-    }
 
     public static Connection getConnection() throws SQLException {
         return dataSource.getConnection();
     }
-
-
-//        private static final String url = "jdbc:postgresql://localhost:5432/pwrexplorer?characterEncoding=UTF-8";
-//        private static final String user = "postgres";
-//        private static final String password = "bXgzfYVU49ki";
-//
-//        public static Connection getConnection() throws SQLException {
-//            return DriverManager.getConnection(url, user, password);
-//        }
 
 }

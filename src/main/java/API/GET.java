@@ -5,7 +5,6 @@ import Block.Block;
 import Block.Blocks;
 import DailyActivity.Stats;
 import Main.Settings;
-import Txn.Txn;
 import Txn.NewTxn;
 import Txn.Txns;
 import User.User;
@@ -21,7 +20,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.web3j.protocol.core.Ethereum;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -938,27 +936,38 @@ public class GET {
                 int count = Integer.parseInt(request.queryParams("count"));
                 int page = Integer.parseInt(request.queryParams("page"));
 
-
                 Validator v = pwrj.getValidator(validatorAddress);
-                System.out.println(">>Validator address " + v.getAddress());
-                if (v == null) return getError(response, "Invalid Validator Address");
+                logger.info(">>Validator address {}", v.getAddress());
+                if (v.getAddress() == null) return getError(response, "Invalid Validator Address");
 
                 int totalPages = v.getDelegatorsCount() / count;
                 if (v.getDelegatorsCount() % count != 0) ++totalPages;
                 int startingIndex = (page - 1) * count;
 
                 List<Delegator> delegators = v.getDelegators(pwrj);
+                logger.info("delegators size {}", delegators.size());
+                for (Delegator value : delegators) {
+                    logger.info("-------- delegator {}", value);
+                }
                 JSONArray delegatorsArray = new JSONArray();
-                for (int t = startingIndex; t < v.getDelegatorsCount(); ++t) {
-                    Delegator delegator = delegators.get(t);
-                    if (delegator == null) continue;
+                try {
+                    int delegatorsCount = Math.max(v.getDelegatorsCount(), 0);
 
-                    JSONObject object = new JSONObject();
+                    for (int t = 0; t < delegatorsCount; t++) {
+                        logger.info("------------ delegators count {}", delegatorsCount);
+                        Delegator delegator = delegators.get(t);
+                        if (delegator == null) continue;
 
-                    object.put("address", delegator.getAddress());
-                    object.put("delegatedPWR", BigDecimal.valueOf(delegator.getDelegatedPWR()).divide(BigDecimal.TEN.pow(9), 0, BigDecimal.ROUND_HALF_UP));
+                        JSONObject object = new JSONObject();
 
-                    delegatorsArray.put(object);
+                        object.put("address", delegator.getAddress());
+                        object.put("delegatedPWR", BigDecimal.valueOf(delegator.getDelegatedPWR())
+                                .divide(BigDecimal.TEN.pow(9), 0, BigDecimal.ROUND_HALF_UP));
+
+                        delegatorsArray.put(object);
+                    }
+                } catch (Exception e) {
+                    delegatorsArray = new JSONArray();
                 }
 
                 JSONObject metadata = new JSONObject();

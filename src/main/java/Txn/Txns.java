@@ -15,7 +15,7 @@ import java.util.Map;
 import static Core.Sql.Queries.getDbTxn;
 
 public class Txns {
-    private static final Logger logger = LogManager.getLogger(Txn.class);
+    private static final Logger logger = LogManager.getLogger(Txns.class);
     private static Map<String /*Txn Hash*/, NewTxn> txnByHash = new HashMap<>();
 
     public static void add(NewTxn txn) {
@@ -84,7 +84,7 @@ public class Txns {
                 try {
                     totalTxnFeesThe24HoursBefore += txn.txnFee();
                 } catch (Exception e) {
-                    e.printStackTrace();
+//                    e.printStackTrace();
                 }
             }
         }

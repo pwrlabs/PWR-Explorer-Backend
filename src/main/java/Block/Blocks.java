@@ -75,22 +75,18 @@ public class Blocks {
         while(true) {
             Block block = Blocks.getBlock(blockNumberToCheck--);
             if(block == null) {
-                System.out.println(">>Block is null for block number: " + (blockNumberToCheck));
+                logger.info(">>Block is null for block number: {}", (blockNumberToCheck));
                 break;
-            } else {
-                System.out.println(">>Block is not null , block number: " + (blockNumberToCheck));
             }
+//            else {
+//                logger.info(">>Block is not null , block number: {}", (blockNumberToCheck));
+//            }
 
             long blockTimestamp = block.getTimeStamp();
             if(blockTimestamp < timeNow - 24 * 60 * 60) {
-                System.out.println(">>Block is older than 24 hours. Stopping iteration.");
+                logger.info(">>Block is older than 24 hours. Stopping iteration.");
                 break;
             }
-
-//            System.out.println(">>Block number: " + block.getBlockNumber());
-//            System.out.println(">>Block size: " + block.getBlockSize());
-//            System.out.println(">>Block reward: " + block.getBlockReward());
-//            System.out.println(">>Block count: " + (totalBlockCountPast24Hours + 1));
 
             totalBlockSizePast24Hours += block.getBlockSize();
             totalBlockRewardsPast24Hours += block.getBlockReward();
@@ -98,14 +94,14 @@ public class Blocks {
         }
 
         if(totalBlockCountPast24Hours == 0) {
-            System.out.println(">>No blocks found in the past 24 hours.");
+            logger.info(">>No blocks found in the past 24 hours.");
             averageBlockSizePast24Hours = 0;
         } else {
             averageBlockSizePast24Hours = (int) (totalBlockSizePast24Hours / totalBlockCountPast24Hours);
         }
 
         if(averageBlockSizePast24Hours == 0) {
-            System.out.println(">>Average block size is zero.");
+            logger.info(">>Average block size is zero.");
             networkUtilizationPast24Hours = 0;
         } else {
             networkUtilizationPast24Hours = BigDecimal.valueOf(((double)averageBlockSizePast24Hours / (double)Settings.getBlockSizeLimit()) * 100).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();

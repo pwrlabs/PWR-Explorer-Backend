@@ -50,7 +50,6 @@ public class Main {
         RateLimiter.initRateLimiter();
 
         DatabaseInitialization.initialize();
-//        PWRJ pwrj = new PWRJ("http://147.182.172.216:8085/");
         // test explorer
         PWRJ pwrj = new PWRJ(Config.getPwrRpcUrl());
 

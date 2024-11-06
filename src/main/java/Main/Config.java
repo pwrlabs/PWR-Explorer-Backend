@@ -22,13 +22,14 @@ public class Config {
         }
 
         try {
+//            pwrRpcUrl = config.optString("pwrRpcUrl", "http://147.182.172.216:8085/");
             pwrRpcUrl = config.optString("pwrRpcUrl", "https://pwrrpc.pwrlabs.io");
             databaseUserName = config.optString("databaseUserName", "postgres");
-            databasePassword = config.optString("databasePassword", "bXgzfYVU49ki");
+            databasePassword = config.optString("databasePassword", "KUX3bgHxE4ksPRrpu");
             databaseName = config.optString("databaseName", "pwrexplorer");
 
 //            databasePassword = config.optString("databasePassword", "Kriko2004");
-//            databaseName = config.optString("databaseName", "explorer");
+//            databaseName = config.optString("databaseName", "testexplorer");
 
         } catch (Exception e ) {
             System.err.println("Config:static:Failed to load config file");

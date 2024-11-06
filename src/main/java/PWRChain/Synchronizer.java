@@ -29,16 +29,13 @@ public class Synchronizer {
 
                 try {
                     long latestBlockNumber = pwrj.getLatestBlockNumber();
-                    logger.info("-------------------- {}", latestBlockNumber);
+                    logger.info("Latest block number {}", latestBlockNumber);
                     while (blockToCheck <= latestBlockNumber) {
                         logger.info("Checking block: {}", blockToCheck);
 
                         try {
-                            logger.info("--------------------- {}", blockToCheck);
                             Block block = pwrj.getBlockByNumberExcludingDataAndExtraData(blockToCheck);
-                            logger.info("----------------------------------");
-                            logger.info("Scanned block -------------------------- : {} ",block);
-                            logger.info("Block hash: {}", block.getHash());
+//                            logger.info("Scanned block: {} ",block);
 
                             try {
                                 insertBlock(block.getNumber(), block.getHash(), block.getSubmitter().substring(2),

@@ -436,7 +436,7 @@ public class Queries {
                     long blockReward = rs.getLong(BLOCK_REWARD);
                     int size = rs.getInt(BLOCK_SIZE);
                     String blockNumberString = "" + blockNumber;
-                    block = new Block(blockNumberString, timestamp, feeRecipient, blockReward, size, transactionsCount +1);
+                    block = new Block(blockNumberString, timestamp, feeRecipient, blockReward, size, transactionsCount);
                 }
             }
         } catch (Exception e) {
@@ -599,7 +599,7 @@ public class Queries {
                     int size = rs.getInt(BLOCK_SIZE);
                     String blockNumberString = "" + blockNumber;
                     logger.info("---------------------- {}", transactionsCount);
-                    Block block = new Block(blockNumberString, timestamp, feeRecipient, blockReward, size, transactionsCount +1);
+                    Block block = new Block(blockNumberString, timestamp, feeRecipient, blockReward, size, transactionsCount);
                     blocks.add(block);
                 }
             }

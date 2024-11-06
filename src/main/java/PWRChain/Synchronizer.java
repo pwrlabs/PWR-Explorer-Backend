@@ -9,6 +9,8 @@ import com.github.pwrlabs.pwrj.record.block.Block;
 import com.github.pwrlabs.pwrj.record.transaction.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.io.IOException;
 import java.util.*;
 import static Core.Sql.Queries.*;
 
@@ -26,7 +28,6 @@ public class Synchronizer {
                 } catch (InterruptedException e) {
                     logger.error("Thread sleep interrupted", e);
                 }
-
                 try {
                     long latestBlockNumber = pwrj.getLatestBlockNumber();
                     logger.info("Latest block number {}", latestBlockNumber);

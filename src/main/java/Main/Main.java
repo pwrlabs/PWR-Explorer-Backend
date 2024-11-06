@@ -50,6 +50,7 @@ public class Main {
         RateLimiter.initRateLimiter();
 
         DatabaseInitialization.initialize();
+
         // test explorer
         PWRJ pwrj = new PWRJ(Config.getPwrRpcUrl());
 

@@ -936,7 +936,7 @@ public class GET {
                 int count = Integer.parseInt(request.queryParams("count"));
                 int page = Integer.parseInt(request.queryParams("page"));
 
-                Validator v = pwrj.getValidator(validatorAddress);
+                Validator v = pwrj.getValidator(validatorAddress.substring(2));
                 logger.info(">>Validator address {}", v.getAddress());
                 if (v.getAddress() == null) return getError(response, "Invalid Validator Address");
 

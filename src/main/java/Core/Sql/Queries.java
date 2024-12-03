@@ -598,7 +598,6 @@ public class Queries {
                     long blockReward = rs.getLong(BLOCK_REWARD);
                     int size = rs.getInt(BLOCK_SIZE);
                     String blockNumberString = "" + blockNumber;
-                    logger.info("---------------------- {}", transactionsCount);
                     Block block = new Block(blockNumberString, timestamp, feeRecipient, blockReward, size, transactionsCount);
                     blocks.add(block);
                 }

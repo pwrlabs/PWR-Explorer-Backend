@@ -51,9 +51,9 @@ public class Main {
 
         DatabaseInitialization.initialize();
 
+
         // test explorer
         PWRJ pwrj = new PWRJ(Config.getPwrRpcUrl());
-
 
         GET.run(pwrj);
         POST.run(pwrj);
@@ -67,6 +67,5 @@ public class Main {
         Txn.Initializer.init();
 
         Synchronizer.sync(pwrj);
-
     }
 }

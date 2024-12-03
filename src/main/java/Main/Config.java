@@ -26,20 +26,23 @@ public class Config {
         }
 
         try {
-             pwrRpcUrl = config.optString("pwrRpcUrl", "http://164.92.238.215:8085");
-//            pwrRpcUrl = config.optString("pwrRpcUrl", "https://pwrrpc.pwrlabs.io");
+//             pwrRpcUrl = config.optString("pwrRpcUrl", "http://164.92.238.215:8085");
+            pwrRpcUrl = config.optString("pwrRpcUrl", "https://pwrrpc.pwrlabs.io");
             databaseUserName = config.optString("databaseUserName", "postgres");
 
+
             // explorer v2
-//            databasePassword = config.optString("databasePassword", "bXgzfYVU49ki");
-//            databaseName = config.optString("databaseName", "explorer");
+            databasePassword = config.optString("databasePassword", "bXgzfYVU49ki");
+            databaseName = config.optString("databaseName", "pwrexplorer");
+//             databaseName = config.optString("databaseName", "explorer");
+//             databasePassword = config.optString("databasePassword", "Kriko2004");
+
 
             // test explorer
-//             databasePassword = config.optString("databasePassword", "Kriko2004");
+            // databasePassword = config.optString("databasePassword", "Kriko2004");
             // databaseName = config.optString("databaseName", "testexplorer");
-
-            databasePassword = config.optString("databasePassword", "KUX3bgHxE4ksPRrpu");
-             databaseName = config.optString("databaseName", "pwrexplorer");
+            // databasePassword = config.optString("databasePassword", "KUX3bgHxE4ksPRrpu");
+            // databaseName = config.optString("databaseName", "pwrexplorer");
 
 
         } catch (Exception e) {

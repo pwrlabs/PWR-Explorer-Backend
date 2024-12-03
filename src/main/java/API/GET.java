@@ -65,9 +65,8 @@ public class GET {
                     List<Block> blockList = getLastXBlocks(5);
                     for (Block block : blockList) {
                         JSONObject object = new JSONObject();
-                        object.put("blockNumber", block.getBlockNumber());
-                        object.put("blockHeight", blockNumberToCheck);
-                        object.put("timeStamp", block.getTimeStamp());
+                        object.put("blockHeight", block.getBlockNumber());
+                        object.put("timeStamp", block.getTimeStamp() / 1000);
                         object.put("txnsCount", block.getTxnCount());
                         object.put("blockReward", block.getBlockReward());
                         object.put("blockSubmitter", "0x" + block.getBlockSubmitter());
@@ -85,7 +84,7 @@ public class GET {
                         if (txn == null) continue;
                         JSONObject object = new JSONObject();
                         object.put("txnHash", txn.hash());
-                        object.put("timeStamp", txn.timestamp());
+                        object.put("timeStamp", txn.timestamp() / 1000);
                         object.put("from", "0x" + txn.fromAddress());
                         object.put("to", txn.toAddress());
                         object.put("value", txn.value());
@@ -154,7 +153,7 @@ public class GET {
                     JSONObject object = new JSONObject();
                     object.put("blockNumber", block.getBlockNumber());
                     object.put("blockHeight", Blocks.getLatestBlockNumber());
-                    object.put("timeStamp", block.getTimeStamp());
+                    object.put("timeStamp", block.getTimeStamp() / 1000);
                     object.put("txnsCount", block.getTxnCount());
                     object.put("blockReward", block.getBlockReward());
                     object.put("blockSubmitter", "0x" + block.getBlockSubmitter());
@@ -168,7 +167,7 @@ public class GET {
                     if (txn == null) continue;
                     JSONObject object = new JSONObject();
                     object.put("txnHash", txn.hash());
-                    object.put("timeStamp", txn.timestamp());
+                    object.put("timeStamp", txn.timestamp() / 1000);
                     object.put("from", "0x" + txn.fromAddress());
                     object.put("to", txn.toAddress());
                     object.put("value", txn.value());
@@ -220,7 +219,7 @@ public class GET {
                 for (Block block : blockList) {
                     JSONObject object = new JSONObject();
                     object.put("blockHeight", block.getBlockNumber());
-                    object.put("timeStamp", block.getTimeStamp());
+                    object.put("timeStamp", block.getTimeStamp() / 1000);
                     object.put("txnsCount", block.getTxnCount());
                     object.put("blockReward", block.getBlockReward());
                     object.put("blockSubmitter", "0x" + block.getBlockSubmitter());
@@ -260,7 +259,8 @@ public class GET {
 
                 return getSuccess(
                         "blockHeight", blockNumber,
-                        "timeStamp", block.getTimestamp(),
+                        "blockHash", block.getHash(),
+                        "timeStamp", block.getTimestamp() / 1000,
                         "txnsCount", block.getTransactionCount(),
                         "blockSize", block.getSize(),
                         "blockReward", block.getReward(),
@@ -327,7 +327,7 @@ public class GET {
                     object.put("txnHash", txn.getHash());
                     object.put("txnType", txn.getType());
                     object.put("blockNumber", blockNumber);
-                    object.put("timeStamp", block.getTimestamp());
+                    object.put("timeStamp", block.getTimestamp() / 1000);
                     object.put("from", txn.getSender());
                     object.put("to", txn.getReceiver());
                     object.put("value", txn.getValue());
@@ -436,7 +436,7 @@ public class GET {
                     object.put("txnHash", txn.hash());
                     object.put("txnType", txn.txnType());
                     object.put("block", txn.blockNumber());
-                    object.put("timeStamp", txn.timestamp());
+                    object.put("timeStamp", txn.timestamp() / 1000);
                     object.put("from", "0x" + txn.fromAddress());
                     object.put("to", txn.toAddress());
                     object.put("value", txn.value());
@@ -517,7 +517,7 @@ public class GET {
                         "txnHash", txnHash,
                         "txnType", txn.getType(),
                         "blockNumber", txn.getBlockNumber(),
-                        "timeStamp", txn.getTimestamp(),
+                        "timeStamp", txn.getTimestamp() / 1000,
                         "from", txn.getSender(),
                         "to", txn.getReceiver(),
                         "value", txn.getValue(),
@@ -683,7 +683,7 @@ public class GET {
                         "numberOfDelegators", node.getDelegatorsCount(),
                         "totalShares", sharesInPwr,
                         "blocksCreated", getBlocksSubmitted(address),
-                        "timeOfLastBlock", getLatestBlockNumberForFeeRecipient(address.substring(2))
+                        "timeOfLastBlock", getLatestBlockNumberForFeeRecipient(address.substring(2)) / 1000
                 );
             } catch (Exception e) {
                 return getError(response, e.getLocalizedMessage());
@@ -753,7 +753,7 @@ public class GET {
                     object.put("txnHash", txn.hash());
                     object.put("block", txn.blockNumber());
                     object.put("positionInBlock", txn.positionInBlock());
-                    object.put("timeStamp", txn.timestamp());
+                    object.put("timeStamp", txn.timestamp() / 1000);
                     object.put("from", "0x" + txn.fromAddress());
                     object.put("to", txn.toAddress());
                     object.put("value", txn.value());
@@ -786,7 +786,7 @@ public class GET {
                     JSONObject firstTxnObject = new JSONObject();
                     firstTxnObject.put("txnHash", firstLastTxns.first.hash());
                     firstTxnObject.put("block", firstLastTxns.first.blockNumber());
-                    firstTxnObject.put("timeStamp", firstLastTxns.first.timestamp());
+                    firstTxnObject.put("timeStamp", firstLastTxns.first.timestamp() / 1000);
                     firstLastTxnsObject.put("firstTransaction", firstTxnObject);
                 }
 
@@ -794,7 +794,7 @@ public class GET {
                     JSONObject lastTxnObject = new JSONObject();
                     lastTxnObject.put("txnHash", firstLastTxns.second.hash());
                     lastTxnObject.put("block", firstLastTxns.second.blockNumber());
-                    lastTxnObject.put("timeStamp", firstLastTxns.second.timestamp());
+                    lastTxnObject.put("timeStamp", firstLastTxns.second.timestamp() /1000);
                     firstLastTxnsObject.put("lastTransaction", lastTxnObject);
                 }
 
@@ -936,7 +936,7 @@ public class GET {
                 int count = Integer.parseInt(request.queryParams("count"));
                 int page = Integer.parseInt(request.queryParams("page"));
 
-                Validator v = pwrj.getValidator(validatorAddress.substring(2));
+                Validator v = pwrj.getValidator(validatorAddress);
                 logger.info(">>Validator address {}", v.getAddress());
                 if (v.getAddress() == null) return getError(response, "Invalid Validator Address");
 

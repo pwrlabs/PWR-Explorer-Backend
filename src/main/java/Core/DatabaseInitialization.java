@@ -128,6 +128,8 @@ import org.apache.logging.log4j.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 import static Core.DatabaseConnection.getConnection;
 
@@ -179,6 +181,7 @@ public class DatabaseInitialization {
     };
 
     public static void initialize() {
+        dropTables();
         // Initialize the "Block" table first
         initializeTable(initializeBlock);
 
@@ -232,4 +235,30 @@ public class DatabaseInitialization {
             logger.error("Unable to initialize transactions table for shard {}\nReason: {}", shardIndex, e.getMessage());
         }
     }
+
+    private static void dropTables() {
+        try (Connection connection = getConnection()) {
+            // Drop tables with foreign key constraints first (transactions tables that reference Block)
+            for (int i = 0; i < NUMBER_OF_SHARDS; i++) {
+                dropTable(connection, "\"Transactions_Shard_" + i + "\"");
+            }
+            // Then drop the remaining tables
+            dropTable(connection, "\"Block\"");
+            dropTable(connection, "\"User\"");
+            dropTable(connection, "\"VM\"");
+            dropTable(connection, "\"InitialDelegation\"");
+            dropTable(connection, "\"Validator\"");
+        } catch (Exception e) {
+            logger.error("Error dropping tables: {}", e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private static void dropTable(Connection connection, String tableName) throws SQLException {
+        String sql = "DROP TABLE IF EXISTS " + tableName + " CASCADE";
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute(sql);
+        }
+    }
+
 }

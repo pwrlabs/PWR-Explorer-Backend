@@ -19,7 +19,7 @@ public class Block {
     private int blockSize;
     private int txnCount;
 
-    private final NewTxn[] txns;
+    private final List<NewTxn> txns;
 
     public Block(String blockNumber, long timeStamp, String blockSubmitter, long blockReward, int blockSize, int txnCount) {
         this.blockNumber = blockNumber;
@@ -29,18 +29,13 @@ public class Block {
         this.blockSize = blockSize;
         this.txnCount = txnCount;
 
-        txns = new NewTxn[txnCount];
-        List<NewTxn> tempTxns = getBlockTxns(blockNumber);
-        logger.info("----------------------- {}", tempTxns.size());
-        for(int i = 0; i < tempTxns.size(); i++) {
-            txns[i] = tempTxns.get(i);
-        }
+        txns = getBlockTxns(blockNumber);
 
         Blocks.add(this);
     }
 
     public void addTxn(NewTxn txn, int positionInTheBlock) {
-        txns[positionInTheBlock] = txn;
+        txns.add(positionInTheBlock, txn);
     }
 
     public String getBlockNumber() {
@@ -88,7 +83,7 @@ public class Block {
     }
 
     public NewTxn[] getTxns() {
-        return txns;
+        return txns.toArray(new NewTxn[0]);
     }
 
     //    public Logger getLogger() {

@@ -1057,7 +1057,7 @@ public class Queries {
     public static Map<Long, Integer> getFourteenDaysTxn() {
         String tableName = getTransactionsTableName("0");
 
-        String sql = "SELECT FLOOR(" + TIMESTAMP + " / 86400) * 86400 as day_start, COUNT(*) as count " +
+        String sql = "SELECT FLOOR(" + TIMESTAMP + " / 86400000) * 86400000 as day_start, COUNT(*) as count " +
                 "FROM " + tableName + " " +
                 "WHERE " + TIMESTAMP + " BETWEEN ? AND ? " +
                 "GROUP BY day_start " +
@@ -1069,12 +1069,12 @@ public class Queries {
         ZonedDateTime fourteenDaysAgo = currentTime.minusDays(13).withHour(0).withMinute(0).withSecond(0).withNano(0);
         try (Connection connection = getConnection();
              PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setLong(1, fourteenDaysAgo.toEpochSecond());
-            stmt.setLong(2, currentTime.toEpochSecond());
+            stmt.setLong(1, fourteenDaysAgo.toEpochSecond() * 1000);
+            stmt.setLong(2, currentTime.toEpochSecond() * 1000);
 
             // Initialize the map with all 14 days, setting count to 0
             for (int i = 0; i < 14; i++) {
-                long dayStart = currentTime.minusDays(i).withHour(0).withMinute(0).withSecond(0).toEpochSecond();
+                long dayStart = currentTime.minusDays(i).withHour(0).withMinute(0).withSecond(0).toEpochSecond() * 1000;
                 txns.put(dayStart, 0);
             }
 

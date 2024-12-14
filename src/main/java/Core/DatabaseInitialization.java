@@ -181,7 +181,7 @@ public class DatabaseInitialization {
     };
 
     public static void initialize() {
-        dropTables();
+//        dropTables();
         // Initialize the "Block" table first
         initializeTable(initializeBlock);
 

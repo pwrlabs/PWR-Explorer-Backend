@@ -2183,3 +2183,228 @@
 2024-12-05 16:42:09 [Thread-14] INFO  Txn.Txns - >>averageTxnFeePast24Hours 31761158
 2024-12-05 16:42:09 [Thread-15] INFO  PWRChain.Synchronizer - Checking block: 40
 2024-12-05 16:42:09 [Thread-15] INFO  PWRChain.Synchronizer - Checking block: 41
+2024-12-14 11:39:38 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2024-12-14 11:39:38 [Thread-0] INFO  org.eclipse.jetty.util.log - Logging initialized @1080ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-12-14 11:39:38 [Thread-0] INFO  spark.embeddedserver.jetty.EmbeddedJettyServer - == Spark has ignited ...
+2024-12-14 11:39:38 [Thread-0] INFO  spark.embeddedserver.jetty.EmbeddedJettyServer - >> Listening on 0.0.0.0:8081
+2024-12-14 11:39:38 [Thread-0] INFO  org.eclipse.jetty.server.Server - jetty-9.4.31.v20200723; built: 2020-07-23T17:57:36.812Z; git: 450ba27947e13e66baa8cd1ce7e85a4461cacc1d; jvm 16.0.2+7
+2024-12-14 11:39:38 [Thread-0] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-12-14 11:39:38 [Thread-0] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-12-14 11:39:38 [Thread-0] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 600000ms
+2024-12-14 11:39:38 [Thread-0] INFO  org.eclipse.jetty.server.AbstractConnector - Started ServerConnector@451806ef{HTTP/1.1, (http/1.1)}{0.0.0.0:8081}
+2024-12-14 11:39:38 [Thread-0] INFO  org.eclipse.jetty.server.Server - Started @1166ms
+2024-12-14 11:39:38 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2024-12-14 11:39:38 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:39:38 [main] INFO  Core.DatabaseInitialization - Transactions table for shard 0 initialized!
+2024-12-14 11:39:38 [main] INFO  Core.DatabaseInitialization - Transactions table for shard 1 initialized!
+2024-12-14 11:39:38 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:39:38 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:39:38 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:39:38 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:39:39 [Thread-9] INFO  Block.Block - >>Block is null for block number: -1
+2024-12-14 11:39:39 [Thread-9] INFO  Block.Block - >>No blocks found in the past 24 hours.
+2024-12-14 11:39:39 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-14 11:39:39 [Thread-9] INFO  Block.Block - >>Average block size is zero.
+2024-12-14 11:39:39 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-14 11:39:39 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-14 11:39:40 [Thread-11] INFO  PWRChain.Synchronizer - Latest block number 186315
+2024-12-14 11:39:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 1
+2024-12-14 11:39:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 2
+2024-12-14 11:39:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 3
+2024-12-14 11:39:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 4
+2024-12-14 11:39:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 5
+2024-12-14 11:39:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 6
+2024-12-14 11:39:42 [Thread-9] INFO  Block.Block - >>Block is null for block number: -1
+2024-12-14 11:39:42 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 5
+2024-12-14 11:39:42 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-14 11:39:42 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-14 11:39:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 7
+2024-12-14 11:39:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 8
+2024-12-14 11:39:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 9
+2024-12-14 11:39:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 10
+2024-12-14 11:39:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 11
+2024-12-14 11:39:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 12
+2024-12-14 11:39:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 13
+2024-12-14 11:39:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 14
+2024-12-14 11:39:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 15
+2024-12-14 11:39:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 16
+2024-12-14 11:39:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 17
+2024-12-14 11:39:45 [Thread-9] INFO  Block.Block - >>Block is null for block number: -1
+2024-12-14 11:39:45 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 23
+2024-12-14 11:39:45 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-14 11:39:45 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-14 11:39:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 18
+2024-12-14 11:39:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 19
+2024-12-14 11:40:50 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2024-12-14 11:40:50 [Thread-0] INFO  org.eclipse.jetty.util.log - Logging initialized @778ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-12-14 11:40:50 [Thread-0] INFO  spark.embeddedserver.jetty.EmbeddedJettyServer - == Spark has ignited ...
+2024-12-14 11:40:50 [Thread-0] INFO  spark.embeddedserver.jetty.EmbeddedJettyServer - >> Listening on 0.0.0.0:8081
+2024-12-14 11:40:50 [Thread-0] INFO  org.eclipse.jetty.server.Server - jetty-9.4.31.v20200723; built: 2020-07-23T17:57:36.812Z; git: 450ba27947e13e66baa8cd1ce7e85a4461cacc1d; jvm 16.0.2+7
+2024-12-14 11:40:50 [Thread-0] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-12-14 11:40:50 [Thread-0] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-12-14 11:40:50 [Thread-0] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 660000ms
+2024-12-14 11:40:50 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2024-12-14 11:40:50 [Thread-0] INFO  org.eclipse.jetty.server.AbstractConnector - Started ServerConnector@22190666{HTTP/1.1, (http/1.1)}{0.0.0.0:8081}
+2024-12-14 11:40:50 [Thread-0] INFO  org.eclipse.jetty.server.Server - Started @917ms
+2024-12-14 11:40:50 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:40:50 [main] INFO  Core.DatabaseInitialization - Transactions table for shard 0 initialized!
+2024-12-14 11:40:50 [main] INFO  Core.DatabaseInitialization - Transactions table for shard 1 initialized!
+2024-12-14 11:40:50 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:40:50 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:40:50 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:40:50 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:40:51 [Thread-9] INFO  Block.Block - >>Block is null for block number: -1
+2024-12-14 11:40:51 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-14 11:40:51 [Thread-9] INFO  Block.Block - >>No blocks found in the past 24 hours.
+2024-12-14 11:40:51 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-14 11:40:51 [Thread-9] INFO  Block.Block - >>Average block size is zero.
+2024-12-14 11:40:51 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-14 11:40:52 [Thread-11] INFO  PWRChain.Synchronizer - Latest block number 186339
+2024-12-14 11:40:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 18
+2024-12-14 11:40:52 [Thread-11] ERROR Core.Sql.Queries - org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "Block_pkey"
+  Detail: Key (block_number)=(18) already exists.
+2024-12-14 11:40:52 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0xeda06aad19793813f4dfb195cbde09e52470e1dee819ce1027d7b2daf9e98cf0, 18) already exists.
+2024-12-14 11:40:52 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0xf9d0e0d798003bdc1580aa4e0946b85bc22727bf7709d4be21f5faf893b92cb7, 18) already exists.
+2024-12-14 11:40:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 19
+2024-12-14 11:40:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 20
+2024-12-14 11:40:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 21
+2024-12-14 11:40:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 22
+2024-12-14 11:40:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 23
+2024-12-14 11:40:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 24
+2024-12-14 11:40:54 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 33
+2024-12-14 11:40:54 [Thread-9] INFO  Block.Block - >>Block is null for block number: -1
+2024-12-14 11:40:54 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 5174000
+2024-12-14 11:40:54 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 156787
+2024-12-14 11:40:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 25
+2024-12-14 11:40:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 26
+2024-12-14 11:40:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 27
+2024-12-14 11:40:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 28
+2024-12-14 11:40:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 29
+2024-12-14 11:40:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 30
+2024-12-14 11:40:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 31
+2024-12-14 11:40:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 32
+2024-12-14 11:40:57 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2024-12-14 11:40:57 [Thread-0] INFO  org.eclipse.jetty.util.log - Logging initialized @883ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-12-14 11:40:57 [Thread-0] INFO  spark.embeddedserver.jetty.EmbeddedJettyServer - == Spark has ignited ...
+2024-12-14 11:40:57 [Thread-0] INFO  spark.embeddedserver.jetty.EmbeddedJettyServer - >> Listening on 0.0.0.0:8081
+2024-12-14 11:40:57 [Thread-0] INFO  org.eclipse.jetty.server.Server - jetty-9.4.31.v20200723; built: 2020-07-23T17:57:36.812Z; git: 450ba27947e13e66baa8cd1ce7e85a4461cacc1d; jvm 16.0.2+7
+2024-12-14 11:40:57 [Thread-0] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-12-14 11:40:57 [Thread-0] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-12-14 11:40:57 [Thread-0] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 600000ms
+2024-12-14 11:40:57 [Thread-0] INFO  org.eclipse.jetty.server.AbstractConnector - Started ServerConnector@451806ef{HTTP/1.1, (http/1.1)}{0.0.0.0:8081}
+2024-12-14 11:40:57 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2024-12-14 11:40:57 [Thread-0] INFO  org.eclipse.jetty.server.Server - Started @1003ms
+2024-12-14 11:40:57 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:40:57 [main] INFO  Core.DatabaseInitialization - Transactions table for shard 0 initialized!
+2024-12-14 11:40:57 [main] INFO  Core.DatabaseInitialization - Transactions table for shard 1 initialized!
+2024-12-14 11:40:57 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:40:57 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:40:57 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:40:57 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:40:58 [Thread-9] INFO  Block.Block - >>Block is null for block number: -1
+2024-12-14 11:40:58 [Thread-9] INFO  Block.Block - >>No blocks found in the past 24 hours.
+2024-12-14 11:40:58 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-14 11:40:58 [Thread-9] INFO  Block.Block - >>Average block size is zero.
+2024-12-14 11:40:58 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-14 11:40:58 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-14 11:40:59 [Thread-11] INFO  PWRChain.Synchronizer - Latest block number 186341
+2024-12-14 11:40:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 31
+2024-12-14 11:41:00 [Thread-11] ERROR Core.Sql.Queries - org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "Block_pkey"
+  Detail: Key (block_number)=(31) already exists.
+2024-12-14 11:41:00 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x163cdc9cb1c47113ebd280bd2d4eb70ef688433e5006f4dddca1ddeed85144cc, 31) already exists.
+2024-12-14 11:41:00 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0xd3676489390e88eb39d626cc1ef5f0dba68c09f98b2e2766baefdc986e0a2ad3, 31) already exists.
+2024-12-14 11:41:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 32
+2024-12-14 11:41:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 33
+2024-12-14 11:41:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 34
+2024-12-14 11:41:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 35
+2024-12-14 11:41:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 36
+2024-12-14 11:41:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 37
+2024-12-14 11:41:01 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 53
+2024-12-14 11:41:01 [Thread-9] INFO  Block.Block - >>Block is null for block number: -1
+2024-12-14 11:41:01 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 9154000
+2024-12-14 11:41:01 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 172716
+2024-12-14 11:41:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 38
+2024-12-14 11:41:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 39
+2024-12-14 11:41:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 40
+2024-12-14 11:41:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 41
+2024-12-14 11:41:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 42
+2024-12-14 11:41:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 43
+2024-12-14 11:41:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 44
+2024-12-14 11:41:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 45
+2024-12-14 11:41:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 46
+2024-12-14 11:41:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 47
+2024-12-14 11:41:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 48
+2024-12-14 11:41:04 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 70
+2024-12-14 11:41:04 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 9154000
+2024-12-14 11:41:04 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 130771
+2024-12-14 11:41:04 [Thread-9] INFO  Block.Block - >>Block is null for block number: -1
+2024-12-14 11:41:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 49
+2024-12-14 11:41:05 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 50
+2024-12-14 11:41:05 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 51
+2024-12-14 11:41:05 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 52
+2024-12-14 11:41:05 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 53
+2024-12-14 11:41:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 54
+2024-12-14 11:41:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 55
+2024-12-14 11:41:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 56
+2024-12-14 11:41:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 57
+2024-12-14 11:41:07 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 58
+2024-12-14 11:41:07 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 59
+2024-12-14 11:41:07 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 86
+2024-12-14 11:41:07 [Thread-9] INFO  Block.Block - >>Block is null for block number: -1
+2024-12-14 11:41:07 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 9154000
+2024-12-14 11:41:07 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 106441
+2024-12-14 11:41:07 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 60
+2024-12-14 11:41:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 61
+2024-12-14 11:41:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 62
+2024-12-14 11:41:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 63
+2024-12-14 11:41:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 64
+2024-12-14 11:41:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 65
+2024-12-14 11:41:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 66
+2024-12-14 11:41:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 67
+2024-12-14 11:41:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 68
+2024-12-14 11:41:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 69
+2024-12-14 11:41:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 70
+2024-12-14 11:41:10 [Thread-9] INFO  Block.Block - >>Block is null for block number: -1
+2024-12-14 11:41:10 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 104
+2024-12-14 11:41:10 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 9154000
+2024-12-14 11:41:10 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 88019
+2024-12-14 11:41:13 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2024-12-14 11:41:13 [Thread-0] INFO  org.eclipse.jetty.util.log - Logging initialized @550ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-12-14 11:41:13 [Thread-0] INFO  spark.embeddedserver.jetty.EmbeddedJettyServer - == Spark has ignited ...
+2024-12-14 11:41:13 [Thread-0] INFO  spark.embeddedserver.jetty.EmbeddedJettyServer - >> Listening on 0.0.0.0:8081
+2024-12-14 11:41:13 [Thread-0] INFO  org.eclipse.jetty.server.Server - jetty-9.4.31.v20200723; built: 2020-07-23T17:57:36.812Z; git: 450ba27947e13e66baa8cd1ce7e85a4461cacc1d; jvm 16.0.2+7
+2024-12-14 11:41:13 [Thread-0] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-12-14 11:41:13 [Thread-0] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-12-14 11:41:13 [Thread-0] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 660000ms
+2024-12-14 11:41:13 [Thread-0] INFO  org.eclipse.jetty.server.AbstractConnector - Started ServerConnector@451806ef{HTTP/1.1, (http/1.1)}{0.0.0.0:8081}
+2024-12-14 11:41:13 [Thread-0] INFO  org.eclipse.jetty.server.Server - Started @645ms
+2024-12-14 11:41:13 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2024-12-14 11:41:13 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:41:13 [main] INFO  Core.DatabaseInitialization - Transactions table for shard 0 initialized!
+2024-12-14 11:41:13 [main] INFO  Core.DatabaseInitialization - Transactions table for shard 1 initialized!
+2024-12-14 11:41:13 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:41:13 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:41:13 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:41:13 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-14 11:41:14 [Thread-9] INFO  Block.Block - >>Block is null for block number: -1
+2024-12-14 11:41:14 [Thread-9] INFO  Block.Block - >>No blocks found in the past 24 hours.
+2024-12-14 11:41:14 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-14 11:41:14 [Thread-9] INFO  Block.Block - >>Average block size is zero.
+2024-12-14 11:41:14 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-14 11:41:14 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-14 11:41:15 [Thread-11] INFO  PWRChain.Synchronizer - Latest block number 186346
+2024-12-14 11:41:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 70
+2024-12-14 11:41:15 [Thread-11] ERROR Core.Sql.Queries - org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "Block_pkey"
+  Detail: Key (block_number)=(70) already exists.
+2024-12-14 11:41:15 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0xcac0ac1a23d39da1ce573c043ca0e14de9377440506ceba9841aa614f17ecfad, 70) already exists.
+2024-12-14 11:41:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 71
+2024-12-14 11:41:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 72
+2024-12-14 11:41:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 73
+2024-12-14 11:41:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 74
+2024-12-14 11:41:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 75
+2024-12-14 11:41:17 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 76

@@ -73,9 +73,10 @@ public class Blocks {
         long timeNow = Instant.now().getEpochSecond();
         long blockNumberToCheck = Blocks.getLatestBlockNumber();
         while(true) {
-            Block block = Blocks.getBlock(blockNumberToCheck--);
+            Block block = Blocks.getBlock(blockNumberToCheck);
             if(block == null) {
                 logger.info(">>Block is null for block number: {}", (blockNumberToCheck));
+                Blocks.latestBlockNumber = ++blockNumberToCheck;
                 break;
             }
 //            else {

@@ -2638,3 +2638,1683 @@
 2024-12-16 17:40:18 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
 2024-12-16 17:40:18 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
 2024-12-16 17:40:18 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119133
+2024-12-17 16:41:30 [Thread-0] INFO  org.eclipse.jetty.util.log - Logging initialized @672ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-12-17 16:41:30 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2024-12-17 16:41:30 [Thread-0] INFO  spark.embeddedserver.jetty.EmbeddedJettyServer - == Spark has ignited ...
+2024-12-17 16:41:30 [Thread-0] INFO  spark.embeddedserver.jetty.EmbeddedJettyServer - >> Listening on 0.0.0.0:8081
+2024-12-17 16:41:30 [Thread-0] INFO  org.eclipse.jetty.server.Server - jetty-9.4.31.v20200723; built: 2020-07-23T17:57:36.812Z; git: 450ba27947e13e66baa8cd1ce7e85a4461cacc1d; jvm 16.0.2+7
+2024-12-17 16:41:30 [Thread-0] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-12-17 16:41:30 [Thread-0] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-12-17 16:41:30 [Thread-0] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 660000ms
+2024-12-17 16:41:30 [Thread-0] INFO  org.eclipse.jetty.server.AbstractConnector - Started ServerConnector@37d5db0f{HTTP/1.1, (http/1.1)}{0.0.0.0:8081}
+2024-12-17 16:41:30 [Thread-0] INFO  org.eclipse.jetty.server.Server - Started @834ms
+2024-12-17 16:41:30 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2024-12-17 16:41:30 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:41:30 [main] INFO  Core.DatabaseInitialization - Transactions table for shard 0 initialized!
+2024-12-17 16:41:30 [main] INFO  Core.DatabaseInitialization - Transactions table for shard 1 initialized!
+2024-12-17 16:41:30 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:41:30 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:41:30 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:41:30 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:41:31 [Thread-9] INFO  Block.Block - >>Block is null for block number: -1
+2024-12-17 16:41:31 [Thread-9] INFO  Block.Block - >>No blocks found in the past 24 hours.
+2024-12-17 16:41:31 [Thread-9] INFO  Block.Block - >>Average block size is zero.
+2024-12-17 16:41:31 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:41:31 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:41:31 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:41:32 [Thread-11] INFO  PWRChain.Synchronizer - Latest block number 275824
+2024-12-17 16:41:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119132
+2024-12-17 16:41:32 [Thread-11] ERROR Core.Sql.Queries - org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "Block_pkey"
+  Detail: Key (block_number)=(119132) already exists.
+2024-12-17 16:41:32 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x34c846777659d3fbc6d943b427f05972096bb126e54109a4159cd0ddca341c27, 119132) already exists.
+2024-12-17 16:41:32 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x5933205ca34b736c0b1b6e69ada3c01f3dc35cde6939bfc8adccf6375a514788, 119132) already exists.
+2024-12-17 16:41:32 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0xf26459b47bed1c7004f999a477f607eea31b6544159f89071d193d777e028579, 119132) already exists.
+2024-12-17 16:41:32 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x2c6dcc9fed3280d599b24e71dc206be995b4e1cfe76692093bc5f05f173cb004, 119132) already exists.
+2024-12-17 16:41:32 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0xffb9b4b77f00e35f0da6e06464835c722e378cba0a048e056f6d6e11e76476c2, 119132) already exists.
+2024-12-17 16:41:32 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x88375402445f27358fae5db93c2f6e14c03a2ea908af448b6150d17040660326, 119132) already exists.
+2024-12-17 16:41:32 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x201964d5038fb2085f8d696d74735927cde9b04690e87f6233c776c043a69206, 119132) already exists.
+2024-12-17 16:41:32 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0xeed7bca13e10cbe341c34368d6700ceee4aa4a6256b8e60a439bea2cbd4c59f1, 119132) already exists.
+2024-12-17 16:41:32 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x1010b8d851b657033dcbbff7b2cb86605ef50b22c64ba240ec319139549741a1, 119132) already exists.
+2024-12-17 16:41:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119133
+2024-12-17 16:41:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119134
+2024-12-17 16:41:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119135
+2024-12-17 16:41:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119136
+2024-12-17 16:41:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119137
+2024-12-17 16:41:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119138
+2024-12-17 16:41:34 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:41:34 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 184
+2024-12-17 16:41:34 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 111348000
+2024-12-17 16:41:34 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 605152
+2024-12-17 16:41:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119139
+2024-12-17 16:41:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119140
+2024-12-17 16:41:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119141
+2024-12-17 16:41:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119142
+2024-12-17 16:41:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119143
+2024-12-17 16:41:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119144
+2024-12-17 16:41:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119145
+2024-12-17 16:41:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119146
+2024-12-17 16:41:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119147
+2024-12-17 16:41:37 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:41:37 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 269
+2024-12-17 16:41:37 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 163249000
+2024-12-17 16:41:37 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 606873
+2024-12-17 16:41:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119148
+2024-12-17 16:41:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119149
+2024-12-17 16:41:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119150
+2024-12-17 16:41:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119151
+2024-12-17 16:41:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119152
+2024-12-17 16:41:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119153
+2024-12-17 16:41:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119154
+2024-12-17 16:41:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119155
+2024-12-17 16:41:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119156
+2024-12-17 16:41:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119157
+2024-12-17 16:41:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119158
+2024-12-17 16:41:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119159
+2024-12-17 16:41:40 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:41:40 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 376
+2024-12-17 16:41:40 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 231491000
+2024-12-17 16:41:40 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 615667
+2024-12-17 16:41:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119160
+2024-12-17 16:41:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119161
+2024-12-17 16:41:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119162
+2024-12-17 16:41:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119163
+2024-12-17 16:41:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119164
+2024-12-17 16:41:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119165
+2024-12-17 16:41:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119166
+2024-12-17 16:41:43 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:41:43 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 438
+2024-12-17 16:41:43 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 270476000
+2024-12-17 16:41:43 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 617525
+2024-12-17 16:41:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119167
+2024-12-17 16:41:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119168
+2024-12-17 16:41:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119169
+2024-12-17 16:41:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119170
+2024-12-17 16:41:46 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:41:46 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 472
+2024-12-17 16:41:46 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 290967000
+2024-12-17 16:41:46 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 616455
+2024-12-17 16:41:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119171
+2024-12-17 16:41:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119172
+2024-12-17 16:41:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119173
+2024-12-17 16:41:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119174
+2024-12-17 16:41:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119175
+2024-12-17 16:41:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119176
+2024-12-17 16:41:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119177
+2024-12-17 16:41:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119178
+2024-12-17 16:41:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119179
+2024-12-17 16:41:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119180
+2024-12-17 16:41:49 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:41:49 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 558
+2024-12-17 16:41:49 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 343678000
+2024-12-17 16:41:49 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 615910
+2024-12-17 16:41:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119181
+2024-12-17 16:41:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119182
+2024-12-17 16:41:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119183
+2024-12-17 16:41:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119184
+2024-12-17 16:41:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119185
+2024-12-17 16:41:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119186
+2024-12-17 16:41:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119187
+2024-12-17 16:41:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119188
+2024-12-17 16:41:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119189
+2024-12-17 16:41:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119190
+2024-12-17 16:41:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119191
+2024-12-17 16:41:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119192
+2024-12-17 16:41:52 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:41:52 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 667
+2024-12-17 16:41:52 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 411955000
+2024-12-17 16:41:52 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 617623
+2024-12-17 16:41:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119193
+2024-12-17 16:41:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119194
+2024-12-17 16:41:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119195
+2024-12-17 16:41:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119196
+2024-12-17 16:41:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119197
+2024-12-17 16:41:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119198
+2024-12-17 16:41:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119199
+2024-12-17 16:41:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119200
+2024-12-17 16:41:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119201
+2024-12-17 16:41:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119202
+2024-12-17 16:41:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119203
+2024-12-17 16:41:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119204
+2024-12-17 16:41:55 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:41:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119205
+2024-12-17 16:41:55 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 777
+2024-12-17 16:41:55 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 484921000
+2024-12-17 16:41:55 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 624093
+2024-12-17 16:41:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119206
+2024-12-17 16:41:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119207
+2024-12-17 16:41:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119208
+2024-12-17 16:41:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119209
+2024-12-17 16:41:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119210
+2024-12-17 16:41:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119211
+2024-12-17 16:41:57 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119212
+2024-12-17 16:41:57 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119213
+2024-12-17 16:41:57 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119214
+2024-12-17 16:41:57 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119215
+2024-12-17 16:41:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119216
+2024-12-17 16:41:58 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:41:58 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 880
+2024-12-17 16:41:58 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 549767000
+2024-12-17 16:41:58 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 624735
+2024-12-17 16:41:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119217
+2024-12-17 16:41:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119218
+2024-12-17 16:41:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119219
+2024-12-17 16:41:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119220
+2024-12-17 16:41:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119221
+2024-12-17 16:41:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119222
+2024-12-17 16:42:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119223
+2024-12-17 16:42:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119224
+2024-12-17 16:42:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119225
+2024-12-17 16:42:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119226
+2024-12-17 16:42:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119227
+2024-12-17 16:42:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119228
+2024-12-17 16:42:01 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:01 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 985
+2024-12-17 16:42:01 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 614647000
+2024-12-17 16:42:01 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 624007
+2024-12-17 16:42:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119229
+2024-12-17 16:42:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119230
+2024-12-17 16:42:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119231
+2024-12-17 16:42:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119232
+2024-12-17 16:42:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119233
+2024-12-17 16:42:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119234
+2024-12-17 16:42:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119235
+2024-12-17 16:42:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119236
+2024-12-17 16:42:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119237
+2024-12-17 16:42:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119238
+2024-12-17 16:42:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119239
+2024-12-17 16:42:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119240
+2024-12-17 16:42:04 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:04 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 1101
+2024-12-17 16:42:04 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 1687320000
+2024-12-17 16:42:04 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1532534
+2024-12-17 16:42:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119241
+2024-12-17 16:42:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119242
+2024-12-17 16:42:05 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119243
+2024-12-17 16:42:05 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119244
+2024-12-17 16:42:05 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119245
+2024-12-17 16:42:05 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119246
+2024-12-17 16:42:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119247
+2024-12-17 16:42:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119248
+2024-12-17 16:42:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119249
+2024-12-17 16:42:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119250
+2024-12-17 16:42:07 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119251
+2024-12-17 16:42:07 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119252
+2024-12-17 16:42:07 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:07 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 1202
+2024-12-17 16:42:07 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 1752450000
+2024-12-17 16:42:07 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1457945
+2024-12-17 16:42:07 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119253
+2024-12-17 16:42:07 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119254
+2024-12-17 16:42:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119255
+2024-12-17 16:42:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119256
+2024-12-17 16:42:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119257
+2024-12-17 16:42:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119258
+2024-12-17 16:42:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119259
+2024-12-17 16:42:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119260
+2024-12-17 16:42:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119261
+2024-12-17 16:42:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119262
+2024-12-17 16:42:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119263
+2024-12-17 16:42:10 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:10 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 1316
+2024-12-17 16:42:10 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 1823057000
+2024-12-17 16:42:10 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1385301
+2024-12-17 16:42:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119264
+2024-12-17 16:42:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119265
+2024-12-17 16:42:11 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119266
+2024-12-17 16:42:11 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119267
+2024-12-17 16:42:11 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119268
+2024-12-17 16:42:11 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119269
+2024-12-17 16:42:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119270
+2024-12-17 16:42:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119271
+2024-12-17 16:42:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119272
+2024-12-17 16:42:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119273
+2024-12-17 16:42:13 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119274
+2024-12-17 16:42:13 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:13 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 1431
+2024-12-17 16:42:13 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 1891544000
+2024-12-17 16:42:13 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1321833
+2024-12-17 16:42:13 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119275
+2024-12-17 16:42:13 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119276
+2024-12-17 16:42:14 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119277
+2024-12-17 16:42:14 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119278
+2024-12-17 16:42:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119279
+2024-12-17 16:42:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119280
+2024-12-17 16:42:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119281
+2024-12-17 16:42:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119282
+2024-12-17 16:42:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119283
+2024-12-17 16:42:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119284
+2024-12-17 16:42:16 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:16 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 1512
+2024-12-17 16:42:16 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 1943583000
+2024-12-17 16:42:16 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1285438
+2024-12-17 16:42:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119285
+2024-12-17 16:42:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119286
+2024-12-17 16:42:18 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119287
+2024-12-17 16:42:18 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119288
+2024-12-17 16:42:18 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119289
+2024-12-17 16:42:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119290
+2024-12-17 16:42:19 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119291
+2024-12-17 16:42:19 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 1577
+2024-12-17 16:42:19 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 1984797000
+2024-12-17 16:42:19 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1258590
+2024-12-17 16:42:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119292
+2024-12-17 16:42:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119293
+2024-12-17 16:42:20 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119294
+2024-12-17 16:42:20 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119295
+2024-12-17 16:42:20 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119296
+2024-12-17 16:42:20 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119297
+2024-12-17 16:42:21 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119298
+2024-12-17 16:42:21 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119299
+2024-12-17 16:42:21 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119300
+2024-12-17 16:42:21 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119301
+2024-12-17 16:42:22 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119302
+2024-12-17 16:42:22 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:22 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119303
+2024-12-17 16:42:22 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 1682
+2024-12-17 16:42:22 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 2047541000
+2024-12-17 16:42:22 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1217325
+2024-12-17 16:42:22 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119304
+2024-12-17 16:42:22 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119305
+2024-12-17 16:42:23 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119306
+2024-12-17 16:42:23 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119307
+2024-12-17 16:42:23 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119308
+2024-12-17 16:42:23 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119309
+2024-12-17 16:42:24 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119310
+2024-12-17 16:42:24 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119311
+2024-12-17 16:42:24 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119312
+2024-12-17 16:42:24 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119313
+2024-12-17 16:42:25 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119314
+2024-12-17 16:42:25 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119315
+2024-12-17 16:42:25 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:25 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 1783
+2024-12-17 16:42:25 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 2112100000
+2024-12-17 16:42:25 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1184576
+2024-12-17 16:42:25 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119316
+2024-12-17 16:42:25 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119317
+2024-12-17 16:42:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119318
+2024-12-17 16:42:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119319
+2024-12-17 16:42:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119320
+2024-12-17 16:42:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119321
+2024-12-17 16:42:27 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119322
+2024-12-17 16:42:27 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119323
+2024-12-17 16:42:27 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119324
+2024-12-17 16:42:27 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119325
+2024-12-17 16:42:28 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119326
+2024-12-17 16:42:28 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119327
+2024-12-17 16:42:28 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:28 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 1905
+2024-12-17 16:42:28 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 2187199000
+2024-12-17 16:42:28 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1148135
+2024-12-17 16:42:28 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119328
+2024-12-17 16:42:28 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119329
+2024-12-17 16:42:29 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119330
+2024-12-17 16:42:29 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119331
+2024-12-17 16:42:29 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119332
+2024-12-17 16:42:29 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119333
+2024-12-17 16:42:30 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119334
+2024-12-17 16:42:30 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119335
+2024-12-17 16:42:30 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119336
+2024-12-17 16:42:30 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119337
+2024-12-17 16:42:31 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119338
+2024-12-17 16:42:31 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119339
+2024-12-17 16:42:31 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:31 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 2002
+2024-12-17 16:42:31 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 2250365000
+2024-12-17 16:42:31 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1124058
+2024-12-17 16:42:31 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119340
+2024-12-17 16:42:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119341
+2024-12-17 16:42:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119342
+2024-12-17 16:42:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119343
+2024-12-17 16:42:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119344
+2024-12-17 16:42:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119345
+2024-12-17 16:42:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119346
+2024-12-17 16:42:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119347
+2024-12-17 16:42:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119348
+2024-12-17 16:42:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119349
+2024-12-17 16:42:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119350
+2024-12-17 16:42:34 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119351
+2024-12-17 16:42:34 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 2106
+2024-12-17 16:42:34 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 3316217000
+2024-12-17 16:42:34 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1574651
+2024-12-17 16:42:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119352
+2024-12-17 16:42:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119353
+2024-12-17 16:42:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119354
+2024-12-17 16:42:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119355
+2024-12-17 16:42:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119356
+2024-12-17 16:42:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119357
+2024-12-17 16:42:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119358
+2024-12-17 16:42:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119359
+2024-12-17 16:42:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119360
+2024-12-17 16:42:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119361
+2024-12-17 16:42:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119362
+2024-12-17 16:42:37 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:37 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 2218
+2024-12-17 16:42:37 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 3383656000
+2024-12-17 16:42:37 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1525543
+2024-12-17 16:42:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119363
+2024-12-17 16:42:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119364
+2024-12-17 16:42:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119365
+2024-12-17 16:42:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119366
+2024-12-17 16:42:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119367
+2024-12-17 16:42:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119368
+2024-12-17 16:42:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119369
+2024-12-17 16:42:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119370
+2024-12-17 16:42:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119371
+2024-12-17 16:42:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119372
+2024-12-17 16:42:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119373
+2024-12-17 16:42:40 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:40 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 2334
+2024-12-17 16:42:40 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 3448655000
+2024-12-17 16:42:40 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1477572
+2024-12-17 16:42:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119374
+2024-12-17 16:42:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119375
+2024-12-17 16:42:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119376
+2024-12-17 16:42:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119377
+2024-12-17 16:42:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119378
+2024-12-17 16:42:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119379
+2024-12-17 16:42:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119380
+2024-12-17 16:42:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119381
+2024-12-17 16:42:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119382
+2024-12-17 16:42:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119383
+2024-12-17 16:42:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119384
+2024-12-17 16:42:43 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119385
+2024-12-17 16:42:43 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 2438
+2024-12-17 16:42:43 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 3521801000
+2024-12-17 16:42:43 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1444545
+2024-12-17 16:42:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119386
+2024-12-17 16:42:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119387
+2024-12-17 16:42:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119388
+2024-12-17 16:42:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119389
+2024-12-17 16:42:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119390
+2024-12-17 16:42:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119391
+2024-12-17 16:42:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119392
+2024-12-17 16:42:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119393
+2024-12-17 16:42:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119394
+2024-12-17 16:42:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119395
+2024-12-17 16:42:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119396
+2024-12-17 16:42:46 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119397
+2024-12-17 16:42:46 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 2544
+2024-12-17 16:42:46 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 3586177000
+2024-12-17 16:42:46 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1409660
+2024-12-17 16:42:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119398
+2024-12-17 16:42:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119399
+2024-12-17 16:42:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119400
+2024-12-17 16:42:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119401
+2024-12-17 16:42:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119402
+2024-12-17 16:42:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119403
+2024-12-17 16:42:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119404
+2024-12-17 16:42:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119405
+2024-12-17 16:42:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119406
+2024-12-17 16:42:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119407
+2024-12-17 16:42:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119408
+2024-12-17 16:42:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119409
+2024-12-17 16:42:49 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:49 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 2653
+2024-12-17 16:42:49 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 3656614000
+2024-12-17 16:42:49 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1378294
+2024-12-17 16:42:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119410
+2024-12-17 16:42:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119411
+2024-12-17 16:42:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119412
+2024-12-17 16:42:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119413
+2024-12-17 16:42:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119414
+2024-12-17 16:42:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119415
+2024-12-17 16:42:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119416
+2024-12-17 16:42:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119417
+2024-12-17 16:42:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119418
+2024-12-17 16:42:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119419
+2024-12-17 16:42:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119420
+2024-12-17 16:42:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119421
+2024-12-17 16:42:52 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119422
+2024-12-17 16:42:52 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 2777
+2024-12-17 16:42:52 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 3735598000
+2024-12-17 16:42:52 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1345191
+2024-12-17 16:42:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119423
+2024-12-17 16:42:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119424
+2024-12-17 16:42:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119425
+2024-12-17 16:42:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119426
+2024-12-17 16:42:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119427
+2024-12-17 16:42:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119428
+2024-12-17 16:42:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119429
+2024-12-17 16:42:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119430
+2024-12-17 16:42:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119431
+2024-12-17 16:42:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119432
+2024-12-17 16:42:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119433
+2024-12-17 16:42:55 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:55 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 2866
+2024-12-17 16:42:55 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 3789132000
+2024-12-17 16:42:55 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1322097
+2024-12-17 16:42:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119434
+2024-12-17 16:42:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119435
+2024-12-17 16:42:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119436
+2024-12-17 16:42:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119437
+2024-12-17 16:42:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119438
+2024-12-17 16:42:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119439
+2024-12-17 16:42:57 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119440
+2024-12-17 16:42:57 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119441
+2024-12-17 16:42:57 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119442
+2024-12-17 16:42:57 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119443
+2024-12-17 16:42:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119444
+2024-12-17 16:42:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119445
+2024-12-17 16:42:58 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:42:58 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 2985
+2024-12-17 16:42:58 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 3867718000
+2024-12-17 16:42:58 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1295717
+2024-12-17 16:42:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119446
+2024-12-17 16:42:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119447
+2024-12-17 16:42:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119448
+2024-12-17 16:42:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119449
+2024-12-17 16:42:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119450
+2024-12-17 16:42:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119451
+2024-12-17 16:43:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119452
+2024-12-17 16:43:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119453
+2024-12-17 16:43:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119454
+2024-12-17 16:43:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119455
+2024-12-17 16:43:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119456
+2024-12-17 16:43:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119457
+2024-12-17 16:43:01 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:01 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 3107
+2024-12-17 16:43:01 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 3944707000
+2024-12-17 16:43:01 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1269619
+2024-12-17 16:43:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119458
+2024-12-17 16:43:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119459
+2024-12-17 16:43:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119460
+2024-12-17 16:43:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119461
+2024-12-17 16:43:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119462
+2024-12-17 16:43:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119463
+2024-12-17 16:43:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119464
+2024-12-17 16:43:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119465
+2024-12-17 16:43:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119466
+2024-12-17 16:43:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119467
+2024-12-17 16:43:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119468
+2024-12-17 16:43:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119469
+2024-12-17 16:43:04 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:04 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 3208
+2024-12-17 16:43:04 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 4012229000
+2024-12-17 16:43:04 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1250694
+2024-12-17 16:43:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119470
+2024-12-17 16:43:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119471
+2024-12-17 16:43:05 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119472
+2024-12-17 16:43:05 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119473
+2024-12-17 16:43:05 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119474
+2024-12-17 16:43:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119475
+2024-12-17 16:43:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119476
+2024-12-17 16:43:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119477
+2024-12-17 16:43:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119478
+2024-12-17 16:43:07 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119479
+2024-12-17 16:43:07 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119480
+2024-12-17 16:43:07 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:07 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 3316
+2024-12-17 16:43:07 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 4082245000
+2024-12-17 16:43:07 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1231075
+2024-12-17 16:43:07 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119481
+2024-12-17 16:43:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119482
+2024-12-17 16:43:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119483
+2024-12-17 16:43:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119484
+2024-12-17 16:43:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119485
+2024-12-17 16:43:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119486
+2024-12-17 16:43:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119487
+2024-12-17 16:43:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119488
+2024-12-17 16:43:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119489
+2024-12-17 16:43:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119490
+2024-12-17 16:43:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119491
+2024-12-17 16:43:10 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119492
+2024-12-17 16:43:10 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 3426
+2024-12-17 16:43:10 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 4150670000
+2024-12-17 16:43:10 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1211520
+2024-12-17 16:43:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119493
+2024-12-17 16:43:11 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119494
+2024-12-17 16:43:11 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119495
+2024-12-17 16:43:11 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119496
+2024-12-17 16:43:11 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119497
+2024-12-17 16:43:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119498
+2024-12-17 16:43:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119499
+2024-12-17 16:43:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119500
+2024-12-17 16:43:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119501
+2024-12-17 16:43:13 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119502
+2024-12-17 16:43:13 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119503
+2024-12-17 16:43:13 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:13 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119504
+2024-12-17 16:43:13 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 3523
+2024-12-17 16:43:13 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 4214160000
+2024-12-17 16:43:13 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1196185
+2024-12-17 16:43:13 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119505
+2024-12-17 16:43:14 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119506
+2024-12-17 16:43:14 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119507
+2024-12-17 16:43:14 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119508
+2024-12-17 16:43:14 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119509
+2024-12-17 16:43:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119510
+2024-12-17 16:43:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119511
+2024-12-17 16:43:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119512
+2024-12-17 16:43:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119513
+2024-12-17 16:43:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119514
+2024-12-17 16:43:16 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119515
+2024-12-17 16:43:16 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 3633
+2024-12-17 16:43:16 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 4284088000
+2024-12-17 16:43:16 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1179214
+2024-12-17 16:43:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119516
+2024-12-17 16:43:17 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119517
+2024-12-17 16:43:17 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119518
+2024-12-17 16:43:17 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119519
+2024-12-17 16:43:17 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119520
+2024-12-17 16:43:18 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119521
+2024-12-17 16:43:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119522
+2024-12-17 16:43:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119523
+2024-12-17 16:43:19 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:19 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 3716
+2024-12-17 16:43:19 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 4337680000
+2024-12-17 16:43:19 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1167298
+2024-12-17 16:43:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119524
+2024-12-17 16:43:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119525
+2024-12-17 16:43:20 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119526
+2024-12-17 16:43:20 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119527
+2024-12-17 16:43:21 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119528
+2024-12-17 16:43:21 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119529
+2024-12-17 16:43:21 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119530
+2024-12-17 16:43:22 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119531
+2024-12-17 16:43:22 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119532
+2024-12-17 16:43:22 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:22 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119533
+2024-12-17 16:43:22 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 3810
+2024-12-17 16:43:22 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 4400757000
+2024-12-17 16:43:22 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1155054
+2024-12-17 16:43:22 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119534
+2024-12-17 16:43:23 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119535
+2024-12-17 16:43:23 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119536
+2024-12-17 16:43:23 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119537
+2024-12-17 16:43:23 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119538
+2024-12-17 16:43:24 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119539
+2024-12-17 16:43:24 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119540
+2024-12-17 16:43:24 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119541
+2024-12-17 16:43:24 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119542
+2024-12-17 16:43:25 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119543
+2024-12-17 16:43:25 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119544
+2024-12-17 16:43:25 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:25 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119545
+2024-12-17 16:43:25 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 3920
+2024-12-17 16:43:25 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 4472097000
+2024-12-17 16:43:25 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1140841
+2024-12-17 16:43:25 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119546
+2024-12-17 16:43:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119547
+2024-12-17 16:43:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119548
+2024-12-17 16:43:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119549
+2024-12-17 16:43:27 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119550
+2024-12-17 16:43:27 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119551
+2024-12-17 16:43:27 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119552
+2024-12-17 16:43:28 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119553
+2024-12-17 16:43:28 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119554
+2024-12-17 16:43:28 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:28 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 3995
+2024-12-17 16:43:28 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 4520633000
+2024-12-17 16:43:28 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1131572
+2024-12-17 16:43:28 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119555
+2024-12-17 16:43:29 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119556
+2024-12-17 16:43:29 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119557
+2024-12-17 16:43:29 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119558
+2024-12-17 16:43:30 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119559
+2024-12-17 16:43:30 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119560
+2024-12-17 16:43:30 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119561
+2024-12-17 16:43:30 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119562
+2024-12-17 16:43:31 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119563
+2024-12-17 16:43:31 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119564
+2024-12-17 16:43:31 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:31 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119565
+2024-12-17 16:43:31 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 4094
+2024-12-17 16:43:31 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 4586527000
+2024-12-17 16:43:31 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1120304
+2024-12-17 16:43:31 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119566
+2024-12-17 16:43:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119567
+2024-12-17 16:43:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119568
+2024-12-17 16:43:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119569
+2024-12-17 16:43:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119570
+2024-12-17 16:43:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119571
+2024-12-17 16:43:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119572
+2024-12-17 16:43:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119573
+2024-12-17 16:43:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119574
+2024-12-17 16:43:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119575
+2024-12-17 16:43:34 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119576
+2024-12-17 16:43:34 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 4193
+2024-12-17 16:43:34 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 4647696000
+2024-12-17 16:43:34 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1108441
+2024-12-17 16:43:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119577
+2024-12-17 16:43:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119578
+2024-12-17 16:43:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119579
+2024-12-17 16:43:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119580
+2024-12-17 16:43:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119581
+2024-12-17 16:43:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119582
+2024-12-17 16:43:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119583
+2024-12-17 16:43:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119584
+2024-12-17 16:43:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119585
+2024-12-17 16:43:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119586
+2024-12-17 16:43:37 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:37 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 4282
+2024-12-17 16:43:37 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 4704515000
+2024-12-17 16:43:37 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1098672
+2024-12-17 16:43:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119587
+2024-12-17 16:43:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119588
+2024-12-17 16:43:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119589
+2024-12-17 16:43:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119590
+2024-12-17 16:43:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119591
+2024-12-17 16:43:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119592
+2024-12-17 16:43:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119593
+2024-12-17 16:43:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119594
+2024-12-17 16:43:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119595
+2024-12-17 16:43:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119596
+2024-12-17 16:43:40 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119597
+2024-12-17 16:43:40 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 4387
+2024-12-17 16:43:40 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 4770617000
+2024-12-17 16:43:40 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1087444
+2024-12-17 16:43:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119598
+2024-12-17 16:43:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119599
+2024-12-17 16:43:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119600
+2024-12-17 16:43:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119601
+2024-12-17 16:43:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119602
+2024-12-17 16:43:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119603
+2024-12-17 16:43:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119604
+2024-12-17 16:43:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119605
+2024-12-17 16:43:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119606
+2024-12-17 16:43:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119607
+2024-12-17 16:43:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119608
+2024-12-17 16:43:43 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:43 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 4481
+2024-12-17 16:43:43 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 4829498000
+2024-12-17 16:43:43 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1077772
+2024-12-17 16:43:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119609
+2024-12-17 16:43:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119610
+2024-12-17 16:43:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119611
+2024-12-17 16:43:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119612
+2024-12-17 16:43:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119613
+2024-12-17 16:43:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119614
+2024-12-17 16:43:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119615
+2024-12-17 16:43:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119616
+2024-12-17 16:43:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119617
+2024-12-17 16:43:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119618
+2024-12-17 16:43:46 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119619
+2024-12-17 16:43:46 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 4578
+2024-12-17 16:43:46 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 4892381000
+2024-12-17 16:43:46 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1068672
+2024-12-17 16:43:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119620
+2024-12-17 16:43:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119621
+2024-12-17 16:43:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119622
+2024-12-17 16:43:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119623
+2024-12-17 16:43:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119624
+2024-12-17 16:43:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119625
+2024-12-17 16:43:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119626
+2024-12-17 16:43:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119627
+2024-12-17 16:43:49 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119628
+2024-12-17 16:43:49 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 4657
+2024-12-17 16:43:49 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 4942758000
+2024-12-17 16:43:49 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1061360
+2024-12-17 16:43:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119629
+2024-12-17 16:43:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119630
+2024-12-17 16:43:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119631
+2024-12-17 16:43:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119632
+2024-12-17 16:43:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119633
+2024-12-17 16:43:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119634
+2024-12-17 16:43:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119635
+2024-12-17 16:43:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119636
+2024-12-17 16:43:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119637
+2024-12-17 16:43:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119638
+2024-12-17 16:43:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119639
+2024-12-17 16:43:52 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119640
+2024-12-17 16:43:52 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 4762
+2024-12-17 16:43:52 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 5008349000
+2024-12-17 16:43:52 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1051732
+2024-12-17 16:43:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119641
+2024-12-17 16:43:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119642
+2024-12-17 16:43:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119643
+2024-12-17 16:43:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119644
+2024-12-17 16:43:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119645
+2024-12-17 16:43:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119646
+2024-12-17 16:43:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119647
+2024-12-17 16:43:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119648
+2024-12-17 16:43:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119649
+2024-12-17 16:43:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119650
+2024-12-17 16:43:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119651
+2024-12-17 16:43:55 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119652
+2024-12-17 16:43:55 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 4872
+2024-12-17 16:43:55 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 5074097000
+2024-12-17 16:43:55 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1041481
+2024-12-17 16:43:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119653
+2024-12-17 16:43:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119654
+2024-12-17 16:43:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119655
+2024-12-17 16:43:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119656
+2024-12-17 16:43:57 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119657
+2024-12-17 16:43:57 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119658
+2024-12-17 16:43:57 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119659
+2024-12-17 16:43:57 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119660
+2024-12-17 16:43:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119661
+2024-12-17 16:43:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119662
+2024-12-17 16:43:58 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:43:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119663
+2024-12-17 16:43:58 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 4969
+2024-12-17 16:43:58 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 5138913000
+2024-12-17 16:43:58 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1034194
+2024-12-17 16:43:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119664
+2024-12-17 16:43:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119665
+2024-12-17 16:43:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119666
+2024-12-17 16:43:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119667
+2024-12-17 16:44:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119668
+2024-12-17 16:44:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119669
+2024-12-17 16:44:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119670
+2024-12-17 16:44:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119671
+2024-12-17 16:44:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119672
+2024-12-17 16:44:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119673
+2024-12-17 16:44:01 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:01 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 5063
+2024-12-17 16:44:01 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 5199582000
+2024-12-17 16:44:01 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1026976
+2024-12-17 16:44:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119674
+2024-12-17 16:44:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119675
+2024-12-17 16:44:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119676
+2024-12-17 16:44:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119677
+2024-12-17 16:44:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119678
+2024-12-17 16:44:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119679
+2024-12-17 16:44:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119680
+2024-12-17 16:44:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119681
+2024-12-17 16:44:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119682
+2024-12-17 16:44:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119683
+2024-12-17 16:44:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119684
+2024-12-17 16:44:04 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:06 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2024-12-17 16:44:06 [Thread-0] INFO  org.eclipse.jetty.util.log - Logging initialized @1095ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-12-17 16:44:06 [Thread-0] INFO  spark.embeddedserver.jetty.EmbeddedJettyServer - == Spark has ignited ...
+2024-12-17 16:44:06 [Thread-0] INFO  spark.embeddedserver.jetty.EmbeddedJettyServer - >> Listening on 0.0.0.0:8081
+2024-12-17 16:44:06 [Thread-0] INFO  org.eclipse.jetty.server.Server - jetty-9.4.31.v20200723; built: 2020-07-23T17:57:36.812Z; git: 450ba27947e13e66baa8cd1ce7e85a4461cacc1d; jvm 16.0.2+7
+2024-12-17 16:44:06 [Thread-0] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-12-17 16:44:06 [Thread-0] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-12-17 16:44:06 [Thread-0] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 600000ms
+2024-12-17 16:44:06 [Thread-0] INFO  org.eclipse.jetty.server.AbstractConnector - Started ServerConnector@3be1aff7{HTTP/1.1, (http/1.1)}{0.0.0.0:8081}
+2024-12-17 16:44:06 [Thread-0] INFO  org.eclipse.jetty.server.Server - Started @1307ms
+2024-12-17 16:44:06 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2024-12-17 16:44:06 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:44:06 [main] INFO  Core.DatabaseInitialization - Transactions table for shard 0 initialized!
+2024-12-17 16:44:06 [main] INFO  Core.DatabaseInitialization - Transactions table for shard 1 initialized!
+2024-12-17 16:44:06 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:44:06 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:44:06 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:44:06 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:44:07 [Thread-9] INFO  Block.Block - >>Block is null for block number: -1
+2024-12-17 16:44:07 [Thread-9] INFO  Block.Block - >>No blocks found in the past 24 hours.
+2024-12-17 16:44:07 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:44:07 [Thread-9] INFO  Block.Block - >>Average block size is zero.
+2024-12-17 16:44:07 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:44:07 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:44:08 [Thread-11] INFO  PWRChain.Synchronizer - Latest block number 275876
+2024-12-17 16:44:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119683
+2024-12-17 16:44:09 [Thread-11] ERROR Core.Sql.Queries - org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "Block_pkey"
+  Detail: Key (block_number)=(119683) already exists.
+2024-12-17 16:44:09 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x389ee7244fc26e1995af88195256d8dc3235452b707b112739247570d47e8bac, 119683) already exists.
+2024-12-17 16:44:09 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x4da048ae9ffa25cc3d5671673097ea1a6120fb3d8a9c3e09784b140eccbea2f9, 119683) already exists.
+2024-12-17 16:44:09 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x2404c7603b1c2c663726c6464211e4cce2833ad5c503b58bf6fe47d2bd2301e4, 119683) already exists.
+2024-12-17 16:44:09 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0xea1d3e703687a97bf5354e90e24dba367362881a0f4eb19e8ad72df3edc544f3, 119683) already exists.
+2024-12-17 16:44:09 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x9ade01b66c86ebd5086aa1fb4246b69a88b6d0d58202774c657cb27491d92f23, 119683) already exists.
+2024-12-17 16:44:09 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x370aa20f5370aa97ac0dde11ce2d12eda1e2b0f90ddb1524e993cb7dbfd78704, 119683) already exists.
+2024-12-17 16:44:09 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x2d1357f271bd6731d0d7317a6807840dd97e619784406834324ff35f06a10a43, 119683) already exists.
+2024-12-17 16:44:09 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x332fd37abc5ebc4a8465a681dfeed8189860cb53d47d26d52bd027424f81d31c, 119683) already exists.
+2024-12-17 16:44:09 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x6db0dddab3839d5419ae205cf491f9dc5ad6de175d6e3263ab307d00b88bd5b1, 119683) already exists.
+2024-12-17 16:44:09 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x9ffea404b089f4780ac4457e5e7c600991262ca5f0e6049115b3fe21853a872b, 119683) already exists.
+2024-12-17 16:44:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119684
+2024-12-17 16:44:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119685
+2024-12-17 16:44:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119686
+2024-12-17 16:44:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119687
+2024-12-17 16:44:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119688
+2024-12-17 16:44:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119689
+2024-12-17 16:44:10 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:10 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 5208
+2024-12-17 16:44:10 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 5290528000
+2024-12-17 16:44:10 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1015846
+2024-12-17 16:44:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119690
+2024-12-17 16:44:11 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119691
+2024-12-17 16:44:11 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119692
+2024-12-17 16:44:11 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119693
+2024-12-17 16:44:11 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119694
+2024-12-17 16:44:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119695
+2024-12-17 16:44:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119696
+2024-12-17 16:44:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119697
+2024-12-17 16:44:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119698
+2024-12-17 16:44:13 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119699
+2024-12-17 16:44:13 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119700
+2024-12-17 16:44:13 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:13 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 5309
+2024-12-17 16:44:13 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 5353593000
+2024-12-17 16:44:13 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1008399
+2024-12-17 16:44:13 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119701
+2024-12-17 16:44:14 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119702
+2024-12-17 16:44:14 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119703
+2024-12-17 16:44:14 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119704
+2024-12-17 16:44:14 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119705
+2024-12-17 16:44:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119706
+2024-12-17 16:44:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119707
+2024-12-17 16:44:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119708
+2024-12-17 16:44:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119709
+2024-12-17 16:44:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119710
+2024-12-17 16:44:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119711
+2024-12-17 16:44:16 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:16 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 5410
+2024-12-17 16:44:16 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 5419714000
+2024-12-17 16:44:16 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1001795
+2024-12-17 16:44:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119712
+2024-12-17 16:44:17 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119713
+2024-12-17 16:44:17 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119714
+2024-12-17 16:44:17 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119715
+2024-12-17 16:44:18 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119716
+2024-12-17 16:44:18 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119717
+2024-12-17 16:44:18 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119718
+2024-12-17 16:44:18 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119719
+2024-12-17 16:44:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119720
+2024-12-17 16:44:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119721
+2024-12-17 16:44:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119722
+2024-12-17 16:44:19 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:19 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 5503
+2024-12-17 16:44:19 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 5476910000
+2024-12-17 16:44:19 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 995258
+2024-12-17 16:44:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119723
+2024-12-17 16:44:20 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119724
+2024-12-17 16:44:20 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119725
+2024-12-17 16:44:20 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119726
+2024-12-17 16:44:20 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119727
+2024-12-17 16:44:21 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119728
+2024-12-17 16:44:21 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119729
+2024-12-17 16:44:22 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119730
+2024-12-17 16:44:22 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119731
+2024-12-17 16:44:22 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:22 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 5581
+2024-12-17 16:44:22 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 5526272000
+2024-12-17 16:44:22 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 990193
+2024-12-17 16:44:22 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119732
+2024-12-17 16:44:23 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119733
+2024-12-17 16:44:23 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119734
+2024-12-17 16:44:23 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119735
+2024-12-17 16:44:24 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119736
+2024-12-17 16:44:24 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119737
+2024-12-17 16:44:24 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119738
+2024-12-17 16:44:25 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119739
+2024-12-17 16:44:25 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:25 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 5660
+2024-12-17 16:44:25 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 5580255000
+2024-12-17 16:44:25 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 985910
+2024-12-17 16:44:25 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119740
+2024-12-17 16:44:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119741
+2024-12-17 16:44:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119742
+2024-12-17 16:44:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119743
+2024-12-17 16:44:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119744
+2024-12-17 16:44:27 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119745
+2024-12-17 16:44:27 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119746
+2024-12-17 16:44:28 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119747
+2024-12-17 16:44:28 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119748
+2024-12-17 16:44:28 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:28 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 5736
+2024-12-17 16:44:28 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 5627214000
+2024-12-17 16:44:28 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 981034
+2024-12-17 16:44:28 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119749
+2024-12-17 16:44:29 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119750
+2024-12-17 16:44:29 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119751
+2024-12-17 16:44:29 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119752
+2024-12-17 16:44:29 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119753
+2024-12-17 16:44:30 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119754
+2024-12-17 16:44:30 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119755
+2024-12-17 16:44:30 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119756
+2024-12-17 16:44:30 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119757
+2024-12-17 16:44:31 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119758
+2024-12-17 16:44:31 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119759
+2024-12-17 16:44:31 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:31 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 5837
+2024-12-17 16:44:31 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 5689118000
+2024-12-17 16:44:31 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 974664
+2024-12-17 16:44:31 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119760
+2024-12-17 16:44:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119761
+2024-12-17 16:44:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119762
+2024-12-17 16:44:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119763
+2024-12-17 16:44:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119764
+2024-12-17 16:44:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119765
+2024-12-17 16:44:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119766
+2024-12-17 16:44:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119767
+2024-12-17 16:44:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119768
+2024-12-17 16:44:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119769
+2024-12-17 16:44:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119770
+2024-12-17 16:44:34 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:34 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 5940
+2024-12-17 16:44:34 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 5755002000
+2024-12-17 16:44:34 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 968855
+2024-12-17 16:44:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119771
+2024-12-17 16:44:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119772
+2024-12-17 16:44:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119773
+2024-12-17 16:44:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119774
+2024-12-17 16:44:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119775
+2024-12-17 16:44:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119776
+2024-12-17 16:44:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119777
+2024-12-17 16:44:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119778
+2024-12-17 16:44:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119779
+2024-12-17 16:44:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119780
+2024-12-17 16:44:37 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:37 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 6039
+2024-12-17 16:44:37 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 5817223000
+2024-12-17 16:44:37 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 963275
+2024-12-17 16:44:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119781
+2024-12-17 16:44:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119782
+2024-12-17 16:44:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119783
+2024-12-17 16:44:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119784
+2024-12-17 16:44:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119785
+2024-12-17 16:44:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119786
+2024-12-17 16:44:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119787
+2024-12-17 16:44:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119788
+2024-12-17 16:44:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119789
+2024-12-17 16:44:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119790
+2024-12-17 16:44:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119791
+2024-12-17 16:44:40 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:40 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 6136
+2024-12-17 16:44:40 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 5881396000
+2024-12-17 16:44:40 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 958506
+2024-12-17 16:44:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119792
+2024-12-17 16:44:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119793
+2024-12-17 16:44:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119794
+2024-12-17 16:44:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119795
+2024-12-17 16:44:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119796
+2024-12-17 16:44:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119797
+2024-12-17 16:44:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119798
+2024-12-17 16:44:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119799
+2024-12-17 16:44:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119800
+2024-12-17 16:44:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119801
+2024-12-17 16:44:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119802
+2024-12-17 16:44:43 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:43 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 6230
+2024-12-17 16:44:43 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 5943131000
+2024-12-17 16:44:43 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 953953
+2024-12-17 16:44:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119803
+2024-12-17 16:44:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119804
+2024-12-17 16:44:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119805
+2024-12-17 16:44:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119806
+2024-12-17 16:44:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119807
+2024-12-17 16:44:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119808
+2024-12-17 16:44:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119809
+2024-12-17 16:44:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119810
+2024-12-17 16:44:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119811
+2024-12-17 16:44:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119812
+2024-12-17 16:44:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119813
+2024-12-17 16:44:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119814
+2024-12-17 16:44:46 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:46 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 6330
+2024-12-17 16:44:46 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 6007521000
+2024-12-17 16:44:46 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 949055
+2024-12-17 16:44:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119815
+2024-12-17 16:44:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119816
+2024-12-17 16:44:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119817
+2024-12-17 16:44:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119818
+2024-12-17 16:44:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119819
+2024-12-17 16:44:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119820
+2024-12-17 16:44:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119821
+2024-12-17 16:44:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119822
+2024-12-17 16:44:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119823
+2024-12-17 16:44:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119824
+2024-12-17 16:44:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119825
+2024-12-17 16:44:49 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119826
+2024-12-17 16:44:49 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 6435
+2024-12-17 16:44:49 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 6074815000
+2024-12-17 16:44:49 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 944027
+2024-12-17 16:44:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119827
+2024-12-17 16:44:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119828
+2024-12-17 16:44:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119829
+2024-12-17 16:44:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119830
+2024-12-17 16:44:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119831
+2024-12-17 16:44:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119832
+2024-12-17 16:44:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119833
+2024-12-17 16:44:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119834
+2024-12-17 16:44:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119835
+2024-12-17 16:44:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119836
+2024-12-17 16:44:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119837
+2024-12-17 16:44:52 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:52 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 6523
+2024-12-17 16:44:52 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 6131200000
+2024-12-17 16:44:52 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 939935
+2024-12-17 16:44:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119838
+2024-12-17 16:44:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119839
+2024-12-17 16:44:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119840
+2024-12-17 16:44:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119841
+2024-12-17 16:44:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119842
+2024-12-17 16:44:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119843
+2024-12-17 16:44:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119844
+2024-12-17 16:44:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119845
+2024-12-17 16:44:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119846
+2024-12-17 16:44:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119847
+2024-12-17 16:44:55 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119848
+2024-12-17 16:44:55 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 6618
+2024-12-17 16:44:55 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 6196350000
+2024-12-17 16:44:55 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 936287
+2024-12-17 16:44:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119849
+2024-12-17 16:44:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119850
+2024-12-17 16:44:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119851
+2024-12-17 16:44:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119852
+2024-12-17 16:44:57 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119853
+2024-12-17 16:44:57 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119854
+2024-12-17 16:44:57 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119855
+2024-12-17 16:44:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119856
+2024-12-17 16:44:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119857
+2024-12-17 16:44:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119858
+2024-12-17 16:44:58 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:44:58 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 6699
+2024-12-17 16:44:58 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 6246904000
+2024-12-17 16:44:58 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 932512
+2024-12-17 16:44:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119859
+2024-12-17 16:44:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119860
+2024-12-17 16:44:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119861
+2024-12-17 16:44:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119862
+2024-12-17 16:44:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119863
+2024-12-17 16:45:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119864
+2024-12-17 16:45:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119865
+2024-12-17 16:45:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119866
+2024-12-17 16:45:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119867
+2024-12-17 16:45:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119868
+2024-12-17 16:45:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119869
+2024-12-17 16:45:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119870
+2024-12-17 16:45:01 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:45:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119871
+2024-12-17 16:45:01 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 6805
+2024-12-17 16:45:01 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 6316864000
+2024-12-17 16:45:01 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 928268
+2024-12-17 16:45:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119872
+2024-12-17 16:45:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119873
+2024-12-17 16:45:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119874
+2024-12-17 16:45:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119875
+2024-12-17 16:45:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119876
+2024-12-17 16:45:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119877
+2024-12-17 16:45:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119878
+2024-12-17 16:45:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119879
+2024-12-17 16:45:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119880
+2024-12-17 16:45:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119881
+2024-12-17 16:45:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119882
+2024-12-17 16:45:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119883
+2024-12-17 16:45:04 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:45:04 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 6909
+2024-12-17 16:45:04 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 6383974000
+2024-12-17 16:45:04 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 924008
+2024-12-17 16:45:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119884
+2024-12-17 16:45:05 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119885
+2024-12-17 16:45:05 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119886
+2024-12-17 16:45:05 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119887
+2024-12-17 16:45:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119888
+2024-12-17 16:45:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119889
+2024-12-17 16:45:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119890
+2024-12-17 16:45:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119891
+2024-12-17 16:45:07 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119892
+2024-12-17 16:45:07 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119893
+2024-12-17 16:45:07 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119894
+2024-12-17 16:45:07 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:45:07 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 7005
+2024-12-17 16:45:07 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 6443794000
+2024-12-17 16:45:07 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 919884
+2024-12-17 16:45:07 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119895
+2024-12-17 16:45:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119896
+2024-12-17 16:45:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119897
+2024-12-17 16:45:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119898
+2024-12-17 16:45:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119899
+2024-12-17 16:45:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119900
+2024-12-17 16:45:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119901
+2024-12-17 16:45:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119902
+2024-12-17 16:45:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119903
+2024-12-17 16:45:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119904
+2024-12-17 16:45:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119905
+2024-12-17 16:45:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119906
+2024-12-17 16:45:10 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:45:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119907
+2024-12-17 16:45:10 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 7125
+2024-12-17 16:45:10 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 7519158000
+2024-12-17 16:45:10 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1055320
+2024-12-17 16:45:11 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119908
+2024-12-17 16:45:11 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119909
+2024-12-17 16:45:11 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119910
+2024-12-17 16:45:11 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119911
+2024-12-17 16:45:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119912
+2024-12-17 16:45:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119913
+2024-12-17 16:45:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119914
+2024-12-17 16:45:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119915
+2024-12-17 16:45:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119916
+2024-12-17 16:45:13 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119917
+2024-12-17 16:45:13 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119918
+2024-12-17 16:45:13 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119919
+2024-12-17 16:45:13 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:45:13 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 7236
+2024-12-17 16:45:13 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 7587587000
+2024-12-17 16:45:13 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1048588
+2024-12-17 16:45:13 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119920
+2024-12-17 16:45:14 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119921
+2024-12-17 16:45:14 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119922
+2024-12-17 16:45:14 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119923
+2024-12-17 16:45:14 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119924
+2024-12-17 16:45:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119925
+2024-12-17 16:45:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119926
+2024-12-17 16:45:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119927
+2024-12-17 16:45:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119928
+2024-12-17 16:45:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119929
+2024-12-17 16:45:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119930
+2024-12-17 16:45:16 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:45:16 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 7363
+2024-12-17 16:45:16 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 7670494000
+2024-12-17 16:45:16 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1041762
+2024-12-17 16:45:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119931
+2024-12-17 16:45:17 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119932
+2024-12-17 16:45:17 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119933
+2024-12-17 16:45:17 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119934
+2024-12-17 16:45:18 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119935
+2024-12-17 16:45:18 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119936
+2024-12-17 16:45:18 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119937
+2024-12-17 16:45:18 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119938
+2024-12-17 16:45:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119939
+2024-12-17 16:45:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119940
+2024-12-17 16:45:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119941
+2024-12-17 16:45:19 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:45:19 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 7460
+2024-12-17 16:45:19 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 7733960000
+2024-12-17 16:45:19 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1036723
+2024-12-17 16:45:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119942
+2024-12-17 16:45:20 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119943
+2024-12-17 16:45:20 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119944
+2024-12-17 16:45:20 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119945
+2024-12-17 16:45:20 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119946
+2024-12-17 16:45:21 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119947
+2024-12-17 16:45:21 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119948
+2024-12-17 16:45:21 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119949
+2024-12-17 16:45:21 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119950
+2024-12-17 16:45:22 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119951
+2024-12-17 16:45:22 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119952
+2024-12-17 16:45:22 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119953
+2024-12-17 16:45:22 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:45:22 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 7557
+2024-12-17 16:45:22 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 7794254000
+2024-12-17 16:45:22 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1031395
+2024-12-17 16:45:22 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119954
+2024-12-17 16:45:23 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119955
+2024-12-17 16:45:23 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119956
+2024-12-17 16:45:23 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119957
+2024-12-17 16:45:24 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119958
+2024-12-17 16:45:24 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119959
+2024-12-17 16:45:24 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119960
+2024-12-17 16:45:24 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119961
+2024-12-17 16:45:25 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:45:25 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119962
+2024-12-17 16:45:25 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 7639
+2024-12-17 16:45:25 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 7846924000
+2024-12-17 16:45:25 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1027218
+2024-12-17 16:45:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119963
+2024-12-17 16:45:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119964
+2024-12-17 16:45:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119965
+2024-12-17 16:45:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119966
+2024-12-17 16:45:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119967
+2024-12-17 16:45:27 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119968
+2024-12-17 16:45:30 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2024-12-17 16:45:30 [Thread-0] INFO  org.eclipse.jetty.util.log - Logging initialized @899ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-12-17 16:45:30 [Thread-0] INFO  spark.embeddedserver.jetty.EmbeddedJettyServer - == Spark has ignited ...
+2024-12-17 16:45:30 [Thread-0] INFO  spark.embeddedserver.jetty.EmbeddedJettyServer - >> Listening on 0.0.0.0:8081
+2024-12-17 16:45:30 [Thread-0] INFO  org.eclipse.jetty.server.Server - jetty-9.4.31.v20200723; built: 2020-07-23T17:57:36.812Z; git: 450ba27947e13e66baa8cd1ce7e85a4461cacc1d; jvm 16.0.2+7
+2024-12-17 16:45:30 [Thread-0] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-12-17 16:45:30 [Thread-0] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-12-17 16:45:30 [Thread-0] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 600000ms
+2024-12-17 16:45:30 [Thread-0] INFO  org.eclipse.jetty.server.AbstractConnector - Started ServerConnector@552d4fa6{HTTP/1.1, (http/1.1)}{0.0.0.0:8081}
+2024-12-17 16:45:30 [Thread-0] INFO  org.eclipse.jetty.server.Server - Started @1008ms
+2024-12-17 16:45:30 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2024-12-17 16:45:30 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:45:30 [main] INFO  Core.DatabaseInitialization - Transactions table for shard 0 initialized!
+2024-12-17 16:45:30 [main] INFO  Core.DatabaseInitialization - Transactions table for shard 1 initialized!
+2024-12-17 16:45:30 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:45:30 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:45:30 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:45:30 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:45:31 [Thread-9] INFO  Block.Block - >>Block is null for block number: -1
+2024-12-17 16:45:31 [Thread-9] INFO  Block.Block - >>No blocks found in the past 24 hours.
+2024-12-17 16:45:31 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:45:31 [Thread-9] INFO  Block.Block - >>Average block size is zero.
+2024-12-17 16:45:31 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:45:31 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:45:32 [Thread-11] INFO  PWRChain.Synchronizer - Latest block number 275904
+2024-12-17 16:45:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119967
+2024-12-17 16:45:32 [Thread-11] ERROR Core.Sql.Queries - org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "Block_pkey"
+  Detail: Key (block_number)=(119967) already exists.
+2024-12-17 16:45:32 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x6c8b2ff35444eddb314868ab55608d857390f574f56824b8d7605c008848e63e, 119967) already exists.
+2024-12-17 16:45:32 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0xb3396e101d17c0a4e0f96c2364b7cfcb5b7b35705d10d4bf10f87db884aa1d12, 119967) already exists.
+2024-12-17 16:45:32 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x3452b05d6a4bc4f98b5e6c08ec2d263d245afddf4558c89abce4b0f7cf2d5dfd, 119967) already exists.
+2024-12-17 16:45:32 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x4fd291fe3ecfb8351059c390aef270db4341fe84a733f78f2390dcb3ce9f5090, 119967) already exists.
+2024-12-17 16:45:32 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x16e4452ed6a503aabff2d221d855e24379657e0f976a5b1ee1629849ff2a1796, 119967) already exists.
+2024-12-17 16:45:32 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x7dbe54e41eaca6685a17fe614dc13cbf56ce0d97a558a19b3d12ac4e3d52cc4a, 119967) already exists.
+2024-12-17 16:45:32 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0xc880c07d3a8f7210494bb3e2f04f5a52a3d5fc0776bb7c79fd995a70ac31d5d7, 119967) already exists.
+2024-12-17 16:45:32 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x3db56fdc42a5fc68a3ed7f8ff9f81bb4c4774ff99d5403c620c563ff677d4080, 119967) already exists.
+2024-12-17 16:45:32 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0xd23f19de36e04177d1d9d842e0a14415e4581cd03d86b72d3d656eb42e4388d3, 119967) already exists.
+2024-12-17 16:45:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119968
+2024-12-17 16:45:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119969
+2024-12-17 16:45:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119970
+2024-12-17 16:45:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119971
+2024-12-17 16:45:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119972
+2024-12-17 16:45:34 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:45:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119973
+2024-12-17 16:45:34 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 7726
+2024-12-17 16:45:34 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 7900411000
+2024-12-17 16:45:34 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 1022574
+2024-12-17 16:45:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119974
+2024-12-17 16:45:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119975
+2024-12-17 16:45:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119976
+2024-12-17 16:45:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119977
+2024-12-17 16:45:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119978
+2024-12-17 16:45:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119979
+2024-12-17 16:45:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119980
+2024-12-17 16:45:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119981
+2024-12-17 16:45:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119982
+2024-12-17 16:45:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119983
+2024-12-17 16:45:37 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:45:37 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:45:37 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:45:37 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:45:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119984
+2024-12-17 16:45:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119985
+2024-12-17 16:45:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119986
+2024-12-17 16:45:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119987
+2024-12-17 16:45:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119988
+2024-12-17 16:45:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119989
+2024-12-17 16:45:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119990
+2024-12-17 16:45:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119991
+2024-12-17 16:45:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119992
+2024-12-17 16:45:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119993
+2024-12-17 16:45:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119994
+2024-12-17 16:45:40 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:45:40 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:45:40 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:45:40 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:45:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119995
+2024-12-17 16:45:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119996
+2024-12-17 16:45:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119997
+2024-12-17 16:45:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119998
+2024-12-17 16:45:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 119999
+2024-12-17 16:45:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120000
+2024-12-17 16:45:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120001
+2024-12-17 16:45:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120002
+2024-12-17 16:45:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120003
+2024-12-17 16:45:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120004
+2024-12-17 16:45:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120005
+2024-12-17 16:45:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120006
+2024-12-17 16:45:43 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:45:43 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:45:43 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:45:43 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:45:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120007
+2024-12-17 16:45:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120008
+2024-12-17 16:45:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120009
+2024-12-17 16:45:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120010
+2024-12-17 16:45:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120011
+2024-12-17 16:45:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120012
+2024-12-17 16:45:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120013
+2024-12-17 16:45:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120014
+2024-12-17 16:45:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120015
+2024-12-17 16:45:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120016
+2024-12-17 16:45:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120017
+2024-12-17 16:45:46 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:45:46 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:45:46 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:45:46 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:45:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120018
+2024-12-17 16:45:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120019
+2024-12-17 16:45:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120020
+2024-12-17 16:45:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120021
+2024-12-17 16:45:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120022
+2024-12-17 16:45:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120023
+2024-12-17 16:45:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120024
+2024-12-17 16:45:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120025
+2024-12-17 16:45:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120026
+2024-12-17 16:45:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120027
+2024-12-17 16:45:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120028
+2024-12-17 16:45:49 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:45:49 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:45:49 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:45:49 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:45:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120029
+2024-12-17 16:45:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120030
+2024-12-17 16:45:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120031
+2024-12-17 16:45:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120032
+2024-12-17 16:45:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120033
+2024-12-17 16:45:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120034
+2024-12-17 16:45:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120035
+2024-12-17 16:45:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120036
+2024-12-17 16:45:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120037
+2024-12-17 16:45:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120038
+2024-12-17 16:45:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120039
+2024-12-17 16:45:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120040
+2024-12-17 16:45:52 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:45:52 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:45:52 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:45:52 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:45:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120041
+2024-12-17 16:45:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120042
+2024-12-17 16:45:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120043
+2024-12-17 16:45:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120044
+2024-12-17 16:45:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120045
+2024-12-17 16:45:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120046
+2024-12-17 16:45:53 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120047
+2024-12-17 16:45:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120048
+2024-12-17 16:45:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120049
+2024-12-17 16:45:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120050
+2024-12-17 16:45:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120051
+2024-12-17 16:45:55 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:45:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120052
+2024-12-17 16:45:55 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:45:55 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:45:55 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:45:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120053
+2024-12-17 16:45:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120054
+2024-12-17 16:45:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120055
+2024-12-17 16:45:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120056
+2024-12-17 16:45:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120057
+2024-12-17 16:45:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120058
+2024-12-17 16:45:56 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120059
+2024-12-17 16:45:57 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120060
+2024-12-17 16:45:57 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120061
+2024-12-17 16:45:57 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120062
+2024-12-17 16:45:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120063
+2024-12-17 16:45:58 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:45:58 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:45:58 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:45:58 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:45:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120064
+2024-12-17 16:45:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120065
+2024-12-17 16:45:58 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120066
+2024-12-17 16:45:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120067
+2024-12-17 16:45:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120068
+2024-12-17 16:45:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120069
+2024-12-17 16:45:59 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120070
+2024-12-17 16:46:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120071
+2024-12-17 16:46:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120072
+2024-12-17 16:46:00 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120073
+2024-12-17 16:46:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120074
+2024-12-17 16:46:01 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:46:01 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:46:01 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:46:01 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:46:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120075
+2024-12-17 16:46:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120076
+2024-12-17 16:46:01 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120077
+2024-12-17 16:46:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120078
+2024-12-17 16:46:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120079
+2024-12-17 16:46:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120080
+2024-12-17 16:46:02 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120081
+2024-12-17 16:46:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120082
+2024-12-17 16:46:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120083
+2024-12-17 16:46:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120084
+2024-12-17 16:46:03 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120085
+2024-12-17 16:46:04 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:46:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120086
+2024-12-17 16:46:04 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:46:04 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:46:04 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:46:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120087
+2024-12-17 16:46:04 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120088
+2024-12-17 16:46:05 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120089
+2024-12-17 16:46:05 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120090
+2024-12-17 16:46:05 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120091
+2024-12-17 16:46:05 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120092
+2024-12-17 16:46:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120093
+2024-12-17 16:46:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120094
+2024-12-17 16:46:06 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120095
+2024-12-17 16:46:07 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120096
+2024-12-17 16:46:07 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:46:07 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:46:07 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:46:07 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:46:07 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120097
+2024-12-17 16:46:07 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120098
+2024-12-17 16:46:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120099
+2024-12-17 16:46:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120100
+2024-12-17 16:46:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120101
+2024-12-17 16:46:08 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120102
+2024-12-17 16:46:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120103
+2024-12-17 16:46:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120104
+2024-12-17 16:46:09 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120105
+2024-12-17 16:46:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120106
+2024-12-17 16:46:10 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:46:10 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:46:10 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:46:10 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:46:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120107
+2024-12-17 16:46:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120108
+2024-12-17 16:46:10 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120109
+2024-12-17 16:46:11 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120110
+2024-12-17 16:46:11 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120111
+2024-12-17 16:46:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120112
+2024-12-17 16:46:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120113
+2024-12-17 16:46:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120114
+2024-12-17 16:46:12 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120115
+2024-12-17 16:46:13 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120116
+2024-12-17 16:46:13 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:46:13 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:46:13 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:46:13 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:46:13 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120117
+2024-12-17 16:46:13 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120118
+2024-12-17 16:46:14 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120119
+2024-12-17 16:46:14 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120120
+2024-12-17 16:46:14 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120121
+2024-12-17 16:46:14 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120122
+2024-12-17 16:46:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120123
+2024-12-17 16:46:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120124
+2024-12-17 16:46:15 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120125
+2024-12-17 16:46:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120126
+2024-12-17 16:46:16 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:46:16 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:46:16 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:46:16 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:46:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120127
+2024-12-17 16:46:16 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120128
+2024-12-17 16:46:17 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120129
+2024-12-17 16:46:17 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120130
+2024-12-17 16:46:17 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120131
+2024-12-17 16:46:18 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120132
+2024-12-17 16:46:18 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120133
+2024-12-17 16:46:18 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120134
+2024-12-17 16:46:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120135
+2024-12-17 16:46:19 [Thread-9] INFO  Block.Block - >>Block is null for block number: 119115
+2024-12-17 16:46:19 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:46:19 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:46:19 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:46:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120136
+2024-12-17 16:46:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120137
+2024-12-17 16:46:19 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120138
+2024-12-17 16:46:20 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120139
+2024-12-17 16:46:20 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120140
+2024-12-17 16:46:20 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120141
+2024-12-17 16:46:23 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2024-12-17 16:46:23 [Thread-0] INFO  org.eclipse.jetty.util.log - Logging initialized @719ms to org.eclipse.jetty.util.log.Slf4jLog
+2024-12-17 16:46:23 [Thread-0] INFO  spark.embeddedserver.jetty.EmbeddedJettyServer - == Spark has ignited ...
+2024-12-17 16:46:23 [Thread-0] INFO  spark.embeddedserver.jetty.EmbeddedJettyServer - >> Listening on 0.0.0.0:8081
+2024-12-17 16:46:23 [Thread-0] INFO  org.eclipse.jetty.server.Server - jetty-9.4.31.v20200723; built: 2020-07-23T17:57:36.812Z; git: 450ba27947e13e66baa8cd1ce7e85a4461cacc1d; jvm 16.0.2+7
+2024-12-17 16:46:23 [Thread-0] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2024-12-17 16:46:23 [Thread-0] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2024-12-17 16:46:23 [Thread-0] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 600000ms
+2024-12-17 16:46:23 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2024-12-17 16:46:23 [Thread-0] INFO  org.eclipse.jetty.server.AbstractConnector - Started ServerConnector@39c5ad15{HTTP/1.1, (http/1.1)}{0.0.0.0:8081}
+2024-12-17 16:46:23 [Thread-0] INFO  org.eclipse.jetty.server.Server - Started @848ms
+2024-12-17 16:46:23 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:46:23 [main] INFO  Core.DatabaseInitialization - Transactions table for shard 0 initialized!
+2024-12-17 16:46:23 [main] INFO  Core.DatabaseInitialization - Transactions table for shard 1 initialized!
+2024-12-17 16:46:23 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:46:23 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:46:23 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:46:23 [main] INFO  Core.DatabaseInitialization - Table initialized!
+2024-12-17 16:46:24 [Thread-9] INFO  Block.Block - >>Block is null for block number: 0
+2024-12-17 16:46:24 [Thread-9] INFO  Block.Block - >>No blocks found in the past 24 hours.
+2024-12-17 16:46:24 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 0
+2024-12-17 16:46:24 [Thread-9] INFO  Block.Block - >>Average block size is zero.
+2024-12-17 16:46:24 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 0
+2024-12-17 16:46:24 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 0
+2024-12-17 16:46:25 [Thread-11] INFO  PWRChain.Synchronizer - Latest block number 275921
+2024-12-17 16:46:25 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120140
+2024-12-17 16:46:25 [Thread-11] ERROR Core.Sql.Queries - org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "Block_pkey"
+  Detail: Key (block_number)=(120140) already exists.
+2024-12-17 16:46:25 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0xeb5e662237aacf256b7799fbbb5e162998da211e7ff41ba4e99ddffba3b58774, 120140) already exists.
+2024-12-17 16:46:25 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0xf3bd09cb16c92dbddb2d6868b35b7ea114a51913c8a1e910e004df67f9b9499d, 120140) already exists.
+2024-12-17 16:46:25 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x5d7f816bcc7a8f355b46547bc3c1b7375641d7ac9c3b5b3800a5a600890bcd6b, 120140) already exists.
+2024-12-17 16:46:25 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x1e06f4ce11eefa3ddadfc33e987f70155b63239fb3880a28d8fe6eac81bd6cf2, 120140) already exists.
+2024-12-17 16:46:25 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0xe238dbf7e6a2088dc2dda70ebdf104f55881e4f10416890631cfb425f08a1684, 120140) already exists.
+2024-12-17 16:46:25 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x5b0a48d5c99e85c3c961e2d5897e05d7f8c0073de4905f93f797c2555fb2fb26, 120140) already exists.
+2024-12-17 16:46:25 [Thread-11] ERROR Core.Sql.Queries - Error inserting transaction: ERROR: duplicate key value violates unique constraint "Transactions_Shard_0_pkey"
+  Detail: Key (hash, block_number)=(0x71a84a9677e15c548db53454959362ac659875288cc51e074eeb15c66512931c, 120140) already exists.
+2024-12-17 16:46:25 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120141
+2024-12-17 16:46:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120142
+2024-12-17 16:46:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120143
+2024-12-17 16:46:26 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120144
+2024-12-17 16:46:27 [Thread-9] INFO  Block.Block - >>Block is null for block number: 120143
+2024-12-17 16:46:27 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120145
+2024-12-17 16:46:27 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 9238
+2024-12-17 16:46:27 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 8859265000
+2024-12-17 16:46:27 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 959002
+2024-12-17 16:46:27 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120146
+2024-12-17 16:46:27 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120147
+2024-12-17 16:46:27 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120148
+2024-12-17 16:46:28 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120149
+2024-12-17 16:46:28 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120150
+2024-12-17 16:46:28 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120151
+2024-12-17 16:46:29 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120152
+2024-12-17 16:46:29 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120153
+2024-12-17 16:46:29 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120154
+2024-12-17 16:46:29 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120155
+2024-12-17 16:46:30 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120156
+2024-12-17 16:46:30 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 9350
+2024-12-17 16:46:30 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 8928622000
+2024-12-17 16:46:30 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 954932
+2024-12-17 16:46:30 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120157
+2024-12-17 16:46:30 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120158
+2024-12-17 16:46:30 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120159
+2024-12-17 16:46:31 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120160
+2024-12-17 16:46:31 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120161
+2024-12-17 16:46:31 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120162
+2024-12-17 16:46:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120163
+2024-12-17 16:46:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120164
+2024-12-17 16:46:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120165
+2024-12-17 16:46:32 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120166
+2024-12-17 16:46:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120167
+2024-12-17 16:46:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120168
+2024-12-17 16:46:33 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 9448
+2024-12-17 16:46:33 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 8995825000
+2024-12-17 16:46:33 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 952140
+2024-12-17 16:46:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120169
+2024-12-17 16:46:33 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120170
+2024-12-17 16:46:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120171
+2024-12-17 16:46:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120172
+2024-12-17 16:46:34 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120173
+2024-12-17 16:46:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120174
+2024-12-17 16:46:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120175
+2024-12-17 16:46:35 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120176
+2024-12-17 16:46:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120177
+2024-12-17 16:46:36 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 9523
+2024-12-17 16:46:36 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 9045481000
+2024-12-17 16:46:36 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 949856
+2024-12-17 16:46:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120178
+2024-12-17 16:46:36 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120179
+2024-12-17 16:46:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120180
+2024-12-17 16:46:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120181
+2024-12-17 16:46:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120182
+2024-12-17 16:46:37 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120183
+2024-12-17 16:46:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120184
+2024-12-17 16:46:38 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120185
+2024-12-17 16:46:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120186
+2024-12-17 16:46:39 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 9601
+2024-12-17 16:46:39 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 9093212000
+2024-12-17 16:46:39 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 947110
+2024-12-17 16:46:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120187
+2024-12-17 16:46:39 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120188
+2024-12-17 16:46:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120189
+2024-12-17 16:46:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120190
+2024-12-17 16:46:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120191
+2024-12-17 16:46:40 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120192
+2024-12-17 16:46:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120193
+2024-12-17 16:46:41 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120194
+2024-12-17 16:46:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120195
+2024-12-17 16:46:42 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 9677
+2024-12-17 16:46:42 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 9144019000
+2024-12-17 16:46:42 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 944922
+2024-12-17 16:46:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120196
+2024-12-17 16:46:42 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120197
+2024-12-17 16:46:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120198
+2024-12-17 16:46:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120199
+2024-12-17 16:46:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120200
+2024-12-17 16:46:43 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120201
+2024-12-17 16:46:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120202
+2024-12-17 16:46:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120203
+2024-12-17 16:46:44 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120204
+2024-12-17 16:46:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120205
+2024-12-17 16:46:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120206
+2024-12-17 16:46:45 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 9778
+2024-12-17 16:46:45 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 9205970000
+2024-12-17 16:46:45 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 941498
+2024-12-17 16:46:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120207
+2024-12-17 16:46:45 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120208
+2024-12-17 16:46:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120209
+2024-12-17 16:46:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120210
+2024-12-17 16:46:46 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120211
+2024-12-17 16:46:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120212
+2024-12-17 16:46:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120213
+2024-12-17 16:46:47 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120214
+2024-12-17 16:46:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120215
+2024-12-17 16:46:48 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 9854
+2024-12-17 16:46:48 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 9250943000
+2024-12-17 16:46:48 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 938800
+2024-12-17 16:46:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120216
+2024-12-17 16:46:48 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120217
+2024-12-17 16:46:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120218
+2024-12-17 16:46:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120219
+2024-12-17 16:46:49 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120220
+2024-12-17 16:46:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120221
+2024-12-17 16:46:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120222
+2024-12-17 16:46:50 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120223
+2024-12-17 16:46:51 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120224
+2024-12-17 16:46:51 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 9941
+2024-12-17 16:46:51 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 9308191000
+2024-12-17 16:46:51 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 936343
+2024-12-17 16:46:52 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120225
+2024-12-17 16:46:54 [Thread-10] INFO  Txn.Txns - >>txn count last 24 hours 9949
+2024-12-17 16:46:54 [Thread-10] INFO  Txn.Txns - >>totalTxnFeesPast24Hours las 24 hours 9313932000
+2024-12-17 16:46:54 [Thread-10] INFO  Txn.Txns - >>averageTxnFeePast24Hours 936167
+2024-12-17 16:46:54 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120226
+2024-12-17 16:46:55 [Thread-11] INFO  PWRChain.Synchronizer - Checking block: 120227

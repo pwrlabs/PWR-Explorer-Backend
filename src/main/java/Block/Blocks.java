@@ -15,7 +15,7 @@ import static Core.Sql.Queries.getLastBlockNumber;
 
 
 public class Blocks {
-    private static final Logger logger = LogManager.getLogger(Block.class);
+    private static final Logger logger = LogManager.getLogger(Blocks.class);
     private static Map<String /*Block Number*/, Block> blockByNumber = new HashMap<>();
     private static long latestBlockNumber = 0;
 
@@ -28,12 +28,12 @@ public class Blocks {
         }
     }
 
-    public static Block getBlock(Long blockNumber) {
-        if(blockByNumber.getOrDefault(blockNumber.toString(), null) == null) {
-            blockByNumber.put(blockNumber.toString(), getDbBlock(blockNumber));
-        }
-        return blockByNumber.get(blockNumber.toString());
-    }
+//    public static Block getBlock(Long blockNumber) {
+//        if(blockByNumber.getOrDefault(blockNumber.toString(), null) == null) {
+//            blockByNumber.put(blockNumber.toString(), getDbBlock(blockNumber));
+//        }
+//        return blockByNumber.get(blockNumber.toString());
+//    }
     public static long getLatestBlockNumber() {
         return latestBlockNumber;
     }
@@ -43,7 +43,7 @@ public class Blocks {
 
         long blockNumberToCheck = Blocks.getLatestBlockNumber();
         for(int i = 0; i < numberOfBlocks; i++) {
-            Block block = Blocks.getBlock(blockNumberToCheck - i);
+            Block block = getDbBlock(blockNumberToCheck - i);
             if(block == null) break;
 
             totalTxnCount += block.getTxnCount();
@@ -70,10 +70,10 @@ public class Blocks {
         long totalBlockRewardsPast24Hours = 0;
         long totalBlockCountPast24Hours = 0;
 
-        long timeNow = Instant.now().getEpochSecond();
+        long timeNow = System.currentTimeMillis();
         long blockNumberToCheck = Blocks.getLatestBlockNumber();
         while(true) {
-            Block block = Blocks.getBlock(blockNumberToCheck--);
+            Block block = getDbBlock(blockNumberToCheck--);
             if(block == null) {
                 logger.info(">>Block is null for block number: {}", (blockNumberToCheck));
                 break;
@@ -83,7 +83,7 @@ public class Blocks {
 //            }
 
             long blockTimestamp = block.getTimeStamp();
-            if(blockTimestamp < timeNow - 24 * 60 * 60) {
+            if(blockTimestamp < timeNow - 24 * 60 * 60 * 1000) {
                 logger.info(">>Block is older than 24 hours. Stopping iteration.");
                 break;
             }

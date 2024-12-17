@@ -43,7 +43,7 @@ public class Block {
         logger.debug("Created new Block {}. Active blocks: {}", blockNumber, activeBlocks.get());
 
         // Add to blocks collection
-        Blocks.add(this);
+//        Blocks.add(this);
     }
 
     public void addTxn(NewTxn txn, int positionInTheBlock) {

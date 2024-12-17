@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import static Core.Sql.Queries.getDbBlock;
 import static Core.Sql.Queries.getDbTxn;
 
 public class Txns {
@@ -58,7 +59,7 @@ public class Txns {
         long timeNow = Instant.now().getEpochSecond();
         long blockNumberToCheck = Blocks.getLatestBlockNumber();
         while (true) {
-            Block block = Blocks.getBlock(blockNumberToCheck--);
+            Block block = getDbBlock(blockNumberToCheck--);
             if (block == null) break;
             if (block.getTimeStamp() < timeNow - 24 * 60 * 60) break;
 
@@ -75,7 +76,7 @@ public class Txns {
 
         //Calculate the stats of the 24 hours before the current 24 hours
         while (true) {
-            Block block = Blocks.getBlock(blockNumberToCheck--);
+            Block block = getDbBlock(blockNumberToCheck--);
             if (block == null) break;
             if (block.getTimeStamp() < timeNow - 24 * 60 * 60 * 2) break;
 

@@ -1053,52 +1053,50 @@ public class Queries {
 
         return new Pair<>(firstTxn, lastTxn);
     }
-
     public static Map<Long, Integer> getFourteenDaysTxn() {
-        String tableName = getTransactionsTableName("0");
+        // Pre-calculate the size we need for better memory efficiency
+        final int DAYS_TO_FETCH = 14;
 
-        String sql = "SELECT FLOOR(" + TIMESTAMP + " / 86400000) * 86400000 as day_start, COUNT(*) as count " +
-                "FROM " + tableName + " " +
-                "WHERE " + TIMESTAMP + " BETWEEN ? AND ? " +
-                "GROUP BY day_start " +
-                "ORDER BY day_start DESC";
+        // Use TreeMap instead of LinkedHashMap - more efficient for sorted data
+        TreeMap<Long, Integer> txns = new TreeMap<>(Collections.reverseOrder());
 
-        Map<Long, Integer> txns = new LinkedHashMap<>();
-
+        // Calculate time boundaries once
         ZonedDateTime currentTime = ZonedDateTime.now(ZoneOffset.UTC);
-        ZonedDateTime fourteenDaysAgo = currentTime.minusDays(13).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        ZonedDateTime startTime = currentTime.minusDays(DAYS_TO_FETCH - 1)
+                .withHour(0).withMinute(0).withSecond(0).withNano(0);
+
+        // Optimize SQL query to reduce memory usage
+        String sql = "SELECT CAST((" + TIMESTAMP + " / 86400000) AS BIGINT) * 86400000 as day_start, " +
+                "COUNT(*) as count " +
+                "FROM " + getTransactionsTableName("0") + " " +
+                "WHERE " + TIMESTAMP + " >= ? AND " + TIMESTAMP + " < ? " +
+                "GROUP BY CAST((" + TIMESTAMP + " / 86400000) AS BIGINT) * 86400000";
+
         try (Connection connection = getConnection();
              PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setLong(1, fourteenDaysAgo.toEpochSecond() * 1000);
-            stmt.setLong(2, currentTime.toEpochSecond() * 1000);
 
-            // Initialize the map with all 14 days, setting count to 0
-            for (int i = 0; i < 14; i++) {
-                long dayStart = currentTime.minusDays(i).withHour(0).withMinute(0).withSecond(0).toEpochSecond() * 1000;
+            // Use exact timestamp bounds
+            stmt.setLong(1, startTime.toInstant().toEpochMilli());
+            stmt.setLong(2, currentTime.toInstant().toEpochMilli());
+
+            // Initialize map with zeros for all days first
+            for (int i = 0; i < DAYS_TO_FETCH; i++) {
+                long dayStart = startTime.plusDays(i).toInstant().toEpochMilli();
                 txns.put(dayStart, 0);
             }
 
+            // Process results directly without intermediate collections
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    long dayStart = rs.getLong("day_start");
-                    int count = rs.getInt("count");
-                    txns.put(dayStart, count);
+                    txns.put(rs.getLong("day_start"), rs.getInt("count"));
                 }
             }
 
         } catch (SQLException e) {
-            logger.error("Error fetching seven days txns {}", e.getMessage());
+            logger.error("Error fetching {} days transactions: {}", DAYS_TO_FETCH, e.getMessage());
         }
 
-
-        return txns.entrySet().stream()
-                .sorted(Map.Entry.<Long, Integer>comparingByKey().reversed())
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (e1, e2) -> e1,
-                        LinkedHashMap::new
-                ));
+        return txns;
     }
 
     public static JSONArray getBlocksCreated(String address, int limit, int offset) {

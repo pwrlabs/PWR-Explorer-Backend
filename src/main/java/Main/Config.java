@@ -8,6 +8,7 @@ import java.nio.file.Files;
 public class Config {
 
     private static String pwrRpcUrl, databaseUserName, databasePassword, databaseName;
+    private static int threadSleepOfTxnsAndTxnHistoryUpdate;
 
     static {
         File configFile = new File("config.json");
@@ -27,6 +28,7 @@ public class Config {
             databaseUserName = config.optString("databaseUserName", "postgres");
             databasePassword = config.optString("databasePassword", "KUX3bgHxE4ksPRrpu");
             databaseName = config.optString("databaseName", "pwrexplorer");
+            threadSleepOfTxnsAndTxnHistoryUpdate = config.optInt("threadSleepOfTxnsAndTxnHistoryUpdate", 30000);
 
 //            databasePassword = config.optString("databasePassword", "Kriko2004");
 //            databaseName = config.optString("databaseName", "testexplorer");
@@ -53,6 +55,10 @@ public class Config {
 
     public static String getDatabaseName() {
         return databaseName;
+    }
+
+    public static int getThreadSleepOfTxnsAndTxnHistoryUpdate() {
+        return threadSleepOfTxnsAndTxnHistoryUpdate;
     }
 
 }

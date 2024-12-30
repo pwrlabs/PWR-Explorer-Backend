@@ -4,6 +4,7 @@ package API;
 import Block.Block;
 import Block.Blocks;
 import DailyActivity.Stats;
+import Main.Config;
 import Main.Settings;
 import Txn.NewTxn;
 import Txn.Txns;
@@ -27,17 +28,44 @@ import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static Core.Sql.Queries.*;
+import static Core.Sql.Queries.getFourteenDaysTxn;
 import static spark.Spark.get;
 
 public class GET {
     private static final Logger logger = LogManager.getLogger(GET.class);
+
+    private static AtomicInteger totalTransactionCount = new AtomicInteger(0)   ;
+    private static Map<Long, Integer> txnCountPast14Days = new ConcurrentHashMap<>();
+
+    static {
+        Thread t = new Thread(() -> {
+            while (true) {
+                try {
+                    totalTransactionCount = new AtomicInteger(getTotalTransactionCount());
+                } catch (Exception e) {
+                    logger.error("Error in GET thread", e);
+                }
+
+                try {
+                    txnCountPast14Days = getFourteenDaysTxn();
+                } catch (Exception e) {
+                    logger.error("Error in GET thread", e);
+                }
+
+                try {Thread.sleep(Config.getThreadSleepOfTxnsAndTxnHistoryUpdate());} catch (InterruptedException e) {}
+            }
+        });
+
+        t.setName("GET-Stats-Update-Thread");
+        t.setDaemon(true);
+        t.start();
+    }
 
     public static void run(PWRJ pwrj) {
         get("/test/", (request, response) -> {
@@ -97,8 +125,8 @@ public class GET {
                 CompletableFuture<JSONObject> otherDataFuture = CompletableFuture.supplyAsync(() -> {
                     JSONObject data = new JSONObject();
 
-                    data.put("fourteenDaysTxn", getFourteenDaysTxn());
-                    data.put("totalTransactionsCount", getTotalTransactionCount());
+                    data.put("fourteenDaysTxn", txnCountPast14Days);
+                    data.put("totalTransactionsCount", totalTransactionCount.get());
 
                     try {
                         data.put("validators", pwrj.getActiveValidatorsCount());

@@ -1,5 +1,7 @@
 package Block;
 
+import Core.DataModel.BlockModel;
+import Core.Sql.Queries;
 import Main.Settings;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,14 +31,17 @@ public class Blocks {
     }
 
     public static Block getBlock(Long blockNumber) {
-        if(blockByNumber.getOrDefault(blockNumber.toString(), null) == null) {
-            blockByNumber.put(blockNumber.toString(), getDbBlock(blockNumber));
-        }
-        return blockByNumber.get(blockNumber.toString());
+        return Queries.getDbBlock(blockNumber);
+//        if(blockByNumber.getOrDefault(blockNumber.toString(), null) == null) {
+//            blockByNumber.put(blockNumber.toString(), getDbBlock(blockNumber));
+//        }
+//        return blockByNumber.get(blockNumber.toString());
     }
     public static long getLatestBlockNumber() {
-        return latestBlockNumber;
+        return Queries.getLastBlockNumber();
+        //return latestBlockNumber;
     }
+
     public static double getAverageTps(int numberOfBlocks) {
         long totalTxnCount = 0;
         int blocksCounted = 0;

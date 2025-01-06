@@ -3,14 +3,13 @@ package API;
 
 import Block.Block;
 import Block.Blocks;
+import Core.Cache.CacheManager;
 import DailyActivity.Stats;
 import Main.Config;
 import Main.Settings;
 import Txn.NewTxn;
 import Txn.Txns;
 import User.User;
-import User.Users;
-import Validator.Validators;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import com.github.pwrlabs.pwrj.record.delegator.Delegator;
 import com.github.pwrlabs.pwrj.record.transaction.PayableVmDataTransaction;
@@ -27,7 +26,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,35 +37,10 @@ import static spark.Spark.get;
 
 public class GET {
     private static final Logger logger = LogManager.getLogger(GET.class);
-
-    private static AtomicInteger totalTransactionCount = new AtomicInteger(0)   ;
-    private static Map<Long, Integer> txnCountPast14Days = new ConcurrentHashMap<>();
-
-    static {
-        Thread t = new Thread(() -> {
-            while (true) {
-                try {
-                    totalTransactionCount = new AtomicInteger(getTotalTransactionCount());
-                } catch (Exception e) {
-                    logger.error("Error in GET thread", e);
-                }
-
-                try {
-                    txnCountPast14Days = getFourteenDaysTxn();
-                } catch (Exception e) {
-                    logger.error("Error in GET thread", e);
-                }
-
-                try {Thread.sleep(Config.getThreadSleepOfTxnsAndTxnHistoryUpdate());} catch (InterruptedException e) {}
-            }
-        });
-
-        t.setName("GET-Stats-Update-Thread");
-        t.setDaemon(true);
-        t.start();
-    }
+    private static CacheManager cacheManager;
 
     public static void run(PWRJ pwrj) {
+        cacheManager = new CacheManager(pwrj);
         get("/test/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
@@ -88,9 +61,7 @@ public class GET {
                 CompletableFuture<JSONArray> blocksFuture = CompletableFuture.supplyAsync(() -> {
                     Instant start = Instant.now();
                     JSONArray blocks = new JSONArray();
-                    long blockNumberToCheck = Blocks.getLatestBlockNumber();
-                    logger.info("------------------- {}" , blockNumberToCheck);
-                    List<Block> blockList = getLastXBlocks(5);
+                    List<Block> blockList = cacheManager.getBlocks(5);
                     for (Block block : blockList) {
                         JSONObject object = new JSONObject();
                         object.put("blockHeight", block.getBlockNumber());
@@ -107,7 +78,7 @@ public class GET {
                 CompletableFuture<JSONArray> txnsFuture = CompletableFuture.supplyAsync(() -> {
                     Instant start = Instant.now();
                     JSONArray txns = new JSONArray();
-                    List<NewTxn> txnsList = getLastXTransactions(5);
+                    List<NewTxn> txnsList = cacheManager.getRecentTxns(5);
                     for (NewTxn txn : txnsList) {
                         if (txn == null) continue;
                         JSONObject object = new JSONObject();
@@ -125,14 +96,9 @@ public class GET {
                 CompletableFuture<JSONObject> otherDataFuture = CompletableFuture.supplyAsync(() -> {
                     JSONObject data = new JSONObject();
 
-                    data.put("fourteenDaysTxn", txnCountPast14Days);
-                    data.put("totalTransactionsCount", totalTransactionCount.get());
-
-                    try {
-                        data.put("validators", pwrj.getActiveValidatorsCount());
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    data.put("fourteenDaysTxn", cacheManager.getFourteenDaysTxn());
+                    data.put("totalTransactionsCount", cacheManager.getTotalTransactionCount());
+                    data.put("validators", cacheManager.getActiveValidatorsCount());
                     data.put("tps", Blocks.getAverageTps(100));
 
                     return data;
@@ -144,7 +110,7 @@ public class GET {
                 JSONArray arr = blocksResult != null ? blocksResult.optJSONArray(0) : null;
 
                 long blocksCount = 0;
-                if (arr != null && arr.length() > 0) {
+                if (arr != null && !arr.isEmpty()) {
                     blocksCount = arr.optJSONObject(0).optLong("blockHeight", 0);
                 }
 
@@ -157,12 +123,12 @@ public class GET {
                         "validators", otherData.getInt("validators"),
                         "tps", otherData.getDouble("tps"),
                         "txns", txnsResult.getJSONArray(0),
-                        "blocks", blocksResult.getJSONArray(0),
+                        "blocks", blocksResult != null ? blocksResult.getJSONArray(0) : 0,
                         "fourteenDaysTxn", otherData.get("fourteenDaysTxn"),
                         "serverDuration", Duration.between(serverStart, Instant.now()).toMillis()
                 );
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("An error occurred while fetching explorer info: ", e);
                 return getError(response, e.getMessage());
             }
         });
@@ -176,11 +142,11 @@ public class GET {
                 JSONArray txns = new JSONArray();
 
                 // Fetch the latest 5 blocks (assuming a function getLastXBlocks exists)
-                List<Block> blockList = getLastXBlocks(5);
+                List<Block> blockList = cacheManager.getBlocks(5);
                 for (Block block : blockList) {
                     JSONObject object = new JSONObject();
                     object.put("blockNumber", block.getBlockNumber());
-                    object.put("blockHeight", Blocks.getLatestBlockNumber());
+                    object.put("blockHeight", cacheManager.getBlocksCount());
                     object.put("timeStamp", block.getTimeStamp() / 1000);
                     object.put("txnsCount", block.getTxnCount());
                     object.put("blockReward", block.getBlockReward());
@@ -190,7 +156,7 @@ public class GET {
                 }
 
                 // Fetch the latest 5 transactions (assuming a function getLastXTransactions exists)
-                List<NewTxn> txnsList = getLastXTransactions(5);
+                List<NewTxn> txnsList = cacheManager.getRecentTxns(5);
                 for (NewTxn txn : txnsList) {
                     if (txn == null) continue;
                     JSONObject object = new JSONObject();
@@ -209,8 +175,8 @@ public class GET {
                 responseObject.put("priceChange", 2.5);  // example value
                 responseObject.put("marketCap", 1000000000L);  // example value
                 responseObject.put("totalTransactionsCount", getTransactionCountPast24Hours());
-                responseObject.put("blocksCount", Blocks.getLatestBlockNumber());
-                responseObject.put("validators", pwrj.getActiveValidatorsCount());  // example value
+                responseObject.put("blocksCount", cacheManager.getBlocksCount());
+                responseObject.put("validators", cacheManager.getActiveValidatorsCount());  // example value
                 responseObject.put("tps", Blocks.getAverageTps(100));  // example value
                 responseObject.put("txns", txns);
                 responseObject.put("blocks", blocks);
@@ -224,7 +190,7 @@ public class GET {
                 return responseObject.toString();
 
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("An error occurred while fetching daily stats: ", e);
                 return getError(response, e.getLocalizedMessage());
             }
         });
@@ -237,12 +203,11 @@ public class GET {
 
                 int offset = (page - 1) * count;
 
-                long latestBlockNumber = Blocks.getLatestBlockNumber();
+                long latestBlockNumber = cacheManager.getBlocksCount();
                 int totalBlockCount = (int) latestBlockNumber;
                 int totalPages = (int) Math.ceil((double) totalBlockCount / count);
 
                 List<Block> blockList = getLastXBlocks(count, offset);
-                System.out.println(">>>blockList: " + blockList);
                 JSONArray blocksArray = new JSONArray();
                 for (Block block : blockList) {
                     JSONObject object = new JSONObject();
@@ -293,7 +258,7 @@ public class GET {
                         "blockSize", block.getSize(),
                         "blockReward", block.getReward(),
                         "blockSubmitter", block.getSubmitter(),
-                        "blockConfirmations", Blocks.getLatestBlockNumber() - blockNumber);
+                        "blockConfirmations", cacheManager.getBlocksCount() - blockNumber);
             } catch (Exception e) {
                 e.printStackTrace();
                 return getError(response, e.getLocalizedMessage());
@@ -438,7 +403,6 @@ public class GET {
                 int limit = Integer.parseInt(request.queryParams("count"));
                 int page = Integer.parseInt(request.queryParams("page"));
                 int offset = (page - 1) * limit;
-                System.out.println(">>hello");
 
                 List<NewTxn> txnsList = getTransactions(limit, offset);
 
@@ -453,9 +417,7 @@ public class GET {
                 BigDecimal ONE_PWR_TO_USD = BigDecimal.ONE;
 
                 for (NewTxn txn : txnsList) {
-                    Transaction subTxn = pwrj.getTransactionByHash(txn.hash());
-
-                    BigDecimal sparks = new BigDecimal(txn.txnFee());
+                    BigDecimal sparks = BigDecimal.valueOf(txn.txnFee());
                     BigDecimal pwrAmount = sparks.divide(BigDecimal.valueOf(1000000000L), 9, RoundingMode.HALF_EVEN);
 
                     BigDecimal feeValueInUSD = pwrAmount.multiply(ONE_PWR_TO_USD).setScale(9, RoundingMode.HALF_EVEN);
@@ -471,7 +433,7 @@ public class GET {
                     object.put("txnFee", txn.txnFee());
                     object.put("valueInUsd", txn.value());
                     object.put("txnFeeInUsd", feeValueInUSD);
-                    object.put("nonceOrValidationHash", subTxn.getNonce());
+                    object.put("nonceOrValidationHash", txn.nonce());
                     object.put("positionInBlock", txn.positionInBlock());
                     transactions.put(object);
                 }
@@ -616,7 +578,7 @@ public class GET {
                 sectionStart = Instant.now();
                 BigDecimal activeVotingPower = new BigDecimal(pwrj.getActiveVotingPower());
                 int standbyNodesCount = pwrj.getStandbyValidatorsCount();
-                int activeNodesCount = pwrj.getActiveValidatorsCount();
+                int activeNodesCount = cacheManager.getActiveValidatorsCount();
                 long totalVotingPower = pwrj.getTotalVotingPower();
                 logger.info("Section middle (Middle data fetching) duration: {} ms", Duration.between(sectionStart, Instant.now()).toMillis());
 
@@ -753,7 +715,7 @@ public class GET {
                 long startCountTimeOne = System.currentTimeMillis();
                 List<NewTxn> txns = getUserTxns(address, page, count);
                 long endCountTimeOne = System.currentTimeMillis();
-                logger.info(">>>Time taken for userTxns: " + (endCountTimeOne - startCountTimeOne) + " ms");
+                logger.info("Time taken for userTxns: " + (endCountTimeOne - startCountTimeOne) + " ms");
 
                 long startCountTimeTwo = System.currentTimeMillis();
                 int totalTxnCount = getTotalTxnCount(address);
@@ -822,14 +784,13 @@ public class GET {
                     JSONObject lastTxnObject = new JSONObject();
                     lastTxnObject.put("txnHash", firstLastTxns.second.hash());
                     lastTxnObject.put("block", firstLastTxns.second.blockNumber());
-                    lastTxnObject.put("timeStamp", firstLastTxns.second.timestamp() /1000);
+                    lastTxnObject.put("timeStamp", firstLastTxns.second.timestamp() / 1000);
                     firstLastTxnsObject.put("lastTransaction", lastTxnObject);
                 }
 
                 return getSuccess("transactions", txnsArray, "metadata", metadata, "firstLastTransactions", firstLastTxnsObject);
             } catch (Exception e) {
-                e.printStackTrace();
-                return getError(response, e.getLocalizedMessage());
+                return getError(response, "Failed to get transaction history " + e.getLocalizedMessage());
             }
         });
 
@@ -839,7 +800,7 @@ public class GET {
 
                 String txnHash = request.queryParams("txnHash").toLowerCase();
 
-                NewTxn txn = Txns.getNewTxn(txnHash);
+                NewTxn txn = getDbTxn(txnHash);
                 if (txn == null) return getSuccess("isProcessed", false);
                 else return getSuccess("isProcessed", true);
             } catch (Exception e) {
@@ -945,14 +906,13 @@ public class GET {
                 metadata.put("previousPage", page > 1 ? page - 1 : -1);
 
                 return getSuccess(
-                        "activeValidatorsCount", pwrj.getActiveValidatorsCount(),
+                        "activeValidatorsCount", cacheManager.getActiveValidatorsCount(),
                         "activeVotingPower", BigDecimal.valueOf(pwrj.getActiveVotingPower()).divide(BigDecimal.TEN.pow(9), 0, BigDecimal.ROUND_HALF_UP),
                         "delegatorsCount", pwrj.getTotalDelegatorsCount(),
                         "validators", validatorsArray,
                         "metadata", metadata);
             } catch (Exception e) {
-                e.printStackTrace();
-                return getError(response, e.getLocalizedMessage());
+                return getError(response, "Failed to get staking home page info: " + e.getLocalizedMessage());
             }
         });
 
@@ -965,7 +925,6 @@ public class GET {
                 int page = Integer.parseInt(request.queryParams("page"));
 
                 Validator v = pwrj.getValidator(validatorAddress);
-                logger.info(">>Validator address {}", v.getAddress());
                 if (v.getAddress() == null) return getError(response, "Invalid Validator Address");
 
                 int totalPages = v.getDelegatorsCount() / count;
@@ -978,11 +937,11 @@ public class GET {
                     logger.info("-------- delegator {}", value);
                 }
                 JSONArray delegatorsArray = new JSONArray();
+
                 try {
                     int delegatorsCount = Math.max(v.getDelegatorsCount(), 0);
 
                     for (int t = 0; t < delegatorsCount; t++) {
-                        logger.info("------------ delegators count {}", delegatorsCount);
                         Delegator delegator = delegators.get(t);
                         if (delegator == null) continue;
 
@@ -1011,24 +970,24 @@ public class GET {
                 return getSuccess(
                         "name", "Unnamed Validator",
                         "status", v.getStatus(),
-                        "joiningDate", Validators.getJoinTime(validatorAddress),
+                        "joiningDate", getValidatorJoiningTime(validatorAddress.toLowerCase()),
                         "hosting", "vps",
                         "website", "null",
                         "description", "null",
                         "delegators", delegatorsArray,
                         "metadata", metadata);
             } catch (Exception e) {
-                e.printStackTrace();
                 return getError(response, e.getLocalizedMessage());
             }
         });
+
         get("/staking/portfolio/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
 
                 String userAddress = request.queryParams("userAddress");
 
-                User u = Users.getUser(userAddress);
+                User u = null;
                 if (u == null) return getError(response, "Invalid User Address");
 
                 List<String> delegatedValidators = u.getDelegatedValidators();
@@ -1053,7 +1012,7 @@ public class GET {
                 }
 
                 JSONArray validatorsArray = new JSONArray();
-                long currentBlockNumber = Blocks.getLatestBlockNumber();
+                long currentBlockNumber = cacheManager.getBlocksCount();
                 long blockNumberToCheck = currentBlockNumber - 34560;
                 if (blockNumberToCheck < 0) blockNumberToCheck = 1;
 //                long timeDifference = Blocks.getBlock(currentBlockNumber).getTimeStamp() - Blocks.getBlock(blockNumberToCheck).getTimeStamp();
@@ -1122,11 +1081,7 @@ public class GET {
                         .toString();
 
             } catch (Exception e) {
-                e.printStackTrace();
-                return new JSONObject()
-                        .put("success", false)
-                        .put("error", e.getLocalizedMessage())
-                        .toString();
+                return getError(response, "Failed to get stats " + e.getLocalizedMessage());
             }
         });
 
@@ -1162,10 +1117,6 @@ public class GET {
         }
 
         return object;
-    }
-
-    public static void main(String[] args) {
-        logger.info(1 / 2);
     }
 }
 

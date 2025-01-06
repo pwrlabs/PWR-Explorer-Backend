@@ -20,6 +20,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static Core.Constants.Constants.*;
@@ -49,14 +50,13 @@ public class Queries {
 
             preparedStatement.executeUpdate();
         } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
+            logger.error("Failed to insert user {} due to an internal error: ", address, e);
         }
     }
 
     public static void insertTxn(
             String hash, long blockNumber, int positionInBlock, String fromAddress, String toAddress,
-            long timestamp, long value, String txnType, long txnFee, Boolean success
+            long timestamp, long value, String txnType, long txnFee, long nonce, Boolean success
     ) {
         String tableName = getTransactionsTableName("0");
 //        logger.info("table name {}", tableName);
@@ -70,8 +70,9 @@ public class Queries {
                 "\"value\", " +
                 "\"txn_type\", " +
                 "\"txn_fee\", " +
+                "\"nonce\", " +
                 "\"success\"" +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?);";
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?,?);";
         try (Connection conn = getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, hash);
@@ -83,13 +84,11 @@ public class Queries {
             preparedStatement.setLong(7, value);
             preparedStatement.setString(8, txnType);
             preparedStatement.setLong(9, txnFee);
-            preparedStatement.setBoolean(10, success);
-//            logger.info("QUERY: {}", preparedStatement.toString());
-//            logger.info("Inserted Txn {} Successfully", hash);
+            preparedStatement.setLong(10, nonce);
+            preparedStatement.setBoolean(11, success);
             preparedStatement.executeUpdate();
         } catch (Exception e) {
-            e.printStackTrace();
-            logger.error("Error inserting transaction: {}", e.getMessage());
+            logger.error("Error inserting transaction: ", e);
         }
     }
 
@@ -125,6 +124,19 @@ public class Queries {
         } catch (Exception e) {
             e.printStackTrace();
             logger.error(e.toString());
+        }
+    }
+
+    public static void insertValidator(String address, long joiningTime) {
+        String sql = "INSERT INTO \"Validator\" (address, joining_time, lifetime_rewards, submitted_blocks, blocks_submitted) VALUES (?,?,0,0,0)";
+
+        try (Connection connection = getConnection();
+             PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, address);
+            stmt.setLong(2, joiningTime);
+            stmt.executeUpdate();
+        } catch (Exception e) {
+            logger.error("Failed to insert Validator: ", e);
         }
     }
 
@@ -384,8 +396,6 @@ public class Queries {
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, address);
 
-//            logger.info("QUERY: {}", preparedStatement.toString());
-
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
                     byte[] firstSentTxn = rs.getBytes(FIRST_SENT_TXN);
@@ -396,8 +406,7 @@ public class Queries {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
+            logger.error("Failed to get user from db: ", e);
         }
         return user;
     }
@@ -425,11 +434,8 @@ public class Queries {
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setLong(1, blockNumber);
 
-//            logger.info("QUERY: {}", preparedStatement.toString());
-
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
-                    String blockHash = rs.getString(BLOCK_HASH);
                     String feeRecipient = rs.getString(FEE_RECIPIENT);
                     long timestamp = rs.getLong(TIMESTAMP);
                     int transactionsCount = rs.getInt(TRANSACTIONS_COUNT);
@@ -440,8 +446,7 @@ public class Queries {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.getMessage());
+            logger.error("Failed to get block {} from db: ", blockNumber, e);
         }
         return block;
     }
@@ -478,8 +483,7 @@ public class Queries {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
+            logger.error("An error occurred while retrieving txn details: ", e);
         }
         return txn;
     }
@@ -520,8 +524,6 @@ public class Queries {
             preparedStatement.setInt(1, limit);
             preparedStatement.setInt(2, offset);
 
-//            logger.info("QUERY: {}", preparedStatement.toString());
-
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 while (rs.next()) {
                     NewTxn txn = populateNewTxnObject(rs);
@@ -557,8 +559,6 @@ public class Queries {
 
                 try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
                     preparedStatement.setInt(1, x);
-
-//                    logger.info("QUERY: {}", preparedStatement.toString());
 
                     try (ResultSet rs = preparedStatement.executeQuery()) {
                         while (rs.next()) {
@@ -677,6 +677,22 @@ public class Queries {
             logger.error(e.toString());
         }
         return txns;
+    }
+
+    public static long getValidatorJoiningTime(String address) {
+        String sql = "SELECT joining_time FROM Validator WHERE address = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, address);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("An error occurred while retrieving validator joining time: ", e);
+        }
+        return 0;
     }
 
     public static List<NewTxn> getTransactionsByAddressAndBlockRange(String address, long startBlockNumber, long endBlockNumber) {
@@ -852,7 +868,6 @@ public class Queries {
 
         try (Connection conn = getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-//            logger.info("QUERY: {}", preparedStatement.toString());
 
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
@@ -861,15 +876,14 @@ public class Queries {
                         averageFee = averageFeeDecimal.toBigInteger();
                         logger.info("Average Transaction Fee Past 24 Hours: {}", averageFee);
                     } else {
-                        logger.info("No data found for Average Transaction Fee Past 24 Hours");
+                        logger.info("Average fee decimal is null");
                     }
                 } else {
-                    logger.info("No data found for Average Transaction Fee Past 24 Hours");
+                    logger.info("No data found for Average Transaction Fee Past 24 Hours. Result set was empty");
                 }
             }
         } catch (Exception e) {
-            logger.error("Error while calculating Average Transaction Fee Past 24 Hours: {}", e.toString());
-            e.printStackTrace();
+            logger.error("Error while calculating Average Transaction Fee Past 24 Hours: ", e);
         }
 
         return averageFee;
@@ -1047,48 +1061,47 @@ public class Queries {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
             logger.error("Error querying first and last transactions for address {}: {}", address, e.getMessage());
         }
 
         return new Pair<>(firstTxn, lastTxn);
     }
-    public static Map<Long, Integer> getFourteenDaysTxn() {
-        // Pre-calculate the size we need for better memory efficiency
-        final int DAYS_TO_FETCH = 14;
 
-        // Use TreeMap instead of LinkedHashMap - more efficient for sorted data
+    public static Map<Long, Integer> getFourteenDaysTxn() {
+        final int DAYS_TO_FETCH = 14;
+        final long MILLIS_PER_DAY = 86400000; // 24 * 60 * 60 * 1000
+
         TreeMap<Long, Integer> txns = new TreeMap<>(Collections.reverseOrder());
 
-        // Calculate time boundaries once
-        ZonedDateTime currentTime = ZonedDateTime.now(ZoneOffset.UTC);
-        ZonedDateTime startTime = currentTime.minusDays(DAYS_TO_FETCH - 1)
-                .withHour(0).withMinute(0).withSecond(0).withNano(0);
+        // Calculate current day's start timestamp
+        long currentTimeMillis = System.currentTimeMillis();
+        long currentDayStart = (currentTimeMillis / MILLIS_PER_DAY) * MILLIS_PER_DAY;
+        long startTimeMillis = currentDayStart - ((DAYS_TO_FETCH - 1) * MILLIS_PER_DAY);
 
-        // Optimize SQL query to reduce memory usage
-        String sql = "SELECT CAST((" + TIMESTAMP + " / 86400000) AS BIGINT) * 86400000 as day_start, " +
+        String sql = "SELECT (\"timestamp\" / " + MILLIS_PER_DAY + ") * " + MILLIS_PER_DAY + " as day_start, " +
                 "COUNT(*) as count " +
-                "FROM " + getTransactionsTableName("0") + " " +
-                "WHERE " + TIMESTAMP + " >= ? AND " + TIMESTAMP + " < ? " +
-                "GROUP BY CAST((" + TIMESTAMP + " / 86400000) AS BIGINT) * 86400000";
+                "FROM \"Transactions_Shard_0\" " +
+                "WHERE \"timestamp\" >= ? AND \"timestamp\" < ? " +
+                "GROUP BY (\"timestamp\" / " + MILLIS_PER_DAY + ") * " + MILLIS_PER_DAY + " " +
+                "ORDER BY day_start DESC";
 
         try (Connection connection = getConnection();
              PreparedStatement stmt = connection.prepareStatement(sql)) {
 
-            // Use exact timestamp bounds
-            stmt.setLong(1, startTime.toInstant().toEpochMilli());
-            stmt.setLong(2, currentTime.toInstant().toEpochMilli());
+            stmt.setLong(1, startTimeMillis);
+            stmt.setLong(2, currentDayStart + MILLIS_PER_DAY); // Include full current day
 
-            // Initialize map with zeros for all days first
+            // Initialize map with zeros for all days at day start boundaries
             for (int i = 0; i < DAYS_TO_FETCH; i++) {
-                long dayStart = startTime.plusDays(i).toInstant().toEpochMilli();
-                txns.put(dayStart, 0);
+                long dayStartMillis = startTimeMillis + (i * MILLIS_PER_DAY);
+                txns.put(dayStartMillis, 0);
             }
 
-            // Process results directly without intermediate collections
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    txns.put(rs.getLong("day_start"), rs.getInt("count"));
+                    long dayStartMillis = rs.getLong("day_start");
+                    int count = rs.getInt("count");
+                    txns.put(dayStartMillis, count);
                 }
             }
 
@@ -1165,85 +1178,10 @@ public class Queries {
             this.second = second;
         }
     }
-    //============================helpers=============================================
 
-//        public static List<DailyActivity> getDailyActivity() {
-//            String sql = "SELECT " +
-//                    "    DATE_TRUNC('day', TO_TIMESTAMP(\"timestamp\" / 1000)) AS day, " +
-//                    "    COUNT(*) AS transaction_count, " +
-//                    "    SUM(\"value\") AS total_value, " +
-//                    "    SUM(\"txn_fee\") AS total_fee, " +
-//                    "    SUM(\"amount_usd_value\") AS total_amount_usd, " +
-//                    "    SUM(\"fee_usd_value\") AS total_fee_usd " +
-//                    "FROM " +
-//                    "    ( " +
-//                    "        SELECT * FROM \"Transactions_Shard_0\" " +
-//                    "        UNION ALL " +
-//                    "        SELECT * FROM \"Transactions_Shard_1\" " +
-//                    "        UNION ALL " +
-//                    "        SELECT * FROM \"Transactions_Shard_2\" " +
-//                    "        UNION ALL " +
-//                    "        SELECT * FROM \"Transactions_Shard_3\" " +
-//                    "        UNION ALL " +
-//                    "        SELECT * FROM \"Transactions_Shard_4\" " +
-//                    "    ) AS transactions " +
-//                    "GROUP BY " +
-//                    "    day " +
-//                    "ORDER BY " +
-//                    "    day;";
-//
-//            List<DailyActivity> dailyActivities = new ArrayList<>();
-//
-//            try (Connection conn = getConnection();
-//                 PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-//
-//                logger.info("QUERY: {}", preparedStatement.toString());
-//
-//                try (ResultSet rs = preparedStatement.executeQuery()) {
-//                    while (rs.next()) {
-//                        Date day = rs.getDate("day");
-//                        int transactionCount = rs.getInt("transaction_count");
-//                        long totalValue = rs.getLong("total_value");
-//                        long totalFee = rs.getLong("total_fee");
-//                        long totalAmountUsd = rs.getLong("total_amount_usd");
-//                        long totalFeeUsd = rs.getLong("total_fee_usd");
-//
-//                        DailyActivity dailyActivity = new DailyActivity(day, transactionCount, totalValue, totalFee, totalAmountUsd, totalFeeUsd);
-//                        dailyActivities.add(dailyActivity);
-//                    }
-//                }
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                logger.error(e.toString());
-//            }
-//
-//            return dailyActivities;
-//        }
-
-    //============================HELPERS=============================================
-//    private static Txn populateTxnObject(ResultSet rs) throws SQLException {
-//        return new Txn(
-//                rs.getString(HASH),
-//                rs.getLong(BLOCK_NUMBER),
-//                rs.getInt(SIZE),
-//                rs.getInt(POSITION_IN_BLOCK),
-//                rs.getString(FROM_ADDRESS),
-//                rs.getString(TO_ADDRESS),
-//                rs.getLong(TIMESTAMP),
-//                rs.getLong(VALUE),
-//                rs.getLong(TXN_FEE),
-//                rs.getString(TXN_TYPE),
-//                rs.getBoolean(SUCCESS),
-//                rs.getString(ERROR_MESSAGE),
-//                rs.getLong(NONCE),
-//                rs.getLong(ACTION_FEE),
-//                rs.getBoolean(PAID),
-//                rs.getString(FEEPAYER)
-//        );
-//    }
-
+    //#region Helpers
     private static NewTxn populateNewTxnObject(ResultSet rs) throws SQLException {
-        NewTxn newTxn = new NewTxn(
+        return new NewTxn(
                 rs.getString(HASH),
                 rs.getLong(BLOCK_NUMBER),
                 rs.getInt(POSITION_IN_BLOCK),
@@ -1253,9 +1191,9 @@ public class Queries {
                 rs.getLong(VALUE),
                 rs.getString(TXN_TYPE),
                 rs.getLong(TXN_FEE),
+                rs.getLong(NONCE),
                 rs.getBoolean(SUCCESS)
         );
-        return newTxn;
     }
 
     private static TxnModel populateTxnModel(ResultSet rs) throws SQLException {
@@ -1285,4 +1223,5 @@ public class Queries {
         int shardIndex = Math.abs(hash.hashCode()) % NUMBER_OF_SHARDS;
         return "\"Transactions_Shard_" + shardIndex + "\"";
     }
+    //#endregion
 }

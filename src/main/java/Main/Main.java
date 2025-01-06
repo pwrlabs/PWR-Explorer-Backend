@@ -5,8 +5,6 @@ import API.POST;
 import API.RateLimiter;
 import Core.DatabaseInitialization;
 import PWRChain.Synchronizer;
-import VM.VM;
-import com.github.pwrlabs.dbm.DBM;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 
 import java.io.IOException;
@@ -51,17 +49,13 @@ public class Main {
 
         DatabaseInitialization.initialize();
 
-
         // test explorer
         PWRJ pwrj = new PWRJ(Config.getPwrRpcUrl());
 
         GET.run(pwrj);
         POST.run(pwrj);
 
-//        DBM.loadAllObjectsFromDatabase(Block.Block.class);
-        DBM.loadAllObjectsFromDatabase(VM.class);
-//        DBM.loadAllObjectsFromDatabase(User.class);
-//        DBM.loadAllObjectsFromDatabase(Txn.Txn.class);
+//        DBM.loadAllObjectsFromDatabase(VM.class);
 
         Block.Initializer.init();
         Txn.Initializer.init();

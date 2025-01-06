@@ -12,29 +12,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import static Core.Sql.Queries.getDbTxn;
+import static Core.Sql.Queries.*;
 
 public class Txns {
     private static final Logger logger = LogManager.getLogger(Txns.class);
-    private static Map<String /*Txn Hash*/, NewTxn> txnByHash = new HashMap<>();
 
-    public static void add(NewTxn txn) {
-        if (txnByHash.get(txn.hash().toLowerCase()) != null) {
-            logger.info("Txn already exists: {}", txn.hash());
-        }
-        txnByHash.put(txn.hash().toLowerCase(), txn);
-    }
-
-    public static NewTxn getNewTxn(String txnHash) {
-        if (txnByHash.getOrDefault(txnHash.toLowerCase(), null) == null) {
-            txnByHash.put(txnHash.toLowerCase(), getDbTxn(txnHash.toLowerCase()));
-        }
-        return txnByHash.get(txnHash.toLowerCase());
-    }
-
-    public static int getTxnCount() {
-        return txnByHash.size();
-    }
     //==================================================================================================================
 
     private static long txnCountPast24Hours = 0;
@@ -56,9 +38,9 @@ public class Txns {
         long averageTxnFeeThe24HoursBefore = 0;
 
         long timeNow = Instant.now().getEpochSecond();
-        long blockNumberToCheck = Blocks.getLatestBlockNumber();
+        long blockNumberToCheck = getLastBlockNumber();
         while (true) {
-            Block block = Blocks.getBlock(blockNumberToCheck--);
+            Block block = getDbBlock(blockNumberToCheck--);
             if (block == null) break;
             if (block.getTimeStamp() < timeNow - 24 * 60 * 60) break;
 
@@ -75,7 +57,7 @@ public class Txns {
 
         //Calculate the stats of the 24 hours before the current 24 hours
         while (true) {
-            Block block = Blocks.getBlock(blockNumberToCheck--);
+            Block block = getDbBlock(blockNumberToCheck--);
             if (block == null) break;
             if (block.getTimeStamp() < timeNow - 24 * 60 * 60 * 2) break;
 

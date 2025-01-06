@@ -170,10 +170,11 @@ public class DatabaseInitialization {
             ");";
 
     private static final String initializeValidator = "CREATE TABLE IF NOT EXISTS \"Validator\" (\n" +
-            "    \"address\" VARCHAR(40) PRIMARY KEY,\n" +
+            "    \"address\" VARCHAR(62) PRIMARY KEY,\n" +
+            "    \"joining_time\" BIGINT,\n" +
             "    \"lifetime_rewards\" BIGINT,\n" +
             "    \"submitted_blocks\" INTEGER,\n" +
-            "    \"blocks_submitted\" BIGINT[]\n" +
+            "    \"blocks_submitted\" BIGINT\n" +
             ");";
 
     final static String[] initializationQueue = new String[]{
@@ -202,8 +203,7 @@ public class DatabaseInitialization {
             preparedStatement.executeUpdate();
             logger.info("Table initialized!");
         } catch (Exception e) {
-            e.printStackTrace();
-            logger.error("Unable to initialize table\nReason: {}", e.getMessage());
+            logger.error("Unable to initialize table: ", e);
         }
     }
 
@@ -219,6 +219,7 @@ public class DatabaseInitialization {
                 "    \"value\" BIGINT,\n" +
                 "    \"txn_type\" VARCHAR(256),\n" +
                 "    \"txn_fee\" BIGINT,\n" +
+                "    \"nonce\" BIGINT,\n" +
                 "    \"success\" BOOLEAN,\n" +
                 "    PRIMARY KEY (\"hash\", \"block_number\"),\n" +
                 "    FOREIGN KEY (\"block_number\") REFERENCES \"Block\"(\"block_number\")\n" +
@@ -231,7 +232,6 @@ public class DatabaseInitialization {
             preparedStatement.executeUpdate();
             logger.info("Transactions table for shard {} initialized!", shardIndex);
         } catch (Exception e) {
-            e.printStackTrace();
             logger.error("Unable to initialize transactions table for shard {}\nReason: {}", shardIndex, e.getMessage());
         }
     }
@@ -249,8 +249,7 @@ public class DatabaseInitialization {
             dropTable(connection, "\"InitialDelegation\"");
             dropTable(connection, "\"Validator\"");
         } catch (Exception e) {
-            logger.error("Error dropping tables: {}", e.getMessage());
-            e.printStackTrace();
+            logger.error("Error dropping tables: ", e);
         }
     }
 

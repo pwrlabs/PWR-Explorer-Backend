@@ -1,16 +1,11 @@
 package Block;
 
-import Core.DataModel.BlockModel;
-import Core.Sql.Queries;
 import Main.Settings;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.math.BigDecimal;
-import java.sql.SQLOutput;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
 
 import static Core.Sql.Queries.getDbBlock;
 import static Core.Sql.Queries.getLastBlockNumber;
@@ -18,37 +13,15 @@ import static Core.Sql.Queries.getLastBlockNumber;
 
 public class Blocks {
     private static final Logger logger = LogManager.getLogger(Block.class);
-    private static Map<String /*Block Number*/, Block> blockByNumber = new HashMap<>();
     private static long latestBlockNumber = 0;
-
-    public static void add(Block block) {
-        blockByNumber.put(block.getBlockNumber(), block);
-
-        long blockNumber = Long.parseLong(block.getBlockNumber());
-        if(blockNumber > latestBlockNumber) {
-            latestBlockNumber = blockNumber;
-        }
-    }
-
-    public static Block getBlock(Long blockNumber) {
-        return Queries.getDbBlock(blockNumber);
-//        if(blockByNumber.getOrDefault(blockNumber.toString(), null) == null) {
-//            blockByNumber.put(blockNumber.toString(), getDbBlock(blockNumber));
-//        }
-//        return blockByNumber.get(blockNumber.toString());
-    }
-    public static long getLatestBlockNumber() {
-        return Queries.getLastBlockNumber();
-        //return latestBlockNumber;
-    }
 
     public static double getAverageTps(int numberOfBlocks) {
         long totalTxnCount = 0;
         int blocksCounted = 0;
 
-        long blockNumberToCheck = Blocks.getLatestBlockNumber();
+        long blockNumberToCheck = getLastBlockNumber();
         for(int i = 0; i < numberOfBlocks; i++) {
-            Block block = Blocks.getBlock(blockNumberToCheck - i);
+            Block block = getDbBlock(blockNumberToCheck - i);
             if(block == null) break;
 
             totalTxnCount += block.getTxnCount();
@@ -59,10 +32,6 @@ public class Blocks {
         return BigDecimal.valueOf(totalTxnCount).divide(BigDecimal.valueOf(blocksCounted), 1, BigDecimal.ROUND_HALF_UP).doubleValue();
     }
 
-    public static void updateLatestBlockNumber() {
-        latestBlockNumber = getLastBlockNumber();
-    }
-
     //==================================================================================================================
 
     private static double networkUtilizationPast24Hours = 0;
@@ -70,23 +39,20 @@ public class Blocks {
     private static long totalBlockRewardsPast24Hours = 0;
 
     public static void updateBlock24HourStats() {
-        System.out.println(">>>UPDATING BLOCK");
+        logger.info("UPDATING BLOCK");
         long totalBlockSizePast24Hours = 0;
         long totalBlockRewardsPast24Hours = 0;
         long totalBlockCountPast24Hours = 0;
 
         long timeNow = Instant.now().getEpochSecond();
-        long blockNumberToCheck = Blocks.getLatestBlockNumber();
+        long blockNumberToCheck = getLastBlockNumber();
         while(true) {
-            Block block = Blocks.getBlock(blockNumberToCheck);
+            Block block = getDbBlock(blockNumberToCheck);
             if(block == null) {
                 logger.info(">>Block is null for block number: {}", (blockNumberToCheck));
                 Blocks.latestBlockNumber = ++blockNumberToCheck;
                 break;
             }
-//            else {
-//                logger.info(">>Block is not null , block number: {}", (blockNumberToCheck));
-//            }
 
             long blockTimestamp = block.getTimeStamp();
             if(blockTimestamp < timeNow - 24 * 60 * 60) {
@@ -100,21 +66,21 @@ public class Blocks {
         }
 
         if(totalBlockCountPast24Hours == 0) {
-            logger.info(">>No blocks found in the past 24 hours.");
+            logger.info("No blocks found in the past 24 hours.");
             averageBlockSizePast24Hours = 0;
         } else {
             averageBlockSizePast24Hours = (int) (totalBlockSizePast24Hours / totalBlockCountPast24Hours);
         }
 
         if(averageBlockSizePast24Hours == 0) {
-            logger.info(">>Average block size is zero.");
+            logger.info("Average block size is zero.");
             networkUtilizationPast24Hours = 0;
         } else {
             networkUtilizationPast24Hours = BigDecimal.valueOf(((double)averageBlockSizePast24Hours / (double)Settings.getBlockSizeLimit()) * 100).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
         }
 
         Blocks.totalBlockRewardsPast24Hours = totalBlockRewardsPast24Hours;
-        System.out.println(">>REWARDS 24: " + totalBlockRewardsPast24Hours);
+        logger.info("REWARDS 24: {}", totalBlockRewardsPast24Hours);
     }
 
     public static double getNetworkUtilizationPast24Hours() {

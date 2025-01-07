@@ -12,12 +12,11 @@ public class Config {
     static {
         File configFile = new File("config.json");
         JSONObject config = new JSONObject();
-        if(configFile.exists()) {
+        if (configFile.exists()) {
             try {
                 config = new JSONObject(Files.readString(configFile.toPath()));
             } catch (Exception e) {
-                System.err.println("Config:static:Failed to load config file");
-                e.printStackTrace();
+                System.err.println("Config:static:Failed to load config file: " + e);
             }
         }
 
@@ -39,9 +38,8 @@ public class Config {
             databasePassword = config.optString("databasePassword", "Kriko2004");
             databaseName = config.optString("databaseName", "testexplorer");
 
-        } catch (Exception e ) {
-            System.err.println("Config:static:Failed to load config file");
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("Config:static:Failed to load config file: " + e);
 
             System.exit(0);
         }

@@ -5,6 +5,7 @@ C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\API\RateLimiter.java
 C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Block\Block.java
 C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Block\Blocks.java
 C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Block\Initializer.java
+C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Core\Cache\CacheManager.java
 C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Core\Constants\Constants.java
 C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Core\DatabaseConnection.java
 C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Core\DatabaseInitialization.java

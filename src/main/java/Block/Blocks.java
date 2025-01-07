@@ -15,7 +15,7 @@ public class Blocks {
     private static final Logger logger = LogManager.getLogger(Block.class);
     private static long latestBlockNumber = 0;
 
-    public static double getAverageTps(int numberOfBlocks) {
+    public static double getAvgTxnsPerBlock(int numberOfBlocks) {
         long totalTxnCount = 0;
         int blocksCounted = 0;
 

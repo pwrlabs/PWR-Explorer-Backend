@@ -226,7 +226,10 @@ public class DatabaseInitialization {
                 ");\n" +
                 "CREATE INDEX IF NOT EXISTS \"idx_from_address_" + shardIndex + "\" ON " + tableName + " (\"from_address\");\n" +
                 "CREATE INDEX IF NOT EXISTS \"idx_to_address_" + shardIndex + "\" ON " + tableName + " (\"to_address\");\n" +
-                "CREATE INDEX IF NOT EXISTS \"idx_block_number_" + shardIndex + "\" ON " + tableName + " (\"block_number\");";
+                "CREATE INDEX IF NOT EXISTS \"idx_block_number_" + shardIndex + "\" ON " + tableName + " (\"block_number\");\n" +
+                "CREATE INDEX IF NOT EXISTS \"idx_timestamp_" + shardIndex + "\" ON " + tableName + " (\"timestamp\" DESC);\n" +
+                "CREATE INDEX IF NOT EXISTS \"idx_timestamp_grouped_" + shardIndex + "\" ON " + tableName + " ((\"timestamp\" / 86400000));\n" +
+                "CREATE INDEX IF NOT EXISTS \"idx_block_timestamp_" + shardIndex + "\" ON " + tableName + " (\"block_number\", \"timestamp\" DESC);";
         try (Connection conn = getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.executeUpdate();

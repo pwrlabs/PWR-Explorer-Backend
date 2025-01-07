@@ -64,7 +64,7 @@ public class Synchronizer {
 
                         ++blockToCheck;
                         try {
-                            Thread.sleep(10);
+                            Thread.sleep(1);
                         } catch (InterruptedException e) {
                             logger.error("Thread sleep interrupted", e);
                         }

@@ -15,6 +15,7 @@ public class Block {
     private static final Logger logger = LogManager.getLogger(Block.class);
     private static final int MAX_TRANSACTIONS_IN_MEMORY = 1000;
 
+    private String blockHash;
     private String blockNumber;
     private final long timeStamp;
     private String blockSubmitter;
@@ -29,8 +30,9 @@ public class Block {
     // Keep track of number of blocks in memory
     private static final AtomicInteger activeBlocks = new AtomicInteger(0);
 
-    public Block(String blockNumber, long timeStamp, String blockSubmitter,
+    public Block(String blockHash, String blockNumber, long timeStamp, String blockSubmitter,
                  long blockReward, int blockSize, int txnCount) {
+        this.blockHash = blockHash;
         this.blockNumber = blockNumber;
         this.timeStamp = timeStamp;
         this.blockSubmitter = blockSubmitter;
@@ -112,6 +114,8 @@ public class Block {
     }
 
     // Getters and setters
+    public String getBlockHash() { return blockHash; }
+
     public String getBlockNumber() {
         return blockNumber;
     }

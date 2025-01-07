@@ -94,7 +94,7 @@ public class Queries {
 
     public static void insertBlock(long blockNumber, String blockHash, String feeRecipient, long timestamp, int transactionsCount, long blockReward, int size, boolean success) {
         String blockNumberStr = "" + blockNumber;
-        new Block(blockNumberStr, timestamp, feeRecipient, blockReward, size, transactionsCount);
+        new Block(blockHash, blockNumberStr, timestamp, feeRecipient, blockReward, size, transactionsCount);
         String sql = "INSERT INTO \"Block\" (" +
                 BLOCK_NUMBER + ", " +
                 BLOCK_HASH + ", " +
@@ -441,8 +441,9 @@ public class Queries {
                     int transactionsCount = rs.getInt(TRANSACTIONS_COUNT);
                     long blockReward = rs.getLong(BLOCK_REWARD);
                     int size = rs.getInt(BLOCK_SIZE);
+                    String blockHash = rs.getString(BLOCK_HASH);
                     String blockNumberString = "" + blockNumber;
-                    block = new Block(blockNumberString, timestamp, feeRecipient, blockReward, size, transactionsCount);
+                    block = new Block(blockHash, blockNumberString, timestamp, feeRecipient, blockReward, size, transactionsCount);
                 }
             }
         } catch (Exception e) {
@@ -461,10 +462,53 @@ public class Queries {
                 return rs.getLong(1);
             }
         } catch (Exception e) {
-            e.printStackTrace();
             logger.error(e.getMessage());
         }
         return 0;
+    }
+
+    public static double getAverageTps(int numberOfBlocks, long lastBlockNumber) {
+        String sql = "SELECT transactions_count, timestamp FROM \"Block\" " +
+                "WHERE block_number > ? " +
+                "ORDER BY block_number DESC " +
+                "LIMIT ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, lastBlockNumber - numberOfBlocks);
+            stmt.setInt(2, numberOfBlocks);
+
+            long totalTxns = 0;
+            Long firstTimestamp = null;
+            Long lastTimestamp = null;
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    totalTxns += rs.getInt("transactions_count");
+                    long timestamp = rs.getLong("timestamp");
+
+                    if (firstTimestamp == null) {
+                        firstTimestamp = timestamp;
+                    }
+                    lastTimestamp = timestamp;
+                }
+            }
+
+            if (firstTimestamp == null || lastTimestamp == null || firstTimestamp.equals(lastTimestamp)) {
+                return 0;
+            }
+
+            // Calculate time difference in seconds
+            double timeSpanSeconds = (firstTimestamp - lastTimestamp) / 1000.0;
+
+            // Calculate TPS
+            return BigDecimal.valueOf(totalTxns)
+                    .divide(BigDecimal.valueOf(timeSpanSeconds), 1, BigDecimal.ROUND_HALF_UP)
+                    .doubleValue();
+        } catch (Exception e) {
+            logger.error("Failed to calculate TPS: ", e);
+            return 0;
+        }
     }
 
     public static NewTxn getDbTxn(String hash) {
@@ -598,12 +642,12 @@ public class Queries {
                     long blockReward = rs.getLong(BLOCK_REWARD);
                     int size = rs.getInt(BLOCK_SIZE);
                     String blockNumberString = "" + blockNumber;
-                    Block block = new Block(blockNumberString, timestamp, feeRecipient, blockReward, size, transactionsCount);
+
+                    Block block = new Block(blockHash, blockNumberString, timestamp, feeRecipient, blockReward, size, transactionsCount);
                     blocks.add(block);
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
             logger.error(e.getMessage());
         }
 
@@ -636,6 +680,7 @@ public class Queries {
                     logger.info("count {}", transactionsCount);
 
                     Block block = new Block(
+                            blockHash,
                             String.valueOf(blockNumber),
                             timestamp,
                             feeRecipient,

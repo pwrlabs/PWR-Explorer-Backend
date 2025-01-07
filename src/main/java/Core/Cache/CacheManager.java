@@ -13,12 +13,9 @@ import org.apache.logging.log4j.Logger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static Core.Sql.Queries.*;
-import static Core.Sql.Queries.getTotalTransactionCount;
 
 public class CacheManager {
     private final Logger logger = LogManager.getLogger(CacheManager.class.getName());
@@ -28,6 +25,7 @@ public class CacheManager {
     private final LoadingCache<String, Long> blocksCountCache;
     private final LoadingCache<String, Integer> totalTxnCountCache;
     private final LoadingCache<String, Map<Long, Integer>> fourteenDaysTxnCache;
+    private final LoadingCache<String, Double> averageTpsCache;
 
     public CacheManager(PWRJ pwrj) {
         blocksCache = CacheBuilder.newBuilder()
@@ -82,11 +80,24 @@ public class CacheManager {
 
         fourteenDaysTxnCache = CacheBuilder.newBuilder()
                 .maximumSize(1)
-                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .expireAfterWrite(30, TimeUnit.SECONDS)
                 .build(new CacheLoader<>() {
                     @Override
                     public Map<Long, Integer> load(String key) {
                         return Queries.getFourteenDaysTxn();
+                    }
+                });
+
+        averageTpsCache = CacheBuilder.newBuilder()
+                .maximumSize(2)
+                .expireAfterWrite(20, TimeUnit.SECONDS)
+                .build(new CacheLoader<String, Double>() {
+                    @Override
+                    public Double load(String key) throws Exception {
+                        String[] parts = key.split("_");
+                        int numberOfBlocks = Integer.parseInt(parts[1]);
+                        int latestBlockNumber = Integer.parseInt(parts[3]);
+                        return Queries.getAverageTps(numberOfBlocks, latestBlockNumber);
                     }
                 });
     }
@@ -145,4 +156,15 @@ public class CacheManager {
         }
         return new HashMap<>();
     }
+
+    public double getAverageTps(int numberOfBlocks, long latestBlockNumber) {
+        try {
+            String cacheKey = String.format("blocks_%d_latest_%d", numberOfBlocks, latestBlockNumber);
+            return averageTpsCache.get(cacheKey);
+        } catch (Exception e) {
+            logger.error("Failed to fetch average TPS: ", e);
+        }
+        return 0.0;
+    }
+
 }

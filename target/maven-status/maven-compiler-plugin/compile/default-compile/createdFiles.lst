@@ -3,6 +3,7 @@ Main\Hex.class
 VM\VM.class
 Txn\NewTxn.class
 Core\DataModel\BlockModel.class
+Core\Cache\CacheManager$4.class
 API\POST.class
 Block\Blocks.class
 Main\Settings.class
@@ -11,8 +12,10 @@ Main\Config.class
 Main\OHTTP.class
 Core\Sql\Queries$Pair.class
 Core\Sql\Queries.class
+Core\Cache\CacheManager$7.class
 DailyActivity\DailyActivity.class
 Txn\Initializer$1.class
+Core\Cache\CacheManager$2.class
 User\User.class
 Core\DatabaseInitialization.class
 DailyActivity\Stats$BlockInfo.class
@@ -20,6 +23,7 @@ API\GET.class
 Block\Block.class
 DailyActivity\Stats.class
 VM\VMs.class
+Core\Cache\CacheManager$5.class
 Core\Constants\Constants.class
 Txn\Initializer.class
 PWRChain\Synchronizer.class
@@ -27,8 +31,12 @@ Core\DatabaseConnection.class
 Core\DataModel\TxnModel.class
 Txn\Txns.class
 User\Users.class
+Core\Cache\CacheManager$3.class
 Validator\Validators.class
+Core\Cache\CacheManager$1.class
+Core\Cache\CacheManager.class
 Main\Main.class
 Core\DataModel\UserModel.class
 API\RateLimiter.class
 Block\Initializer.class
+Core\Cache\CacheManager$6.class

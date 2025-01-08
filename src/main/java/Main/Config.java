@@ -27,16 +27,16 @@ public class Config {
             threadSleepOfTxnsAndTxnHistoryUpdate = config.optInt("threadSleepOfTxnsAndTxnHistoryUpdate", 30000);
 
             // main explorer
-//            databaseName = config.optString("databaseName", "pwrexplorer");
-//            databasePassword = config.optString("databasePassword", "KUX3bgHxE4ksPRrpu");
+            databaseName = config.optString("databaseName", "pwrexplorer");
+            databasePassword = config.optString("databasePassword", "new_password");
 
             // test explorer
 //            databaseName = config.optString("databaseName", "testexplorer");
 //            databasePassword = config.optString("databasePassword", "KUX3bgHxE4ksPRrpu");
 
             // local explorer
-            databasePassword = config.optString("databasePassword", "Kriko2004");
-            databaseName = config.optString("databaseName", "testexplorer");
+//            databasePassword = config.optString("databasePassword", "Kriko2004");
+//            databaseName = config.optString("databaseName", "testexplorer");
 
         } catch (Exception e) {
             System.err.println("Config:static:Failed to load config file: " + e);

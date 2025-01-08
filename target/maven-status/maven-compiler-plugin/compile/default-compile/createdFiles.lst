@@ -1,6 +1,7 @@
 Txn\Txn.class
 Main\Hex.class
 VM\VM.class
+Core\Cache\CacheManager$8.class
 Txn\NewTxn.class
 Core\DataModel\BlockModel.class
 Core\Cache\CacheManager$4.class

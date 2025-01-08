@@ -9,6 +9,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +27,7 @@ public class CacheManager {
     private final LoadingCache<String, Integer> totalTxnCountCache;
     private final LoadingCache<String, Map<Long, Integer>> fourteenDaysTxnCache;
     private final LoadingCache<String, Double> averageTpsCache;
+    private final LoadingCache<String, JSONObject> blockStatsCache;
 
     public CacheManager(PWRJ pwrj) {
         blocksCache = CacheBuilder.newBuilder()
@@ -100,6 +102,16 @@ public class CacheManager {
                         return Queries.getAverageTps(numberOfBlocks, latestBlockNumber);
                     }
                 });
+
+        blockStatsCache = CacheBuilder.newBuilder()
+                .maximumSize(1)
+                .expireAfterWrite(1, TimeUnit.MINUTES)
+                .build(new CacheLoader<>() {
+                    @Override
+                    public JSONObject load(String key) throws Exception {
+                        return Queries.get24HourBlockStats();
+                    }
+                });
     }
 
     // Method to retrieve cached or fresh blocks
@@ -165,6 +177,15 @@ public class CacheManager {
             logger.error("Failed to fetch average TPS: ", e);
         }
         return 0.0;
+    }
+
+    public JSONObject get24HourBlockStats() {
+        try {
+            return blockStatsCache.get("stats");
+        } catch (Exception e) {
+            logger.error("Failed to fetch 24h block stats: ", e);
+            return new JSONObject();
+        }
     }
 
 }

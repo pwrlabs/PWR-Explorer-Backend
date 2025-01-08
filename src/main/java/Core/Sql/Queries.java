@@ -3,6 +3,7 @@ package Core.Sql;
 import Block.Block;
 import Core.DataModel.TxnModel;
 import Core.DatabaseConnection;
+import Main.Settings;
 import Txn.Txns;
 import Txn.NewTxn;
 import User.User;
@@ -56,7 +57,7 @@ public class Queries {
 
     public static void insertTxn(
             String hash, long blockNumber, int positionInBlock, String fromAddress, String toAddress,
-            long timestamp, long value, String txnType, long txnFee, long nonce, Boolean success
+            long timestamp, long value, String txnType, long txnFee, Boolean success
     ) {
         String tableName = getTransactionsTableName("0");
 //        logger.info("table name {}", tableName);
@@ -70,9 +71,8 @@ public class Queries {
                 "\"value\", " +
                 "\"txn_type\", " +
                 "\"txn_fee\", " +
-                "\"nonce\", " +
                 "\"success\"" +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?,?);";
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
         try (Connection conn = getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, hash);
@@ -84,8 +84,7 @@ public class Queries {
             preparedStatement.setLong(7, value);
             preparedStatement.setString(8, txnType);
             preparedStatement.setLong(9, txnFee);
-            preparedStatement.setLong(10, nonce);
-            preparedStatement.setBoolean(11, success);
+            preparedStatement.setBoolean(10, success);
             preparedStatement.executeUpdate();
         } catch (Exception e) {
             logger.error("Error inserting transaction: ", e);
@@ -677,8 +676,6 @@ public class Queries {
                     long blockReward = rs.getLong(BLOCK_REWARD);
                     int size = rs.getInt(BLOCK_SIZE);
 
-                    logger.info("count {}", transactionsCount);
-
                     Block block = new Block(
                             blockHash,
                             String.valueOf(blockNumber),
@@ -1024,6 +1021,56 @@ public class Queries {
         return percentageChange;
     }
 
+    public static JSONObject get24HourBlockStats() {
+        final long MILLIS_PER_DAY = 86400000; // 24 * 60 * 60 * 1000
+        long currentTimeMillis = System.currentTimeMillis();
+
+        String sql = "SELECT COALESCE(SUM(\"size\"), 0) as total_size, " +
+                "COALESCE(SUM(\"block_reward\"), 0) as total_rewards, " +
+                "COUNT(*) as block_count, " +
+                "COALESCE(AVG(\"size\"), 0) as avg_size, " +
+                "COALESCE(SUM(\"transactions_count\"), 0) as total_txns " +
+                "FROM \"Block\" WHERE \"timestamp\" >= ? AND \"timestamp\" < ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement stmt = connection.prepareStatement(sql)) {
+
+            stmt.setLong(1, currentTimeMillis - MILLIS_PER_DAY);
+            stmt.setLong(2, currentTimeMillis);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int blockCount = rs.getInt("block_count");
+                    int avgBlockSize = (int) rs.getDouble("avg_size");
+                    long totalRewards = rs.getLong("total_rewards");
+                    long totalTxns = rs.getLong("total_txns");
+                    double networkUtilization = blockCount > 0
+                            ? BigDecimal.valueOf(((double)avgBlockSize / (double) Settings.getBlockSizeLimit()) * 100)
+                            .setScale(2, BigDecimal.ROUND_HALF_UP)
+                            .doubleValue()
+                            : 0.0;
+
+                    return new JSONObject()
+                            .put("blocksCount", blockCount)
+                            .put("averageBlockSize", avgBlockSize)
+                            .put("totalRewards", totalRewards)
+                            .put("totalTransactions", totalTxns)
+                            .put("networkUtilization", networkUtilization);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting 24h block stats: ", e);
+        }
+
+        return new JSONObject()
+                .put("blocksCount", 0)
+                .put("averageBlockSize", 0)
+                .put("totalRewards", 0)
+                .put("totalTransactions", 0)
+                .put("networkUtilization", 0.0);
+    }
+
+
     public static int getTotalTransactionCount() {
         int totalCount = 0;
         String tableName = getTransactionsTableName("0");
@@ -1236,7 +1283,6 @@ public class Queries {
                 rs.getLong(VALUE),
                 rs.getString(TXN_TYPE),
                 rs.getLong(TXN_FEE),
-                rs.getLong(NONCE),
                 rs.getBoolean(SUCCESS)
         );
     }

@@ -46,7 +46,7 @@ public class GET {
                 response.header("Content-Type", "application/json");
                 return "Server is on";
             } catch (Exception e) {
-                return getError(response, "Error in test request: "+ e.getLocalizedMessage());
+                return getError(response, "Error in test request: " + e.getLocalizedMessage());
             }
         });
 
@@ -126,7 +126,7 @@ public class GET {
                         "tps", otherDataObj.getDouble("tps"),
                         "txns", txnsResult.getJSONArray(0),
                         "blocks", blocksResult != null ? blocksResult.getJSONArray(0) : 0,
-                        "blocksTime", blocksResult.get(1),
+                        "blocksTime", blocksResult != null ? blocksResult.get(1) : 0,
                         "txnsTime", txnsResult.get(1),
                         "fourteenDaysTxn", otherDataObj.get("fourteenDaysTxn"),
                         "otherDataTime", otherData.get(1),
@@ -212,8 +212,9 @@ public class GET {
                 int totalBlockCount = (int) latestBlockNumber;
                 int totalPages = (int) Math.ceil((double) totalBlockCount / count);
 
-                List<Block> blockList = getLastXBlocks(count, offset);
                 JSONArray blocksArray = new JSONArray();
+                List<Block> blockList = getLastXBlocks(count, offset);
+
                 for (Block block : blockList) {
                     JSONObject object = new JSONObject();
                     object.put("blockHeight", block.getBlockNumber());
@@ -235,14 +236,16 @@ public class GET {
                 metadata.put("nextPage", page < totalPages ? page + 1 : -1);
                 metadata.put("previousPage", page > 1 ? page - 1 : -1);
 
+                JSONObject blockStats = cacheManager.get24HourBlockStats();
+
                 return getSuccess(
-                        "networkUtilizationPast24Hours", Blocks.getNetworkUtilizationPast24Hours(),
-                        "averageBlockSizePast24Hours", Blocks.getAverageBlockSizePast24Hours(),
-                        "totalBlockRewardsPast24Hours", Blocks.getTotalBlockRewardsPast24Hours(),
+                        "networkUtilizationPast24Hours", blockStats.getDouble("networkUtilization"),
+                        "averageBlockSizePast24Hours", blockStats.getInt("averageBlockSize"),
+                        "totalBlockRewardsPast24Hours", blockStats.getLong("totalRewards"),
                         "blocks", blocksArray,
                         "metadata", metadata);
             } catch (Exception e) {
-                return getError(response, e.getLocalizedMessage());
+                return getError(response, "Failed to get latest blocks: " + e.getLocalizedMessage());
             }
         });
         get("/blockDetails/", (request, response) -> {
@@ -419,6 +422,8 @@ public class GET {
                 BigDecimal ONE_PWR_TO_USD = BigDecimal.ONE;
 
                 for (NewTxn txn : txnsList) {
+                    Transaction subTxn = pwrj.getTransactionByHash(txn.hash());
+
                     BigDecimal sparks = BigDecimal.valueOf(txn.txnFee());
                     BigDecimal pwrAmount = sparks.divide(BigDecimal.valueOf(1000000000L), 9, RoundingMode.HALF_EVEN);
 
@@ -435,7 +440,7 @@ public class GET {
                     object.put("txnFee", txn.txnFee());
                     object.put("valueInUsd", txn.value());
                     object.put("txnFeeInUsd", feeValueInUSD);
-                    object.put("nonceOrValidationHash", txn.nonce());
+                    object.put("nonceOrValidationHash", subTxn.getNonce());
                     object.put("positionInBlock", txn.positionInBlock());
                     transactions.put(object);
                 }
@@ -473,8 +478,7 @@ public class GET {
                         "averageTransactionFeePercentageChangeComparedToPreviousDay", Txns.getAverageTxnFeePercentageChangeComparedToPreviousDay(),
                         "transactions", transactions);
             } catch (Exception e) {
-                e.printStackTrace();
-                return getError(response, e.getLocalizedMessage());
+                return getError(response, "Failed to fetch latest transactions: " + e.getLocalizedMessage());
             }
         });
         get("/transactionDetails/", (request, response) -> {
@@ -519,8 +523,7 @@ public class GET {
                         "extraData", txn.getExtraData()
                 );
             } catch (Exception e) {
-                e.printStackTrace();
-                return getError(response, e.getLocalizedMessage());
+                return getError(response, "Failed to get txn details: " + e.getLocalizedMessage());
             }
         });
 
@@ -549,8 +552,7 @@ public class GET {
 
                 return getSuccess("nonce", pwrj.getNonceOfAddress(userAddress));
             } catch (Exception e) {
-                e.printStackTrace();
-                return getError(response, e.getLocalizedMessage());
+                return getError(response, "Failed to get nonce of user: " + e.getLocalizedMessage());
             }
         });
 
@@ -728,6 +730,7 @@ public class GET {
                 BigDecimal ONE_PWR_TO_USD = BigDecimal.ONE;
 
                 for (NewTxn txn : txns) {
+                    Transaction subTxn = pwrj.getTransactionByHash(txn.hash());
                     BigDecimal sparks = new BigDecimal(txn.txnFee());
                     BigDecimal pwrAmount = sparks.divide(BigDecimal.valueOf(1000000000L), 9, RoundingMode.HALF_EVEN);
 
@@ -745,7 +748,7 @@ public class GET {
                     object.put("success", txn.success());
                     object.put("txnFee", txn.txnFee());
                     object.put("txnFeeInUsd", feeValueInUSD);
-                    object.put("nonceOrValidationHash", txn.nonce());
+                    object.put("nonceOrValidationHash", subTxn.getNonce());
 
                     txnsArray.put(object);
                 }
@@ -798,8 +801,7 @@ public class GET {
                 if (txn == null) return getSuccess("isProcessed", false);
                 else return getSuccess("isProcessed", true);
             } catch (Exception e) {
-                e.printStackTrace();
-                return getError(response, e.getLocalizedMessage());
+                return getError(response, "Failed to get txn status: " + e);
             }
         });
 
@@ -817,47 +819,8 @@ public class GET {
                 int availablePages = totalValidatorsCount / count;
                 if (totalValidatorsCount % count != 0) ++availablePages;
 
-                logger.info("Active validators count: {}", activeValidators.size());
-                logger.info("Standby validators count: {}", standbyValidators.size());
-                logger.info("Total validators count: {}", totalValidatorsCount);
                 if (page > availablePages)
                     return getError(response, "Page number is greater than the total available pages: " + availablePages);
-
-                //APY calculation for active validators
-
-                //check APY of active validators for the past 34,560 blocks (2 days)
-//                long currentBlockNumber = Blocks.getLatestBlockNumber();
-//                long blockNumberToCheck = currentBlockNumber - 34560;
-//                if(blockNumberToCheck < 0) blockNumberToCheck = 1;
-//                long timeDifference = Blocks.getBlock(currentBlockNumber).getTimeStamp() - Blocks.getBlock(blockNumberToCheck).getTimeStamp();
-
-                List<String> activeValidatorsList = new LinkedList<>();
-                for (Validator validator : activeValidators) activeValidatorsList.add(validator.getAddress());
-//                BigDecimal oldShareValues = PWRJ.getShareValue(activeValidatorsList, blockNumberToCheck);
-//                JSONObject currentShareValues = PWRJ.getShareValue(activeValidatorsList, currentBlockNumber);
-
-//                Map<String, BigDecimal> apyByValidator = new HashMap<>();
-//                for(String validator: activeValidatorsList) {
-//                    BigDecimal oldShareValue;
-//                    if(oldShareValues.has(validator)) {
-//                        oldShareValue = oldShareValues.getBigDecimal(validator);
-//                    } else {
-//                        oldShareValue = BigDecimal.ONE.divide(BigDecimal.valueOf(3600), 18, BigDecimal.ROUND_HALF_UP);
-//                    }
-//
-//                    BigDecimal currentShareValue;
-//
-//                    if(currentShareValues.has(validator)) {
-//                        currentShareValue = currentShareValues.getBigDecimal(validator);
-//                    } else {
-//                        currentShareValue = BigDecimal.ONE.divide(BigDecimal.valueOf(3600), 18, BigDecimal.ROUND_HALF_UP);
-//                    }
-//
-//                    BigDecimal apy = currentShareValue.subtract(oldShareValue).divide(oldShareValue, 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(31536000)).divide(BigDecimal.valueOf(timeDifference), 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100));
-//                    apyByValidator.put(validator, apy);
-//                }
-
-                //Get the validators for the requested page
 
                 int startingIndex = (page - 1) * count;
                 JSONArray validatorsArray = new JSONArray();
@@ -974,70 +937,30 @@ public class GET {
 
                 String userAddress = request.queryParams("userAddress");
 
-                User u = null;
-                if (u == null) return getError(response, "Invalid User Address");
-
-                List<String> delegatedValidators = u.getDelegatedValidators();
+                List<Validator> delegatedValidators = pwrj.getDelegatees(userAddress);
+                JSONArray portfolioAllocation = new JSONArray();
 
                 long totalDelegatedPWR = 0;
                 long totalRewards = 0;
-                for (String validator : delegatedValidators) {
-                    long delegatedPWR = u.getDelegatedAmount(validator);
+                for (Validator validator : delegatedValidators) {
+                    long delegatedPWR = pwrj.getDelegatedPWR(userAddress, validator.getAddress());
                     totalDelegatedPWR += delegatedPWR;
-                    totalRewards += pwrj.getDelegatedPWR(userAddress, validator) - delegatedPWR;
-                }
-
-                JSONArray portfolioAllocation = new JSONArray();
-                for (String validator : delegatedValidators) {
-                    long delegatedPWR = u.getDelegatedAmount(validator);
+                    totalRewards += pwrj.getDelegatedPWR(userAddress, validator.getAddress()) - delegatedPWR;
 
                     JSONObject object = new JSONObject();
                     object.put("validatorName", validator);
                     object.put("portfolioShare", BigDecimal.valueOf(delegatedPWR).divide(BigDecimal.valueOf(totalDelegatedPWR), 4, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100)));
-
                     portfolioAllocation.put(object);
-                }
 
+                    JSONObject data = new JSONObject();
+                    data.put("name", validator);
+                    data.put("status", validator.getStatus());
+                    data.put("votingPower", validator.getVotingPower());
+                    data.put("totalPowerShare", BigDecimal.valueOf(validator.getVotingPower()).divide(BigDecimal.valueOf(pwrj.getActiveVotingPower()), 4, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100)));
+                    data.put("delegatedPWR", delegatedPWR);
+                    data.put("apy", 5);
+                }
                 JSONArray validatorsArray = new JSONArray();
-                long currentBlockNumber = cacheManager.getBlocksCount();
-                long blockNumberToCheck = currentBlockNumber - 34560;
-                if (blockNumberToCheck < 0) blockNumberToCheck = 1;
-//                long timeDifference = Blocks.getBlock(currentBlockNumber).getTimeStamp() - Blocks.getBlock(blockNumberToCheck).getTimeStamp();
-//                JSONObject oldShareValues = PWRJ.getShareValue(delegatedValidators, blockNumberToCheck);
-//                JSONObject currentShareValues = PWRJ.getShareValue(delegatedValidators, currentBlockNumber);
-
-//                Map<String, BigDecimal> apyByValidator = new HashMap<>();
-//                for(String validator: delegatedValidators) {
-//                    BigDecimal oldShareValue;
-//                    if(oldShareValues.has(validator)) {
-//                        oldShareValue = oldShareValues.getBigDecimal(validator);
-//                    } else {
-//                        oldShareValue = BigDecimal.ONE.divide(BigDecimal.valueOf(3600), 18, BigDecimal.ROUND_HALF_UP);
-//                    }
-//
-//                    BigDecimal currentShareValue;
-//
-//                    if(currentShareValues.has(validator)) {
-//                        currentShareValue = currentShareValues.getBigDecimal(validator);
-//                    } else {
-//                        currentShareValue = BigDecimal.ONE.divide(BigDecimal.valueOf(3600), 18, BigDecimal.ROUND_HALF_UP);
-//                    }
-//
-//                    BigDecimal apy = currentShareValue.subtract(oldShareValue).divide(oldShareValue, 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(31536000)).divide(BigDecimal.valueOf(timeDifference), 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100));
-//                    apyByValidator.put(validator, apy);
-//                }
-
-                for (String validator : delegatedValidators) {
-                    Validator v = pwrj.getValidator(validator);
-
-                    JSONObject object = new JSONObject();
-                    object.put("name", validator);
-                    object.put("status", v.getStatus());
-                    object.put("votingPower", v.getVotingPower());
-                    object.put("totalPowerShare", BigDecimal.valueOf(v.getVotingPower()).divide(BigDecimal.valueOf(pwrj.getActiveVotingPower()), 4, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100)));
-                    object.put("delegatedPWR", u.getDelegatedAmount(validator));
-                    object.put("apy", 5);
-                }
 
                 return getSuccess(
                         "totalDelegatedPWR", totalDelegatedPWR,
@@ -1045,8 +968,7 @@ public class GET {
                         "portfolioAllocation", portfolioAllocation,
                         "validators", validatorsArray);
             } catch (Exception e) {
-                e.printStackTrace();
-                return getError(response, e.getLocalizedMessage());
+                return getError(response, "Failed to fetch staking portfolio: " + e.getLocalizedMessage());
             }
         });
 

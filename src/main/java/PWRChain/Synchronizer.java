@@ -24,7 +24,7 @@ public class Synchronizer {
                     long latestBlockNumber = pwrj.getLatestBlockNumber();
                     logger.info("Latest block number {}", latestBlockNumber);
                     while (blockToCheck <= latestBlockNumber) {
-//                        logger.info("Checking block: {}", blockToCheck);
+                        long startTime = System.currentTimeMillis();
 
                         try {
                             Block block = pwrj.getBlockByNumberExcludingDataAndExtraData(blockToCheck);
@@ -50,7 +50,7 @@ public class Synchronizer {
                                     Stats.getInstance().processBlock(txn.getSender(), block.getTransactionCount(), block.getReward(), block.getTimestamp(), block.getSize());
                                     insertTxn(txn.getHash(), block.getNumber(), txn.getPositionInTheBlock(),
                                             txn.getSender().substring(2), txn.getReceiver(), txn.getTimestamp(),
-                                            txn.getValue(), txn.getType(), txn.getFee(), txn.getNonce(), !txn.hasError());
+                                            txn.getValue(), txn.getType(), txn.getFee(), !txn.hasError());
 
 
                                 } catch (Exception e) {
@@ -63,10 +63,16 @@ public class Synchronizer {
                         }
 
                         ++blockToCheck;
-                        try {
-                            Thread.sleep(1);
-                        } catch (InterruptedException e) {
-                            logger.error("Thread sleep interrupted", e);
+
+                        long processingTime = System.currentTimeMillis() - startTime;
+                        long sleepTime = Math.max(0, 10 - processingTime);
+
+                        if (sleepTime > 0) {
+                            try {
+                                Thread.sleep(sleepTime);
+                            } catch (InterruptedException e) {
+                                logger.error("Thread sleep interrupted", e);
+                            }
                         }
                     }
                 } catch (Exception e) {

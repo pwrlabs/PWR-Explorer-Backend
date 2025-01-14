@@ -1,123 +1,160 @@
 package Core.Cache;
 
-import Block.Block;
-import Core.Sql.Queries;
-import Txn.NewTxn;
+import DataModel.Block;
+import Database.Queries;
+import DataModel.NewTxn;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.github.benmanes.caffeine.cache.*;
+import com.github.pwrlabs.pwrj.record.validator.Validator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static Core.Sql.Queries.*;
+import static Database.Queries.*;
 
 public class CacheManager {
     private final Logger logger = LogManager.getLogger(CacheManager.class.getName());
-    private final LoadingCache<Integer, List<Block>> blocksCache;
-    private final LoadingCache<Integer, List<NewTxn>> recentTxnCache;
-    private final LoadingCache<String, Integer> activeValidatorsCountCache;
-    private final LoadingCache<String, Long> blocksCountCache;
-    private final LoadingCache<String, Integer> totalTxnCountCache;
-    private final LoadingCache<String, Map<Long, Integer>> fourteenDaysTxnCache;
-    private final LoadingCache<String, Double> averageTpsCache;
-    private final LoadingCache<String, JSONObject> blockStatsCache;
+    private final AsyncLoadingCache<Integer, List<Block>> blocksCache;
+    private final AsyncLoadingCache<Integer, List<NewTxn>> recentTxnCache;
+    private final AsyncLoadingCache<String, Integer> activeValidatorsCountCache;
+    private final AsyncLoadingCache<String, Long> blocksCountCache;
+    private final AsyncLoadingCache<String, Integer> totalTxnCountCache;
+    private final AsyncLoadingCache<String, Map<Long, Integer>> fourteenDaysTxnCache;
+    private final AsyncLoadingCache<String, Double> averageTpsCache;
+    private final AsyncLoadingCache<String, JSONObject> blockStatsCache;
+    private final AsyncLoadingCache<String, List<Validator>> validatorsCache;
+    private final AsyncLoadingCache<String, Integer> standByValidatorsCountCache;
+    private final AsyncLoadingCache<String, Long> activeVotingPowerCache;
+    private final AsyncLoadingCache<String, Long> totalVotingPowerCache;
+    private final AsyncLoadingCache<String, Integer> txnsCountPast24Hours;
+    private final AsyncLoadingCache<String, BigInteger> txnsFeesPast24Hours;
+    private final AsyncLoadingCache<String, BigInteger> averageTxnFeesPast24Hours;
+    private final AsyncLoadingCache<String, Double> avgTxnFeePercentageChangeCache;
+    private final AsyncLoadingCache<String, Double> totalTxnFeesPercentageChangeCache;
+    private final AsyncLoadingCache<String, Double> txnCountPercentageChangeCache;
+
 
     public CacheManager(PWRJ pwrj) {
-        blocksCache = CacheBuilder.newBuilder()
+        blocksCache = Caffeine.newBuilder()
                 .maximumSize(4)
                 .expireAfterWrite(10, TimeUnit.SECONDS)
-                .build(new CacheLoader<>() {
-                    @Override
-                    public List<Block> load(Integer blocksCount) throws Exception {
-                        return getLastXBlocks(blocksCount);
-                    }
-                });
+                .buildAsync(Queries::getLastXBlocks);
 
-        recentTxnCache = CacheBuilder.newBuilder()
+        recentTxnCache = Caffeine.newBuilder()
                 .maximumSize(4)
                 .expireAfterWrite(10, TimeUnit.SECONDS)
-                .build(new CacheLoader<>() {
-                    @Override
-                    public List<NewTxn> load(Integer txnsCount) throws Exception {
-                        return getLastXTransactions(txnsCount);
-                    }
-                });
+                .buildAsync(Queries::getLastXTransactions);
 
-        activeValidatorsCountCache = CacheBuilder.newBuilder()
+        activeValidatorsCountCache = Caffeine.newBuilder()
                 .maximumSize(1)
                 .expireAfterWrite(1, TimeUnit.MINUTES)
-                .build(new CacheLoader<>() {
-                    @Override
-                    public Integer load(String key) throws Exception {
-                        return pwrj.getActiveValidatorsCount();
-                    }
-                });
+                .buildAsync(key -> pwrj.getActiveValidatorsCount());
 
-        blocksCountCache = CacheBuilder.newBuilder()
+        blocksCountCache = Caffeine.newBuilder()
                 .maximumSize(1)
                 .expireAfterWrite(20, TimeUnit.SECONDS)
-                .build(new CacheLoader<>() {
-                    @Override
-                    public Long load(String key) throws Exception {
-                        return getLastBlockNumber();
-                    }
-                });
+                .buildAsync(key -> getLastBlockNumber());
 
-        totalTxnCountCache = CacheBuilder.newBuilder()
-                .maximumSize(1)
-                .expireAfterWrite(30, TimeUnit.SECONDS)
-                .build(new CacheLoader<>() {
-                    @Override
-                    public Integer load(String key) {
-                        return Queries.getTotalTransactionCount();
-                    }
-                });
-
-        fourteenDaysTxnCache = CacheBuilder.newBuilder()
-                .maximumSize(1)
-                .expireAfterWrite(30, TimeUnit.SECONDS)
-                .build(new CacheLoader<>() {
-                    @Override
-                    public Map<Long, Integer> load(String key) {
-                        return Queries.getFourteenDaysTxn();
-                    }
-                });
-
-        averageTpsCache = CacheBuilder.newBuilder()
+        averageTpsCache = Caffeine.newBuilder()
                 .maximumSize(2)
                 .expireAfterWrite(20, TimeUnit.SECONDS)
-                .build(new CacheLoader<String, Double>() {
-                    @Override
-                    public Double load(String key) throws Exception {
-                        String[] parts = key.split("_");
-                        int numberOfBlocks = Integer.parseInt(parts[1]);
-                        int latestBlockNumber = Integer.parseInt(parts[3]);
-                        return Queries.getAverageTps(numberOfBlocks, latestBlockNumber);
-                    }
+                .buildAsync(key -> {
+                    String[] parts = key.split("_");
+                    int numberOfBlocks = Integer.parseInt(parts[1]);
+                    int latestBlockNumber = Integer.parseInt(parts[3]);
+                    return Queries.getAverageTps(numberOfBlocks, latestBlockNumber);
                 });
 
-        blockStatsCache = CacheBuilder.newBuilder()
+        blockStatsCache = Caffeine.newBuilder()
                 .maximumSize(1)
                 .expireAfterWrite(1, TimeUnit.MINUTES)
-                .build(new CacheLoader<>() {
-                    @Override
-                    public JSONObject load(String key) throws Exception {
-                        return Queries.get24HourBlockStats();
-                    }
-                });
+                .buildAsync(key -> Queries.get24HourBlockStats());
+
+        // special caches with automatics background refetch
+        totalTxnCountCache = Caffeine.newBuilder()
+                .maximumSize(1)
+                .refreshAfterWrite(30, TimeUnit.SECONDS)
+                .scheduler(Scheduler.systemScheduler())
+                .buildAsync(key -> Queries.getTotalTransactionCount());
+
+        fourteenDaysTxnCache = Caffeine.newBuilder()
+                .maximumSize(1)
+                .refreshAfterWrite(2, TimeUnit.MINUTES)
+                .scheduler(Scheduler.systemScheduler())
+                .buildAsync(key -> Queries.getFourteenDaysTxn());
+
+        validatorsCache = Caffeine.newBuilder()
+                .maximumSize(1)
+                .refreshAfterWrite(2, TimeUnit.MINUTES)
+                .scheduler(Scheduler.systemScheduler())
+                .buildAsync(key -> pwrj.getActiveValidators());
+
+        totalVotingPowerCache = Caffeine.newBuilder()
+                .maximumSize(1)
+                .refreshAfterWrite(2, TimeUnit.MINUTES)
+                .scheduler(Scheduler.systemScheduler())
+                .buildAsync(key -> pwrj.getTotalVotingPower());
+
+        activeVotingPowerCache = Caffeine.newBuilder()
+                .maximumSize(1)
+                .refreshAfterWrite(2, TimeUnit.MINUTES)
+                .scheduler(Scheduler.systemScheduler())
+                .buildAsync(key -> pwrj.getActiveVotingPower());
+
+        standByValidatorsCountCache = Caffeine.newBuilder()
+                .maximumSize(1)
+                .refreshAfterWrite(2, TimeUnit.MINUTES)
+                .scheduler(Scheduler.systemScheduler())
+                .buildAsync(key -> pwrj.getStandbyValidatorsCount());
+
+        txnsCountPast24Hours = Caffeine.newBuilder()
+                .maximumSize(1)
+                .refreshAfterWrite(5, TimeUnit.MINUTES)
+                .scheduler(Scheduler.systemScheduler())
+                .buildAsync(key -> getTransactionCountPast24Hours());
+
+        txnsFeesPast24Hours = Caffeine.newBuilder()
+                .maximumSize(1)
+                .refreshAfterWrite(5, TimeUnit.MINUTES)
+                .scheduler(Scheduler.systemScheduler())
+                .buildAsync(key -> getTotalTransactionFeesPast24Hours());
+
+        averageTxnFeesPast24Hours = Caffeine.newBuilder()
+                .maximumSize(1)
+                .refreshAfterWrite(5, TimeUnit.MINUTES)
+                .scheduler(Scheduler.systemScheduler())
+                .buildAsync(key -> getAverageTransactionFeePast24Hours());
+
+        avgTxnFeePercentageChangeCache = Caffeine.newBuilder()
+                .maximumSize(1)
+                .refreshAfterWrite(5, TimeUnit.MINUTES)
+                .scheduler(Scheduler.systemScheduler())
+                .buildAsync(key -> getAverageTransactionFeePercentageChange());
+
+        totalTxnFeesPercentageChangeCache = Caffeine.newBuilder()
+                .maximumSize(1)
+                .refreshAfterWrite(5, TimeUnit.MINUTES)
+                .scheduler(Scheduler.systemScheduler())
+                .buildAsync(key -> getTotalTransactionFeesPercentageChange());
+
+        txnCountPercentageChangeCache = Caffeine.newBuilder()
+                .maximumSize(1)
+                .refreshAfterWrite(5, TimeUnit.MINUTES)
+                .scheduler(Scheduler.systemScheduler())
+                .buildAsync(key -> getTransactionCountPercentageChangeComparedToPreviousDay());
     }
 
     // Method to retrieve cached or fresh blocks
     public List<Block> getBlocks(int blockCount) {
         try {
-            return blocksCache.get(blockCount);
+            return blocksCache.get(blockCount).get();  // Wait for async result
         } catch (Exception e) {
             logger.error("Failed to fetch last {} blocks: ", blockCount, e);
         }
@@ -126,7 +163,7 @@ public class CacheManager {
 
     public List<NewTxn> getRecentTxns(int txnsCount) {
         try {
-            return recentTxnCache.get(txnsCount);
+            return recentTxnCache.get(txnsCount).get();
         } catch (Exception e) {
             logger.error("Failed to fetch last {} blocks: ", txnsCount, e);
         }
@@ -135,7 +172,7 @@ public class CacheManager {
 
     public int getActiveValidatorsCount() {
         try {
-            return activeValidatorsCountCache.get("count");
+            return activeValidatorsCountCache.get("count").get();
         } catch (Exception e) {
             logger.error("Failed to fetch active validators count: ", e);
         }
@@ -144,7 +181,7 @@ public class CacheManager {
 
     public long getBlocksCount() {
         try {
-            return blocksCountCache.get("count");
+            return blocksCountCache.get("count").get();
         } catch (Exception e) {
             logger.error("Failed to fetch blocks count: ", e);
         }
@@ -153,7 +190,7 @@ public class CacheManager {
 
     public int getTotalTransactionCount() {
         try {
-            return totalTxnCountCache.get("count");
+            return totalTxnCountCache.get("count").get();
         } catch (Exception e) {
             logger.error("Failed to fetch total transaction count: ", e);
         }
@@ -162,7 +199,7 @@ public class CacheManager {
 
     public Map<Long, Integer> getFourteenDaysTxn() {
         try {
-            return fourteenDaysTxnCache.get("txns");
+            return fourteenDaysTxnCache.get("txns").get();
         } catch (Exception e) {
             logger.error("Failed to fetch 14 days transaction data: ", e);
         }
@@ -172,7 +209,7 @@ public class CacheManager {
     public double getAverageTps(int numberOfBlocks, long latestBlockNumber) {
         try {
             String cacheKey = String.format("blocks_%d_latest_%d", numberOfBlocks, latestBlockNumber);
-            return averageTpsCache.get(cacheKey);
+            return averageTpsCache.get(cacheKey).get();
         } catch (Exception e) {
             logger.error("Failed to fetch average TPS: ", e);
         }
@@ -181,11 +218,100 @@ public class CacheManager {
 
     public JSONObject get24HourBlockStats() {
         try {
-            return blockStatsCache.get("stats");
+            return blockStatsCache.get("stats").get();
         } catch (Exception e) {
             logger.error("Failed to fetch 24h block stats: ", e);
             return new JSONObject();
         }
     }
 
+    public List<Validator> getActiveValidators() {
+        try {
+            return validatorsCache.get("validators").get();
+        } catch (Exception e) {
+            logger.info("Failed to fetch active validators: ", e);
+            return new ArrayList<>();
+        }
+    }
+
+    public long getTotalVotingPower() {
+        try {
+            return totalVotingPowerCache.get("count").get();
+        } catch (Exception e) {
+            logger.info("Failed to fetch total voting power: ", e);
+            return 0;
+        }
+    }
+
+    public long getActiveVotingPower() {
+        try {
+            return activeVotingPowerCache.get("count").get();
+        } catch (Exception e) {
+            logger.info("Failed to fetch active voting power: {}", e.getLocalizedMessage());
+            return 0;
+        }
+    }
+
+    public int getStandByValidatorsCount() {
+        try {
+            return standByValidatorsCountCache.get("count").get();
+        } catch (Exception e) {
+            logger.info("Failed to fetch stand by validators count: {}", e.getLocalizedMessage());
+            return 0;
+        }
+    }
+
+    public int getTxnsCountPast24Hours() {
+        try {
+            return txnsCountPast24Hours.get("count").get();
+        } catch (Exception e) {
+            logger.info("Failed to fetch txns count past 24 hrs: {}", e.getLocalizedMessage());
+            return 0;
+        }
+    }
+
+    public BigInteger getAverageTxnFeePast24Hours() {
+        try {
+            return averageTxnFeesPast24Hours.get("count").get();
+        } catch (Exception e) {
+            logger.info("Failed to fetch average txn fee past 24 hrs: {}", e.getLocalizedMessage());
+            return BigInteger.ZERO;
+        }
+    }
+
+    public BigInteger getTotalTxnsFeesPast24Hours() {
+        try {
+            return txnsFeesPast24Hours.get("count").get();
+        } catch (Exception e) {
+            logger.info("Failed to fetch total txn fees past 24 hrs: {}", e.getLocalizedMessage());
+            return BigInteger.ZERO;
+        }
+    }
+
+    public double getAvgTxnFeePercentageChange() {
+        try {
+            return avgTxnFeePercentageChangeCache.get("change").get();
+        } catch (Exception e) {
+            logger.info("Failed to fetch average transaction fee percentage change: {}", e.getLocalizedMessage());
+            return 0.0;
+        }
+    }
+
+    public double getTotalTxnFeesPercentageChange() {
+        try {
+            return totalTxnFeesPercentageChangeCache.get("change").get();
+        } catch (Exception e) {
+            logger.info("Failed to fetch total transaction fees percentage change: {}", e.getLocalizedMessage());
+            return 0.0;
+        }
+    }
+
+    public double getTxnCountPercentageChange() {
+        try {
+            return txnCountPercentageChangeCache.get("change").get();
+        } catch (Exception e) {
+            logger.info("Failed to fetch transaction count percentage change: {}", e.getLocalizedMessage());
+            return 0.0;
+        }
+    }
 }

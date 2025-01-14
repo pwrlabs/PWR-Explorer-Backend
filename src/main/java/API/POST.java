@@ -1,6 +1,6 @@
 package API;
 
-import Main.OHTTP;
+import Network.OHTTP;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import org.json.JSONObject;
 

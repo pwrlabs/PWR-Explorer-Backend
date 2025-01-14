@@ -1,15 +1,9 @@
 package API;
 
-
-import Block.Block;
-import Block.Blocks;
+import DataModel.Block;
 import Core.Cache.CacheManager;
-import DailyActivity.Stats;
-import Main.Config;
-import Main.Settings;
-import Txn.NewTxn;
-import Txn.Txns;
-import User.User;
+import Utils.Settings;
+import DataModel.NewTxn;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import com.github.pwrlabs.pwrj.record.delegator.Delegator;
 import com.github.pwrlabs.pwrj.record.transaction.PayableVmDataTransaction;
@@ -21,23 +15,20 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import static Core.Sql.Queries.*;
-import static Core.Sql.Queries.getFourteenDaysTxn;
+import static Database.Queries.*;
 import static spark.Spark.get;
 
 public class GET {
     private static final Logger logger = LogManager.getLogger(GET.class);
     private static CacheManager cacheManager;
+    private final static BigDecimal ONE_PWR_TO_USD = BigDecimal.ONE;
 
     public static void run(PWRJ pwrj) {
         cacheManager = new CacheManager(pwrj);
@@ -53,6 +44,7 @@ public class GET {
         //Explorer Calls
         get("/explorerInfo/", (request, response) -> {
             Instant serverStart = Instant.now();
+            getLastXTransactions(5);
             try {
                 response.header("Content-Type", "application/json");
 
@@ -146,7 +138,6 @@ public class GET {
                 JSONArray blocks = new JSONArray();
                 JSONArray txns = new JSONArray();
 
-                // Fetch the latest 5 blocks (assuming a function getLastXBlocks exists)
                 List<Block> blockList = cacheManager.getBlocks(5);
                 for (Block block : blockList) {
                     JSONObject object = new JSONObject();
@@ -160,7 +151,6 @@ public class GET {
                     blocks.put(object);
                 }
 
-                // Fetch the latest 5 transactions (assuming a function getLastXTransactions exists)
                 List<NewTxn> txnsList = cacheManager.getRecentTxns(5);
                 for (NewTxn txn : txnsList) {
                     if (txn == null) continue;
@@ -179,17 +169,17 @@ public class GET {
                 responseObject.put("price", Settings.getPrice());
                 responseObject.put("priceChange", 2.5);  // example value
                 responseObject.put("marketCap", 1000000000L);  // example value
-                responseObject.put("totalTransactionsCount", getTransactionCountPast24Hours());
+                responseObject.put("totalTransactionsCount", cacheManager.getTxnsCountPast24Hours());
                 responseObject.put("blocksCount", cacheManager.getBlocksCount());
                 responseObject.put("validators", cacheManager.getActiveValidatorsCount());  // example value
                 responseObject.put("tps", cacheManager.getAverageTps(100, cacheManager.getBlocksCount()));  // example value
                 responseObject.put("txns", txns);
                 responseObject.put("blocks", blocks);
-                responseObject.put("avgTxnFeeChange", getAverageTransactionFeePercentageChange());
-                responseObject.put("totalTxnFeesChange", getTotalTransactionFeesPercentageChange());
-                responseObject.put("avgTxnFeePast24Hours", getAverageTransactionFeePast24Hours());
-                responseObject.put("totalTxnFeesPast24Hours", getTotalTransactionFeesPast24Hours());
-                responseObject.put("txnCountChange", getTransactionCountPercentageChangeComparedToPreviousDay());
+                responseObject.put("avgTxnFeeChange", cacheManager.getAvgTxnFeePercentageChange());
+                responseObject.put("totalTxnFeesChange", cacheManager.getTotalTxnFeesPercentageChange());
+                responseObject.put("avgTxnFeePast24Hours", cacheManager.getAverageTxnFeePast24Hours());
+                responseObject.put("totalTxnFeesPast24Hours", cacheManager.getTotalTxnsFeesPast24Hours());
+                responseObject.put("txnCountChange", cacheManager.getTxnCountPercentageChange());
 
                 // Return the response as a JSON string
                 return responseObject.toString();
@@ -203,14 +193,12 @@ public class GET {
         get("/latestBlocks/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
-                int count = Integer.parseInt(request.queryParams("count"));
-                int page = Integer.parseInt(request.queryParams("page"));
+                int count = validateAndParseCountParam(request.queryParams("count"), response);
+                int page = validateAndParsePageParam(request.queryParams("page"), response);
 
                 int offset = (page - 1) * count;
 
-                long latestBlockNumber = cacheManager.getBlocksCount();
-                int totalBlockCount = (int) latestBlockNumber;
-                int totalPages = (int) Math.ceil((double) totalBlockCount / count);
+                long totalBlockCount = cacheManager.getBlocksCount();
 
                 JSONArray blocksArray = new JSONArray();
                 List<Block> blockList = getLastXBlocks(count, offset);
@@ -225,16 +213,7 @@ public class GET {
                     blocksArray.put(object);
                 }
 
-                JSONObject metadata = new JSONObject();
-                metadata.put("totalBlocks", totalBlockCount);
-                metadata.put("totalPages", totalPages);
-                metadata.put("currentPage", page);
-                metadata.put("itemsPerPage", count);
-                metadata.put("totalItems", totalBlockCount);
-                metadata.put("startIndex", offset + 1);
-                metadata.put("endIndex", Math.min(offset + count, totalBlockCount));
-                metadata.put("nextPage", page < totalPages ? page + 1 : -1);
-                metadata.put("previousPage", page > 1 ? page - 1 : -1);
+                JSONObject metadata = createPaginationMetadata(totalBlockCount, page, count);
 
                 JSONObject blockStats = cacheManager.get24HourBlockStats();
 
@@ -255,7 +234,7 @@ public class GET {
                 long blockNumber = Long.parseLong(request.queryParams("blockNumber"));
 
                 Block block = getDbBlock(blockNumber);
-                if (block == null) return getError(response, "Invalid Block Number");
+                if (block == null) return getError(response, "Invalid DataModel.Block Number");
 
                 return getSuccess(
                         "blockHeight", blockNumber,
@@ -278,7 +257,7 @@ public class GET {
 
                 String blockHash = getBlockHash(blockNumber);
                 if (blockHash == null) {
-                    return getError(response, "Invalid Block Number");
+                    return getError(response, "Invalid DataModel.Block Number");
                 }
 
                 return getSuccess(
@@ -293,31 +272,24 @@ public class GET {
             try {
                 response.header("Content-Type", "application/json");
 
-                long blockNumber = Long.parseLong(request.queryParams("blockNumber"));
-                int count = Integer.parseInt(request.queryParams("count"));
-                int page = Integer.parseInt(request.queryParams("page"));
+                String blockNumber = request.queryParams("blockNumber");
+                int count = validateAndParseCountParam(request.queryParams("count"), response);
+                int page = validateAndParsePageParam(request.queryParams("page"), response);
 
                 //Metadata variables
                 int previousTxnsCount = (page - 1) * count;
-                int totalTxnCount, totalPages;
+                int totalTxnCount;
 
-                Block block = getDbBlock(blockNumber);
-                if (block == null) return getError(response, "Invalid Block Number");
+                Block block = getDbBlock(Long.parseLong(blockNumber));
+                if (block == null) return getError(response, "Invalid DataModel.Block Number");
 
                 int txnsCount = 0;
                 JSONArray txns = new JSONArray();
-                NewTxn[] txnsArray = block.getTxns();
+                List<NewTxn> txnsArray = getBlockTxns(blockNumber);
+                totalTxnCount = txnsArray.size();
 
-                if (txnsArray == null) totalTxnCount = 0;
-                else totalTxnCount = txnsArray.length;
-
-                totalPages = totalTxnCount / count;
-                if (totalTxnCount % count != 0) ++totalPages;
-
-                assert txnsArray != null;
-                for (int t = previousTxnsCount; t < txnsArray.length; ++t) {
-                    NewTxn txn = txnsArray[t];
-                    //Txn txn = txnsArray[t];
+                for (int t = previousTxnsCount; t < txnsArray.size(); ++t) {
+                    NewTxn txn = txnsArray.get(t);
                     if (txn == null) continue;
                     if (txnsCount == count) break;
 
@@ -335,20 +307,7 @@ public class GET {
                     ++txnsCount;
                 }
 
-                JSONObject metadata = new JSONObject();
-                metadata.put("totalPages", totalPages);
-                metadata.put("currentPage", page);
-                metadata.put("itemsPerPage", count);
-                metadata.put("totalItems", totalTxnCount);
-                metadata.put("startIndex", previousTxnsCount + 1);
-                if (previousTxnsCount + count <= totalTxnCount) metadata.put("endIndex", previousTxnsCount + count);
-                else metadata.put("endIndex", totalTxnCount);
-
-                if (page < totalPages) metadata.put("nextPage", page + 1);
-                else metadata.put("nextPage", -1);
-
-                if (page > 1) metadata.put("previousPage", page - 1);
-                else metadata.put("previousPage", -1);
+                JSONObject metadata = createPaginationMetadata(totalTxnCount, page, count);
 
                 return getSuccess("metadata", metadata, "transactions", txns);
             } catch (Exception e) {
@@ -358,40 +317,20 @@ public class GET {
         get("/blocksCreated/", ((request, response) -> {
             response.type("application/json");
             String address = request.queryParams("validatorAddress");
-            int count = Integer.parseInt(request.queryParams("count"));
-            int page = Integer.parseInt(request.queryParams("page"));
+            int count = validateAndParseCountParam(request.queryParams("count"), response);
+            int page = validateAndParsePageParam(request.queryParams("page"), response);
             int offset = (page - 1) * count;
 
             // Metadata variables
-            int previousBlocksCount = (page - 1) * count;
-            int totalBlocksCount, totalPages;
+            int totalBlocksCount;
 
             try {
                 JSONArray blocks = getBlocksCreated(address.toLowerCase().substring(2), count, offset);
-                JSONObject metadata = new JSONObject();
 
                 if (blocks.isEmpty()) totalBlocksCount = 0;
                 else totalBlocksCount = getBlocksSubmitted(address.toLowerCase().substring(2));
 
-                totalPages = totalBlocksCount / count;
-                if (totalBlocksCount % count != 0) ++totalPages;
-
-                metadata.put("totalBlocksCreatedByValidator", totalBlocksCount);
-                metadata.put("totalPages", totalPages);
-                metadata.put("currentPage", page);
-                metadata.put("itemsPerPage", count);
-                metadata.put("totalItems", totalBlocksCount);
-                metadata.put("startIndex", previousBlocksCount + 1);
-
-                if (previousBlocksCount + count <= totalBlocksCount)
-                    metadata.put("endIndex", previousBlocksCount + count);
-                else metadata.put("endIndex", totalBlocksCount);
-
-                if (page < totalPages) metadata.put("nextPage", page + 1);
-                else metadata.put("nextPage", -1);
-
-                if (page > 1) metadata.put("previousPage", page - 1);
-                else metadata.put("previousPage", -1);
+                JSONObject metadata = createPaginationMetadata(totalBlocksCount, page, count);
 
                 return getSuccess("blocks", blocks,
                         "metadata", metadata
@@ -402,81 +341,34 @@ public class GET {
         }));
 
         get("/latestTransactions/", (request, response) -> {
+            JSONArray transactions = new JSONArray();
             try {
                 response.header("Content-Type", "application/json");
 
-                int limit = Integer.parseInt(request.queryParams("count"));
-                int page = Integer.parseInt(request.queryParams("page"));
-                int offset = (page - 1) * limit;
+                int count = validateAndParseCountParam(request.queryParams("count"), response);
+                int page = validateAndParsePageParam(request.queryParams("page"), response);
+                int offset = (page - 1) * count;
 
-                List<NewTxn> txnsList = getTransactions(limit, offset);
+                List<NewTxn> txns = getTransactions(count, offset);
 
-                //Metadata variables
-                int previousTxnsCount = (page - 1) * limit;
-                int totalTxnCount = getTotalTransactionCount();
-                int totalPages = totalTxnCount / limit;
-                if (totalTxnCount % limit != 0) ++totalPages;
+                int totalTxnCount = cacheManager.getTotalTransactionCount();
 
-                JSONArray transactions = new JSONArray();
-
-                BigDecimal ONE_PWR_TO_USD = BigDecimal.ONE;
-
-                for (NewTxn txn : txnsList) {
-                    Transaction subTxn = pwrj.getTransactionByHash(txn.hash());
-
-                    BigDecimal sparks = BigDecimal.valueOf(txn.txnFee());
-                    BigDecimal pwrAmount = sparks.divide(BigDecimal.valueOf(1000000000L), 9, RoundingMode.HALF_EVEN);
-
-                    BigDecimal feeValueInUSD = pwrAmount.multiply(ONE_PWR_TO_USD).setScale(9, RoundingMode.HALF_EVEN);
-
-                    JSONObject object = new JSONObject();
-                    object.put("txnHash", txn.hash());
-                    object.put("txnType", txn.txnType());
-                    object.put("block", txn.blockNumber());
-                    object.put("timeStamp", txn.timestamp() / 1000);
-                    object.put("from", "0x" + txn.fromAddress());
-                    object.put("to", txn.toAddress());
-                    object.put("value", txn.value());
-                    object.put("txnFee", txn.txnFee());
-                    object.put("valueInUsd", txn.value());
-                    object.put("txnFeeInUsd", feeValueInUSD);
-                    object.put("nonceOrValidationHash", subTxn.getNonce());
-                    object.put("positionInBlock", txn.positionInBlock());
+                for (NewTxn txn : txns) {
+                    JSONObject object = populateTxnsResponse(txn);
                     transactions.put(object);
                 }
 
-                JSONObject metadata = new JSONObject();
-                metadata.put("totalPages", totalPages);
-                metadata.put("currentPage", page);
-                metadata.put("itemsPerPage", limit);
-                metadata.put("totalItems", totalTxnCount);
-                metadata.put("startIndex", previousTxnsCount + 1);
-                if (previousTxnsCount + limit <= totalTxnCount) {
-                    metadata.put("endIndex", previousTxnsCount + limit);
-                } else {
-                    metadata.put("endIndex", totalTxnCount);
-                }
-
-                if (page < totalPages) {
-                    metadata.put("nextPage", page + 1);
-                } else {
-                    metadata.put("nextPage", -1);
-                }
-
-                if (page > 1) {
-                    metadata.put("previousPage", page - 1);
-                } else {
-                    metadata.put("previousPage", -1);
-                }
+                JSONObject metadata = createPaginationMetadata(totalTxnCount, page, count);
 
                 return getSuccess("metadata", metadata,
-                        "transactionCountPast24Hours", Txns.getTxnCountPast24Hours(),
-                        "transactionCountPercentageChangeComparedToPreviousDay", Txns.getTxnCountPercentageChangeComparedToPreviousDay(),
-                        "totalTransactionFeesPast24Hours", Txns.getTotalTxnFeesPast24Hours(),
-                        "totalTransactionFeesPercentageChangeComparedToPreviousDay", Txns.getTotalTxnFeesPercentageChangeComparedToPreviousDay(),
-                        "averageTransactionFeePast24Hours", Txns.getAverageTxnFeePast24Hours(),
-                        "averageTransactionFeePercentageChangeComparedToPreviousDay", Txns.getAverageTxnFeePercentageChangeComparedToPreviousDay(),
-                        "transactions", transactions);
+                        "transactionCountPast24Hours", cacheManager.getTxnsCountPast24Hours(),
+                        "transactionCountPercentageChangeComparedToPreviousDay", cacheManager.getTxnCountPercentageChange(),
+                        "totalTransactionFeesPast24Hours", cacheManager.getTotalTxnsFeesPast24Hours(),
+                        "totalTransactionFeesPercentageChangeComparedToPreviousDay", cacheManager.getTotalTxnFeesPercentageChange(),
+                        "averageTransactionFeePast24Hours", cacheManager.getAverageTxnFeePast24Hours(),
+                        "averageTransactionFeePercentageChangeComparedToPreviousDay", cacheManager.getAvgTxnFeePercentageChange(),
+                        "transactions", transactions
+                );
             } catch (Exception e) {
                 return getError(response, "Failed to fetch latest transactions: " + e.getLocalizedMessage());
             }
@@ -488,7 +380,7 @@ public class GET {
                 String txnHash = request.queryParams("txnHash").toLowerCase();
 
                 Transaction txn = pwrj.getTransactionByHash(txnHash);
-                if (txn == null) return getError(response, "Invalid Txn Hash");
+                if (txn == null) return getError(response, "Invalid DataModel.Block.Txn Hash");
 
                 String data = null;
                 if (txn instanceof VmDataTransaction) {
@@ -499,7 +391,6 @@ public class GET {
 
                 long txnFee = txn.getFee();
 
-                BigDecimal ONE_PWR_TO_USD = BigDecimal.ONE;
 
                 BigDecimal sparks = new BigDecimal(txnFee);
                 BigDecimal pwrAmount = sparks.divide(BigDecimal.valueOf(1000000000L), 9, RoundingMode.HALF_EVEN);
@@ -540,8 +431,7 @@ public class GET {
 
                 return getSuccess("balance", balance, "balanceUsdValue", usdValueBigDec);
             } catch (Exception e) {
-                e.printStackTrace();
-                return getError(response, e.getLocalizedMessage());
+                return getError(response, "Failed to fetch balance of user balance due to an internal error " + e.getLocalizedMessage());
             }
         });
 
@@ -557,96 +447,61 @@ public class GET {
         });
 
         get("/nodesInfo/", ((request, response) -> {
-            Instant overallStart = Instant.now();
-            Instant sectionStart;
-
-            int count = Integer.parseInt(request.queryParams("count"));
-            int page = Integer.parseInt(request.queryParams("page"));
+            int count = validateAndParseCountParam(request.queryParams("count"), response);
+            int page = validateAndParsePageParam(request.queryParams("page"), response);
             int offset = (page - 1) * count;
 
-            int previousNodesCount = (page - 1) * count;
-            int totalNodesCount, totalPages;
+            int totalNodesCount;
 
             try {
-                // Section 1: Initial data fetching
-                sectionStart = Instant.now();
-                JSONArray nodesArray = new JSONArray();
-                List<Validator> nodes = pwrj.getActiveValidators();
+                BigDecimal activeVotingPower = new BigDecimal(cacheManager.getActiveVotingPower());
+                BigDecimal hundredBD = BigDecimal.valueOf(100L);
+                BigDecimal millionBD = BigDecimal.valueOf(1000000000L);
+
+                // Fetch data once
+                List<Validator> nodes = cacheManager.getActiveValidators();
                 totalNodesCount = nodes.size();
-                logger.info("Section 1 (Initial data fetching) duration: {} ms", Duration.between(sectionStart, Instant.now()).toMillis());
+                int standbyNodesCount = cacheManager.getStandByValidatorsCount();
+                long totalVotingPower = cacheManager.getTotalVotingPower();
 
-                sectionStart = Instant.now();
-                BigDecimal activeVotingPower = new BigDecimal(pwrj.getActiveVotingPower());
-                int standbyNodesCount = pwrj.getStandbyValidatorsCount();
-                int activeNodesCount = cacheManager.getActiveValidatorsCount();
-                long totalVotingPower = pwrj.getTotalVotingPower();
-                logger.info("Section middle (Middle data fetching) duration: {} ms", Duration.between(sectionStart, Instant.now()).toMillis());
+                // Calculate pagination bounds
+                int startIndex = Math.min(offset, totalNodesCount);
+                int endIndex = Math.min(offset + count, totalNodesCount);
+                List<Validator> paginatedNodes = nodes.subList(startIndex, endIndex);
 
-                // Section 2: Pagination
-                sectionStart = Instant.now();
-                List<Validator> paginatedNodes = nodes.subList(
-                        Math.min(offset, totalNodesCount),
-                        Math.min(offset + count, totalNodesCount)
-                );
-                logger.info("Section 2 (Pagination) duration: {} ms", Duration.between(sectionStart, Instant.now()).toMillis());
+                JSONArray nodesArray = new JSONArray();
 
-                // Section 3: Node processing
-                sectionStart = Instant.now();
                 for (Validator node : paginatedNodes) {
-                    Instant nodeStart = Instant.now();
-                    JSONObject nodeObj = new JSONObject();
                     String address = node.getAddress();
-                    long shares = node.getShares();
-                    BigDecimal sparks = new BigDecimal(shares);
-                    BigDecimal sharesInPwr = sparks.divide(BigDecimal.valueOf(1000000000L), 9, RoundingMode.HALF_EVEN);
 
-                    BigDecimal votingPowerSparks = new BigDecimal(node.getVotingPower());
-                    BigDecimal votingPower = votingPowerSparks.divide(activeVotingPower, 7, RoundingMode.HALF_UP)
-                            .multiply(new BigDecimal("100"))
+                    // Calculate voting power percentage
+                    BigDecimal votingPower = new BigDecimal(node.getVotingPower())
+                            .divide(activeVotingPower, 7, RoundingMode.HALF_UP)
+                            .multiply(hundredBD)
                             .setScale(5, RoundingMode.HALF_UP);
 
-                    nodeObj.put("address", "0x" + address)
+                    // Calculate shares
+                    BigDecimal sharesInPwr = new BigDecimal(node.getShares())
+                            .divide(millionBD, 9, RoundingMode.HALF_EVEN);
+
+                    // Create and populate node object
+                    nodesArray.put(new JSONObject()
+                            .put("address", "0x" + address)
                             .put("host", node.getIp())
                             .put("votingPowerInPercentage", votingPower)
                             .put("votingPowerInPwr", node.getVotingPower())
                             .put("earnings", sharesInPwr)
-                            .put("blocksSubmitted", getBlocksSubmitted(address.toLowerCase()));
-
-                    nodesArray.put(nodeObj);
-
-                    logger.info("Processing time for node {}: {} ms", address, Duration.between(nodeStart, Instant.now()).toMillis());
+                            .put("blocksSubmitted", getBlocksSubmitted(address)));
                 }
-                logger.info("Section 3 (Node processing) total duration: {} ms", Duration.between(sectionStart, Instant.now()).toMillis());
 
-                // Section 4: Metadata calculation
-                sectionStart = Instant.now();
-                totalPages = totalNodesCount / count;
-                if (totalNodesCount % count != 0) ++totalPages;
+                JSONObject metadata = createPaginationMetadata(totalNodesCount, page, count);
 
-                JSONObject metadata = new JSONObject()
-                        .put("totalNodesCount", nodesArray.length())
-                        .put("totalPages", totalPages)
-                        .put("currentPage", page)
-                        .put("itemsPerPage", count)
-                        .put("totalItems", totalNodesCount)
-                        .put("startIndex", previousNodesCount + 1)
-                        .put("endIndex", Math.min(previousNodesCount + count, totalNodesCount))
-                        .put("nextPage", page < totalPages ? page + 1 : -1)
-                        .put("previousPage", page > 1 ? page - 1 : -1);
-                logger.info("Section 4 (Metadata calculation) duration: {} ms", Duration.between(sectionStart, Instant.now()).toMillis());
-
-                // Section 5: Response preparation
-                sectionStart = Instant.now();
-                Object result = getSuccess("nodes", nodesArray,
+                return getSuccess("nodes", nodesArray,
                         "metadata", metadata,
-                        "totalActiveNodes", activeNodesCount,
+                        "totalActiveNodes", totalNodesCount,
                         "totalStandbyNodes", standbyNodesCount,
                         "totalVotingPower", totalVotingPower
                 );
-                logger.info("Section 5 (Response preparation) duration: {} ms", Duration.between(sectionStart, Instant.now()).toMillis());
-
-                logger.info("Overall function duration: {} ms", Duration.between(overallStart, Instant.now()).toMillis());
-                return result;
             } catch (Exception e) {
                 return getError(response, e.getLocalizedMessage());
             }
@@ -682,6 +537,7 @@ public class GET {
 
         get("/transactionHistory/", (request, response) -> {
             try {
+                long serverTime = System.currentTimeMillis();
                 response.header("Content-Type", "application/json");
 
                 String address = request.queryParams("address");
@@ -690,85 +546,32 @@ public class GET {
                 }
                 address = address.substring(2).toLowerCase();
 
-                String countStr = request.queryParams("count");
-                if (countStr == null) {
-                    return getError(response, "Count is required");
-                }
-                int count;
-                try {
-                    count = Integer.parseInt(countStr);
-                } catch (NumberFormatException e) {
-                    return getError(response, "Invalid count");
-                }
+                int count = validateAndParseCountParam(request.queryParams("count"), response);
+                int page = validateAndParsePageParam(request.queryParams("page"), response);
 
-                String pageStr = request.queryParams("page");
-                if (pageStr == null) {
-                    return getError(response, "Page is required");
-                }
-                int page;
-                try {
-                    page = Integer.parseInt(pageStr);
-                } catch (NumberFormatException e) {
-                    return getError(response, "Invalid page");
-                }
-
-                long startCountTimeOne = System.currentTimeMillis();
+                long time = System.currentTimeMillis();
                 List<NewTxn> txns = getUserTxns(address, page, count);
-                long endCountTimeOne = System.currentTimeMillis();
-                logger.info("Time taken for userTxns: " + (endCountTimeOne - startCountTimeOne) + " ms");
-
-                long startCountTimeTwo = System.currentTimeMillis();
+                long userTxnsTime = System.currentTimeMillis() - time;
+                time = System.currentTimeMillis();
                 int totalTxnCount = getTotalTxnCount(address);
-                long endCountTimeTwo = System.currentTimeMillis();
-                logger.info("Time taken for getTotalTxnCount: " + (endCountTimeTwo - startCountTimeTwo) + " ms");
+                long totalTxnsTime = System.currentTimeMillis() - time;
 
-                int totalPages = (int) Math.ceil((double) totalTxnCount / count);
-
-                JSONArray txnsArray = new JSONArray();
-                long start = System.currentTimeMillis();
-
-                BigDecimal ONE_PWR_TO_USD = BigDecimal.ONE;
-
+                time = System.currentTimeMillis();
+                JSONArray transactions = new JSONArray();
                 for (NewTxn txn : txns) {
-                    Transaction subTxn = pwrj.getTransactionByHash(txn.hash());
-                    BigDecimal sparks = new BigDecimal(txn.txnFee());
-                    BigDecimal pwrAmount = sparks.divide(BigDecimal.valueOf(1000000000L), 9, RoundingMode.HALF_EVEN);
-
-                    BigDecimal feeValueInUSD = pwrAmount.multiply(ONE_PWR_TO_USD).setScale(9, RoundingMode.HALF_EVEN);
-
-                    JSONObject object = new JSONObject();
-                    object.put("txnHash", txn.hash());
-                    object.put("block", txn.blockNumber());
-                    object.put("positionInBlock", txn.positionInBlock());
-                    object.put("timeStamp", txn.timestamp() / 1000);
-                    object.put("from", "0x" + txn.fromAddress());
-                    object.put("to", txn.toAddress());
-                    object.put("value", txn.value());
-                    object.put("txnType", txn.txnType());
-                    object.put("success", txn.success());
-                    object.put("txnFee", txn.txnFee());
-                    object.put("txnFeeInUsd", feeValueInUSD);
-                    object.put("nonceOrValidationHash", subTxn.getNonce());
-
-                    txnsArray.put(object);
+                    JSONObject object = populateTxnsResponse(txn);
+                    transactions.put(object);
                 }
 
-                JSONObject metadata = new JSONObject();
-                metadata.put("totalPages", totalPages);
-                metadata.put("currentPage", page);
-                metadata.put("itemsPerPage", page > totalPages ? 0 : count);
-                metadata.put("totalItems", totalTxnCount);
-                metadata.put("startIndex", (page - 1) * count + 1);
-                metadata.put("endIndex", Math.min(page * count, totalTxnCount));
-                metadata.put("nextPage", page < totalPages ? page + 1 : -1);
-                metadata.put("previousPage", page > 1 ? page - 1 : -1);
-                long end = System.currentTimeMillis();
-                logger.info("Time taken for loops: " + (end - start) + " ms");
+                JSONObject metadata = createPaginationMetadata(totalTxnCount, page, count);
 
-                // Get first and last transactions
-                Pair<NewTxn, NewTxn> firstLastTxns = getFirstAndLastTransactionsByAddress(address);
+                Pair<NewTxn, NewTxn> firstLastTxns = new Pair<>(null, null);
+
+                if (totalTxnCount != 0) {
+                    firstLastTxns = getFirstAndLastTransactionsByAddress(address);
+                }
+
                 JSONObject firstLastTxnsObject = new JSONObject();
-
                 if (firstLastTxns.first != null) {
                     JSONObject firstTxnObject = new JSONObject();
                     firstTxnObject.put("txnHash", firstLastTxns.first.hash());
@@ -785,7 +588,14 @@ public class GET {
                     firstLastTxnsObject.put("lastTransaction", lastTxnObject);
                 }
 
-                return getSuccess("transactions", txnsArray, "metadata", metadata, "firstLastTransactions", firstLastTxnsObject);
+                return getSuccess(
+                        "transactions", transactions,
+                        "metadata", metadata,
+                        "firstLastTransactions", firstLastTxnsObject,
+                        "totalTxnsTime", totalTxnsTime,
+                        "userTxnsTime", userTxnsTime,
+                        "serverTime", System.currentTimeMillis() - serverTime
+                );
             } catch (Exception e) {
                 return getError(response, "Failed to get transaction history " + e.getLocalizedMessage());
             }
@@ -975,18 +785,17 @@ public class GET {
         get("/stats", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");
-                Stats stats = Stats.getInstance();
 
                 return new JSONObject()
                         .put("success", true)
-                        .put("totalTransactionCount", stats.getTotalTransactionCount())
-                        .put("totalBlockCount", stats.getTotalBlockCount())
-                        .put("tps", stats.getTPS())
-                        .put("totalFees24h", stats.getTotalFees24h())
-                        .put("avgFeePerTransaction24h", stats.getAvgFeePerTransaction24h())
-                        .put("transactions24h", stats.getTransactions24h())
-                        .put("avgBlockSize24h", stats.getAvgBlockSize24h())
-                        .put("totalFees", stats.getTotalFees())
+                        .put("totalTransactionCount", cacheManager.getTotalTransactionCount())
+                        .put("totalBlockCount", cacheManager.getBlocksCount())
+                        .put("tps", cacheManager.getAverageTps(100, cacheManager.getBlocksCount()))
+                        .put("totalFees24h", cacheManager.getTotalTxnsFeesPast24Hours())
+                        .put("avgFeePerTransaction24h", cacheManager.getAverageTxnFeePast24Hours())
+                        .put("transactions24h", cacheManager.getTxnsCountPast24Hours())
+                        .put("avgBlockSize24h", cacheManager.get24HourBlockStats().get("averageBlockSize"))
+                        .put("totalFees", getTotalFees())
                         .toString();
 
             } catch (Exception e) {
@@ -996,17 +805,49 @@ public class GET {
 
     }
 
-    public static String bytesToHex(byte[] bytes) {
-        StringBuilder hexString = new StringBuilder();
-        for (byte b : bytes) {
-            // Convert each byte to a 2-digit hexadecimal string.
-            hexString.append(String.format("%02X", b));
-        }
-        return hexString.toString().toLowerCase();
+    //#region Pagination Utilities
+    private static JSONObject createPaginationMetadata(long totalItems, int currentPage, int itemsPerPage) {
+        int totalPages = (int) Math.ceil((double) Math.min(totalItems, 100_000) / itemsPerPage);
+        int startIndex = (currentPage - 1) * itemsPerPage + 1;
+        long endIndex = Math.min((long) currentPage * itemsPerPage, totalItems);
+
+        return new JSONObject()
+                .put("totalPages", totalPages)
+                .put("currentPage", currentPage)
+                .put("itemsPerPage", itemsPerPage)
+                .put("totalItems", totalItems)
+                .put("startIndex", startIndex)
+                .put("endIndex", endIndex)
+                .put("nextPage", currentPage < totalPages ? currentPage + 1 : -1)
+                .put("previousPage", currentPage > 1 ? currentPage - 1 : -1);
     }
 
-    // There was a problem on the server side
-    public static JSONObject getError(spark.Response response, String message) {
+    private static int validateAndParsePageParam(String pageStr, spark.Response response) throws Exception {
+        try {
+            int page = Integer.parseInt(pageStr);
+            if (page < 1) {
+                throw new Exception("Page number must be positive");
+            }
+            return page;
+        } catch (NumberFormatException e) {
+            throw new Exception("Invalid page number format");
+        }
+    }
+
+    private static int validateAndParseCountParam(String countStr, spark.Response response) throws Exception {
+        try {
+            int count = Integer.parseInt(countStr);
+            if (count < 1) {
+                throw new Exception("Count must be positive");
+            }
+            return count;
+        } catch (NumberFormatException e) {
+            throw new Exception("Invalid count format");
+        }
+    }
+
+    //#region Helpers
+    private static JSONObject getError(spark.Response response, String message) {
         response.status(400);
         JSONObject object = new JSONObject();
         object.put("message", message);
@@ -1014,7 +855,7 @@ public class GET {
         return object;
     }
 
-    public static JSONObject getSuccess(Object... variables) throws Exception {
+    private static JSONObject getSuccess(Object... variables) throws Exception {
         JSONObject object = new JSONObject();
 
         int size = variables.length;
@@ -1027,5 +868,28 @@ public class GET {
 
         return object;
     }
+
+    private static JSONObject populateTxnsResponse(NewTxn txn) {
+        long fee = txn.txnFee();
+        BigDecimal sparks = BigDecimal.valueOf(fee);
+        BigDecimal pwrAmount = sparks.divide(BigDecimal.valueOf(1000000000L), 9, RoundingMode.HALF_EVEN);
+        BigDecimal feeValueInUSD = pwrAmount.multiply(ONE_PWR_TO_USD).setScale(9, RoundingMode.HALF_EVEN);
+
+        JSONObject object = new JSONObject();
+        object.put("txnHash", txn.hash());
+        object.put("txnType", txn.txnType());
+        object.put("block", txn.blockNumber());
+        object.put("timeStamp", txn.timestamp() / 1000);
+        object.put("from", txn.fromAddress());
+        object.put("to", txn.toAddress());
+        object.put("value", txn.value());
+        object.put("txnFee", fee);
+        object.put("valueInUsd", txn.value());
+        object.put("txnFeeInUsd", feeValueInUSD);
+        object.put("positionInBlock", txn.positionInBlock()
+        );
+        return object;
+    }
+    //#endregion
 }
 

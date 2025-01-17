@@ -9,6 +9,7 @@ API\POST.class
 DataModel\Block.class
 Main.class
 Database\Config.class
+DataModel\UserTransactionInfo.class
 Database\Queries$QueryResult.class
 API\IptablesBlocker.class
 Database\DatabaseInitialization.class

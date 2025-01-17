@@ -7,7 +7,6 @@ import java.nio.file.Files;
 
 public class Config {
     private static String pwrRpcUrl, databaseUserName, databasePassword, databaseName;
-    private static int threadSleepOfTxnsAndTxnHistoryUpdate;
 
     static {
         File configFile = new File("config.json");
@@ -23,19 +22,21 @@ public class Config {
         try {
             pwrRpcUrl = config.optString("pwrRpcUrl", "https://pwrrpc.pwrlabs.io/");
             databaseUserName = config.optString("databaseUserName", "postgres");
-            threadSleepOfTxnsAndTxnHistoryUpdate = config.optInt("threadSleepOfTxnsAndTxnHistoryUpdate", 30000);
 
-            // main explorer
-            databaseName = config.optString("databaseName", "pwrexplorer");
-            databasePassword = config.optString("databasePassword", "new_password");
+            //#region Main explorer configs
+            // databaseName = config.optString("databaseName", "pwrexplorer");
+            // databasePassword = config.optString("databasePassword", "new_password");
+            //#endregion
 
-            // test explorer
-//            databaseName = config.optString("databaseName", "testexplorer");
-//            databasePassword = config.optString("databasePassword", "KUX3bgHxE4ksPRrpu");
+            //#region Test explorer configs
+            databaseName = config.optString("databaseName", "testexplorer");
+            databasePassword = config.optString("databasePassword", "KUX3bgHxE4ksPRrpu");
+            //#endregion
 
-            // local explorer
-//            databasePassword = config.optString("databasePassword", "Kriko2004");
-//            databaseName = config.optString("databaseName", "testexplorer");
+            //#region Local explorer
+            // databasePassword = config.optString("databasePassword", "Kriko2004");
+            // databaseName = config.optString("databaseName", "testexplorer");
+            //#endregion
 
         } catch (Exception e) {
             System.err.println("Database.Config:static:Failed to load config file: " + e);
@@ -44,6 +45,8 @@ public class Config {
         }
     }
 
+
+    //#region Getters
     public static String getPwrRpcUrl() {
         return pwrRpcUrl;
     }
@@ -59,9 +62,5 @@ public class Config {
     public static String getDatabaseName() {
         return databaseName;
     }
-
-    public static int getThreadSleepOfTxnsAndTxnHistoryUpdate() {
-        return threadSleepOfTxnsAndTxnHistoryUpdate;
-    }
-
+    //#endregion
 }

@@ -43,13 +43,11 @@ public class GET {
 
         //Explorer Calls
         get("/explorerInfo/", (request, response) -> {
-            Instant serverStart = Instant.now();
             getLastXTransactions(5);
             try {
                 response.header("Content-Type", "application/json");
 
                 CompletableFuture<JSONArray> blocksFuture = CompletableFuture.supplyAsync(() -> {
-                    Instant start = Instant.now();
                     JSONArray blocks = new JSONArray();
                     List<Block> blockList = cacheManager.getBlocks(5);
                     for (Block block : blockList) {
@@ -61,12 +59,10 @@ public class GET {
                         object.put("blockSubmitter", "0x" + block.getBlockSubmitter());
                         blocks.put(object);
                     }
-                    long duration = Duration.between(start, Instant.now()).toMillis();
-                    return new JSONArray().put(blocks).put(duration);
+                    return new JSONArray().put(blocks);
                 });
 
                 CompletableFuture<JSONArray> txnsFuture = CompletableFuture.supplyAsync(() -> {
-                    Instant start = Instant.now();
                     JSONArray txns = new JSONArray();
                     List<NewTxn> txnsList = cacheManager.getRecentTxns(5);
                     for (NewTxn txn : txnsList) {
@@ -79,8 +75,7 @@ public class GET {
                         object.put("value", txn.value());
                         txns.put(object);
                     }
-                    long duration = Duration.between(start, Instant.now()).toMillis();
-                    return new JSONArray().put(txns).put(duration);
+                    return new JSONArray().put(txns);
                 });
 
                 CompletableFuture<JSONArray> otherDataFuture = CompletableFuture.supplyAsync(() -> {
@@ -118,11 +113,7 @@ public class GET {
                         "tps", otherDataObj.getDouble("tps"),
                         "txns", txnsResult.getJSONArray(0),
                         "blocks", blocksResult != null ? blocksResult.getJSONArray(0) : 0,
-                        "blocksTime", blocksResult != null ? blocksResult.get(1) : 0,
-                        "txnsTime", txnsResult.get(1),
-                        "fourteenDaysTxn", otherDataObj.get("fourteenDaysTxn"),
-                        "otherDataTime", otherData.get(1),
-                        "serverDuration", Duration.between(serverStart, Instant.now()).toMillis()
+                        "fourteenDaysTxn", otherDataObj.get("fourteenDaysTxn")
                 );
             } catch (Exception e) {
                 logger.error("An error occurred while fetching explorer info: ", e);
@@ -167,12 +158,12 @@ public class GET {
                 // Build the response JSON
                 JSONObject responseObject = new JSONObject();
                 responseObject.put("price", Settings.getPrice());
-                responseObject.put("priceChange", 2.5);  // example value
-                responseObject.put("marketCap", 1000000000L);  // example value
+                responseObject.put("priceChange", 2.5);
+                responseObject.put("marketCap", 1000000000L);
                 responseObject.put("totalTransactionsCount", cacheManager.getTxnsCountPast24Hours());
                 responseObject.put("blocksCount", cacheManager.getBlocksCount());
-                responseObject.put("validators", cacheManager.getActiveValidatorsCount());  // example value
-                responseObject.put("tps", cacheManager.getAverageTps(100, cacheManager.getBlocksCount()));  // example value
+                responseObject.put("validators", cacheManager.getActiveValidatorsCount());
+                responseObject.put("tps", cacheManager.getAverageTps(100, cacheManager.getBlocksCount()));
                 responseObject.put("txns", txns);
                 responseObject.put("blocks", blocks);
                 responseObject.put("avgTxnFeeChange", cacheManager.getAvgTxnFeePercentageChange());
@@ -316,12 +307,12 @@ public class GET {
         });
         get("/blocksCreated/", ((request, response) -> {
             response.type("application/json");
+
             String address = request.queryParams("validatorAddress");
             int count = validateAndParseCountParam(request.queryParams("count"), response);
             int page = validateAndParsePageParam(request.queryParams("page"), response);
             int offset = (page - 1) * count;
 
-            // Metadata variables
             int totalBlocksCount;
 
             try {
@@ -549,14 +540,9 @@ public class GET {
                 int count = validateAndParseCountParam(request.queryParams("count"), response);
                 int page = validateAndParsePageParam(request.queryParams("page"), response);
 
-                long time = System.currentTimeMillis();
                 List<NewTxn> txns = getUserTxns(address, page, count);
-                long userTxnsTime = System.currentTimeMillis() - time;
-                time = System.currentTimeMillis();
                 int totalTxnCount = getTotalTxnCount(address);
-                long totalTxnsTime = System.currentTimeMillis() - time;
 
-                time = System.currentTimeMillis();
                 JSONArray transactions = new JSONArray();
                 for (NewTxn txn : txns) {
                     JSONObject object = populateTxnsResponse(txn);
@@ -592,8 +578,6 @@ public class GET {
                         "transactions", transactions,
                         "metadata", metadata,
                         "firstLastTransactions", firstLastTxnsObject,
-                        "totalTxnsTime", totalTxnsTime,
-                        "userTxnsTime", userTxnsTime,
                         "serverTime", System.currentTimeMillis() - serverTime
                 );
             } catch (Exception e) {
@@ -805,7 +789,7 @@ public class GET {
 
     }
 
-    //#region Pagination Utilities
+    //#region Utils
     private static JSONObject createPaginationMetadata(long totalItems, int currentPage, int itemsPerPage) {
         int totalPages = (int) Math.ceil((double) Math.min(totalItems, 100_000) / itemsPerPage);
         int startIndex = (currentPage - 1) * itemsPerPage + 1;
@@ -845,6 +829,7 @@ public class GET {
             throw new Exception("Invalid count format");
         }
     }
+    //#endregion
 
     //#region Helpers
     private static JSONObject getError(spark.Response response, String message) {

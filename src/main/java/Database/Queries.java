@@ -22,7 +22,7 @@ public class Queries {
     private static final Logger logger = LogManager.getLogger(Queries.class);
     private static final int NUMBER_OF_SHARDS = 1;
 
-    //>>>>>>>INSERT<<<<<<<<
+    //#region Insert functions
     public static void insertTxn(
             String hash, long blockNumber, int positionInBlock, String fromAddress, String toAddress,
             long timestamp, long value, String txnType, long txnFee, Boolean success
@@ -102,24 +102,31 @@ public class Queries {
         }
     }
 
-    public static long getLatestBlockNumberForFeeRecipient(String feeRecipient) {
-        String sql = "SELECT " + TIMESTAMP + " FROM \"Block\" " +
-                "WHERE LOWER(" + FEE_RECIPIENT + ") = ? " +
-                "ORDER BY " + BLOCK_NUMBER + " DESC " +
-                "LIMIT 1";
+    public static void upsertUserHistory(String address, String txnHash, long txnTimestamp, int incrementCount) {
+        String sql = "INSERT INTO \"UsersHistory\" (" +
+                "\"address\", " +
+                "\"transaction_count\", " +
+                "\"first_txn_timestamp\", " +
+                "\"first_txn_hash\", " +
+                "\"last_txn_timestamp\", " +
+                "\"last_txn_hash\"" +
+                ") VALUES (?, ?, ?, ?, ?, ?) " +
+                "ON CONFLICT (\"address\") DO UPDATE SET " +
+                "\"transaction_count\" = \"UsersHistory\".\"transaction_count\" + ?, " +
+                "\"last_txn_timestamp\" = ?, " +
+                "\"last_txn_hash\" = ?";
 
-        try (QueryResult result = executeQuery(sql, feeRecipient)) {
-            ResultSet rs = result.ResultSet();
-            if (rs.next()) {
-                return rs.getLong(TIMESTAMP);
-            }
+        try {
+            executeUpdate(sql, address, incrementCount, txnTimestamp, txnHash, txnTimestamp, txnHash, incrementCount, txnTimestamp, txnHash);
         } catch (SQLException e) {
-            logger.error("Error getting latest block number for fee recipient {}: {}", feeRecipient, e.getMessage());
+            logger.error("Error upserting user history for address {}: {}", address, e.getLocalizedMessage());
+            throw new RuntimeException("Failed to upsert user history", e);
         }
-        return -1;
     }
+    //#endregion
 
-    //>>>>>>>UPDATE<<<<<<<<
+
+    //#region Update functions
     public static void updateInitialDelegations(String userAddress, String validatorAddress, long initialDelegation) {
         String sql = "INSERT INTO \"InitialDelegation\" (" + USER_ADDRESS + ", " + VALIDATOR_ADDRESS + ", " + INITIAL_DELEGATION + ") " +
                 "VALUES (?, ?, ?) " +
@@ -149,8 +156,10 @@ public class Queries {
             logger.error("Failed to update block {}: {}", blockNumber, e.getLocalizedMessage());
         }
     }
+    //#endregion
 
-    //>>>>>>>GET<<<<<<<<
+
+    //#region Get functions
     public static Block getDbBlock(long blockNumber) {
         String sql = "SELECT * FROM \"Block\" WHERE " + BLOCK_NUMBER + " = ?;";
         Block block = null;
@@ -185,6 +194,23 @@ public class Queries {
             logger.error("Failed to get last block number: {}", e.getLocalizedMessage());
         }
         return 0;
+    }
+
+    public static long getLatestBlockNumberForFeeRecipient(String feeRecipient) {
+        String sql = "SELECT " + TIMESTAMP + " FROM \"Block\" " +
+                "WHERE LOWER(" + FEE_RECIPIENT + ") = ? " +
+                "ORDER BY " + BLOCK_NUMBER + " DESC " +
+                "LIMIT 1";
+
+        try (QueryResult result = executeQuery(sql, feeRecipient)) {
+            ResultSet rs = result.ResultSet();
+            if (rs.next()) {
+                return rs.getLong(TIMESTAMP);
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting latest block number for fee recipient {}: {}", feeRecipient, e.getMessage());
+        }
+        return -1;
     }
 
     public static double getAverageTps(int numberOfBlocks, long lastBlockNumber) {
@@ -416,7 +442,7 @@ public class Queries {
 
         String tableName = getTransactionsTableName("0");
 
-        String sql = "SELECT * FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ?" +
+        String sql = "SELECT * FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ? " +
                 "ORDER BY " + TIMESTAMP + " DESC " +
                 "LIMIT ? OFFSET ?;";
 
@@ -680,7 +706,7 @@ public class Queries {
                             return BigInteger.ZERO;
                         }
                     })
-                    .reduce(BigInteger.ZERO, (a, b) -> ((BigInteger)a).add((BigInteger)b)); // Added explicit casting
+                    .reduce(BigInteger.ZERO, (a, b) -> ((BigInteger) a).add((BigInteger) b)); // Added explicit casting
 
         } catch (SQLException e) {
             logger.error("Error getting timestamp bounds for shard: {}", e.getLocalizedMessage());
@@ -706,111 +732,64 @@ public class Queries {
     }
 
     public static int getTotalTxnCount(String address) {
-        int totalCount = 0;
+        String sql = "SELECT transaction_count FROM \"UsersHistory\" WHERE address = ?";
 
-        String tableName = getTransactionsTableName("0");
-
-        String selectFromQuery = "SELECT COUNT(*) AS count FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ?";
-        String selectToQuery = "SELECT COUNT(*) AS count FROM " + tableName + " WHERE " + TO_ADDRESS + " = ?";
-
-        CompletableFuture<Integer> fromCountFuture = CompletableFuture.supplyAsync(() -> {
-            try (QueryResult result = executeQuery(selectFromQuery, address)) {
-                ResultSet rs = result.ResultSet();
-                return rs.next() ? rs.getInt("count") : 0;
-            } catch (SQLException e) {
-                logger.error("Failed to get sender address txns count: {}", e.getLocalizedMessage());
-                return 0;
+        try (QueryResult result = executeQuery(sql, "0x" + address.toLowerCase())) {
+            ResultSet rs = result.ResultSet();
+            if (rs.next()) {
+                return rs.getInt(1);
             }
-        });
-
-        CompletableFuture<Integer> toCountFuture = CompletableFuture.supplyAsync(() -> {
-            try (QueryResult result = executeQuery(selectToQuery, address)) {
-                ResultSet rs = result.ResultSet();
-                return rs.next() ? rs.getInt("count") : 0;
-            } catch (SQLException e) {
-                logger.error("Failed to get receiver address txns count: {}", e.getLocalizedMessage());
-                return 0;
-            }
-        });
-
-        try {
-            totalCount = fromCountFuture.get() + toCountFuture.get();
         } catch (Exception e) {
             logger.error("Error getting results from parallel queries", e);
         }
 
-        return totalCount;
+        return 0;
     }
 
     public static Pair<NewTxn, NewTxn> getFirstAndLastTransactionsByAddress(String address) {
-        CompletableFuture<NewTxn> firstTxnFuture = CompletableFuture.supplyAsync(() -> {
-            NewTxn firstTxn = null;
-            String tableName = getTransactionsTableName("0");
+        NewTxn firstTxn = null;
+        NewTxn lastTxn = null;
 
-            String sql = "(" +
-                    "SELECT * FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ? " +
-                    "ORDER BY " + TIMESTAMP + " ASC LIMIT 1" +
-                    ") UNION ALL (" +
-                    "SELECT * FROM " + tableName + " WHERE " + TO_ADDRESS + " = ? " +
-                    "ORDER BY " + TIMESTAMP + " ASC LIMIT 1" +
-                    ") ORDER BY " + TIMESTAMP + " ASC LIMIT 1";
+        String sql = "SELECT first_txn_timestamp, first_txn_hash, " +
+                "last_txn_timestamp, last_txn_hash " +
+                "FROM \"UsersHistory\" WHERE address = ?";
 
-            try (Connection conn = getConnection();
-                 PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+        try (QueryResult result = executeQuery(sql, "0x" + address.toLowerCase())) {
+            ResultSet rs = result.ResultSet();
+            if (rs.next()) {
+                // Populate first transaction
+                firstTxn = new NewTxn(
+                        rs.getString("first_txn_hash"),
+                        0,
+                        0,
+                        "",
+                        "",
+                        rs.getLong("first_txn_timestamp"),
+                        0,
+                        "",
+                        0,
+                        false
+                );
 
-                preparedStatement.setString(1, address);
-                preparedStatement.setString(2, address);
-
-                try (ResultSet rs = preparedStatement.executeQuery()) {
-                    if (rs.next()) {
-                        firstTxn = populateNewTxnObject(rs);
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("Error querying first transaction for address {}: {}", address, e.getMessage());
+                // Populate last transaction
+                lastTxn = new NewTxn(
+                        rs.getString("last_txn_hash"),
+                        0,
+                        0,
+                        "",
+                        "",
+                        rs.getLong("last_txn_timestamp"),
+                        0,
+                        "",
+                        0,
+                        false
+                );
             }
-            return firstTxn;
-        });
-
-        CompletableFuture<NewTxn> lastTxnFuture = CompletableFuture.supplyAsync(() -> {
-            NewTxn lastTxn = null;
-            String tableName = getTransactionsTableName("0");
-
-            String sql = "(" +
-                    "SELECT * FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ? " +
-                    "ORDER BY " + TIMESTAMP + " DESC LIMIT 1" +
-                    ") UNION ALL (" +
-                    "SELECT * FROM " + tableName + " WHERE " + TO_ADDRESS + " = ? " +
-                    "ORDER BY " + TIMESTAMP + " DESC LIMIT 1" +
-                    ") ORDER BY " + TIMESTAMP + " DESC LIMIT 1";
-
-            try (Connection conn = getConnection();
-                 PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-
-                preparedStatement.setString(1, address);
-                preparedStatement.setString(2, address);
-
-                try (ResultSet rs = preparedStatement.executeQuery()) {
-                    if (rs.next()) {
-                        lastTxn = populateNewTxnObject(rs);
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("Error querying last transaction for address {}: {}", address, e.getMessage());
-            }
-            return lastTxn;
-        });
-
-        try {
-            // Wait for both futures to complete and combine results
-            NewTxn firstTxn = firstTxnFuture.get();
-            NewTxn lastTxn = lastTxnFuture.get();
-            return new Pair<>(firstTxn, lastTxn);
         } catch (Exception e) {
-            logger.error("Error while querying transactions in parallel for address {}: {}", address, e.getMessage());
+            logger.error("Error querying transactions for address {}: {}", address, e.getMessage());
         }
 
-        return new Pair<>(null, null);
+        return new Pair<>(firstTxn, lastTxn);
     }
 
     public static Map<Long, Integer> getFourteenDaysTxn() {
@@ -904,6 +883,171 @@ public class Queries {
         }
     }
 
+    public static boolean isNewUser(String address) {
+        System.out.println("Checking address " + address);
+        String sql = "SELECT COUNT(*) FROM \"UsersHistory\" WHERE \"address\" = ?";
+        try (QueryResult result = executeQuery(sql, "0x" + address)) {
+            ResultSet rs = result.ResultSet();
+            if (rs.next()) {
+                return rs.getInt(1) == 0;
+            }
+        } catch (Exception e) {
+            logger.error("Error checking if user exists: {} {}", address, e.getMessage());
+        }
+        return false;
+    }
+    //#endregion
+
+
+    // These functions to be deleted after integrating the users history table
+    public static Pair<NewTxn, NewTxn> getFirstAndLastTransactionssByAddress(String address) {
+        CompletableFuture<NewTxn> firstTxnFuture = CompletableFuture.supplyAsync(() -> {
+            NewTxn firstTxn = null;
+            String tableName = getTransactionsTableName("0");
+
+            String sql = "(" +
+                    "SELECT * FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ? " +
+                    "ORDER BY " + TIMESTAMP + " ASC LIMIT 1" +
+                    ") UNION ALL (" +
+                    "SELECT * FROM " + tableName + " WHERE " + TO_ADDRESS + " = ? " +
+                    "ORDER BY " + TIMESTAMP + " ASC LIMIT 1" +
+                    ") ORDER BY " + TIMESTAMP + " ASC LIMIT 1";
+
+            try (Connection conn = getConnection();
+                 PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+
+                preparedStatement.setString(1, address);
+                preparedStatement.setString(2, address);
+
+                try (ResultSet rs = preparedStatement.executeQuery()) {
+                    if (rs.next()) {
+                        firstTxn = populateNewTxnObject(rs);
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Error querying first transaction for address {}: {}", address, e.getMessage());
+            }
+            return firstTxn;
+        });
+
+        CompletableFuture<NewTxn> lastTxnFuture = CompletableFuture.supplyAsync(() -> {
+            NewTxn lastTxn = null;
+            String tableName = getTransactionsTableName("0");
+
+            String sql = "(" +
+                    "SELECT * FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ? " +
+                    "ORDER BY " + TIMESTAMP + " DESC LIMIT 1" +
+                    ") UNION ALL (" +
+                    "SELECT * FROM " + tableName + " WHERE " + TO_ADDRESS + " = ? " +
+                    "ORDER BY " + TIMESTAMP + " DESC LIMIT 1" +
+                    ") ORDER BY " + TIMESTAMP + " DESC LIMIT 1";
+
+            try (Connection conn = getConnection();
+                 PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+
+                preparedStatement.setString(1, address);
+                preparedStatement.setString(2, address);
+
+                try (ResultSet rs = preparedStatement.executeQuery()) {
+                    if (rs.next()) {
+                        lastTxn = populateNewTxnObject(rs);
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Error querying last transaction for address {}: {}", address, e.getMessage());
+            }
+            return lastTxn;
+        });
+
+        try {
+            // Wait for both futures to complete and combine results
+            NewTxn firstTxn = firstTxnFuture.get();
+            NewTxn lastTxn = lastTxnFuture.get();
+            return new Pair<>(firstTxn, lastTxn);
+        } catch (Exception e) {
+            logger.error("Error while querying transactions in parallel for address {}: {}", address, e.getMessage());
+        }
+
+        return new Pair<>(null, null);
+    }
+    public static void populateUsersHistoryTable() {
+        logger.info("Starting to populate UsersHistory table...");
+
+        for (int shardIndex = 0; shardIndex < NUMBER_OF_SHARDS; shardIndex++) {
+            String tableName = "\"Transactions_Shard_" + shardIndex + "\"";
+
+            String addressesSql = "SELECT DISTINCT address FROM ( " +
+                    "SELECT from_address as address FROM " + tableName +
+                    " UNION SELECT to_address as address FROM " + tableName +
+                    " WHERE to_address IS NOT NULL) AS all_addresses";
+
+            Set<String> addresseSet = new HashSet<>();
+
+            try (QueryResult result = executeQuery(addressesSql)) {
+                ResultSet rs = result.ResultSet();
+                while (rs.next()) {
+                    addresseSet.add(rs.getString("address"));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            for (String address : addresseSet) {
+                try {
+                    String selectFromQuery = "SELECT COUNT(*) AS count FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ?";
+                    String selectToQuery = "SELECT COUNT(*) AS count FROM " + tableName + " WHERE " + TO_ADDRESS + " = ?";
+
+                    String formattedAddress = address;
+                    if (!address.startsWith("0x")) {
+                        try {
+                            new BigInteger(address);  // If it's a number, use as is
+                        } catch (NumberFormatException e) {
+                            formattedAddress = "0x" + address;  // Not a number, add prefix
+                        }
+                    }
+
+                    CompletableFuture<Integer> fromCountFuture = CompletableFuture.supplyAsync(() -> {
+                        try (QueryResult result = executeQuery(selectFromQuery, address)) {
+                            ResultSet rs = result.ResultSet();
+                            return rs.next() ? rs.getInt("count") : 0;
+                        } catch (SQLException e) {
+                            logger.error("Failed to get sender address txns count: {}", e.getLocalizedMessage());
+                            return 0;
+                        }
+                    });
+
+                    CompletableFuture<Integer> toCountFuture = CompletableFuture.supplyAsync(() -> {
+                        try (QueryResult result = executeQuery(selectToQuery, address)) {
+                            ResultSet rs = result.ResultSet();
+                            return rs.next() ? rs.getInt("count") : 0;
+                        } catch (SQLException e) {
+                            logger.error("Failed to get receiver address txns count: {}", e.getLocalizedMessage());
+                            return 0;
+                        }
+                    });
+
+                    Pair<NewTxn, NewTxn> firstLastTxns = getFirstAndLastTransactionssByAddress(address);
+
+                    int totalCount = fromCountFuture.get() + toCountFuture.get();
+
+                    String insertSql = "INSERT INTO \"UsersHistory\"(" +
+                            "address, " +
+                            "transaction_count, " +
+                            "first_txn_timestamp, " +
+                            "first_txn_hash, " +
+                            "last_txn_timestamp," +
+                            "last_txn_hash) VALUES(?,?,?,?,?,?)";
+                    executeUpdate(
+                            insertSql, formattedAddress.toLowerCase(), totalCount, firstLastTxns.first.timestamp(), firstLastTxns.first.hash(),
+                            firstLastTxns.second.timestamp(), firstLastTxns.second.hash()
+                    );
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            logger.info("Successfully flushed");
+        }
+    }
+
 
     //#region Helpers
     private static NewTxn populateNewTxnObject(ResultSet rs) throws SQLException {
@@ -937,8 +1081,9 @@ public class Queries {
     }
     //#endregion
 
+
     //#region sql executors
-    public record QueryResult(
+    private record QueryResult(
             Connection connection,
             PreparedStatement statement,
             ResultSet ResultSet

@@ -4,8 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class Block {
-    private static final Logger logger = LogManager.getLogger(Block.class);
-
     private final String blockHash;
     private final String blockNumber;
     private final long timeStamp;

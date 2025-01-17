@@ -4,15 +4,17 @@ import API.RateLimiter;
 import Database.Config;
 import Database.DatabaseInitialization;
 import Core.Synchronizer;
+import Database.Queries;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 import static spark.Spark.*;
 
 public class Main {
 
-    public static void main(String[] args) throws NoSuchMethodException, IOException {
+    public static void main(String[] args) throws NoSuchMethodException, IOException, SQLException {
         port(8081);
 
         options("/*",
@@ -47,6 +49,7 @@ public class Main {
         RateLimiter.initRateLimiter();
 
         DatabaseInitialization.initialize();
+        Queries.populateUsersHistoryTable();
 
         // test explorer
         PWRJ pwrj = new PWRJ(Config.getPwrRpcUrl());

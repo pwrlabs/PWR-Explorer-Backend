@@ -899,8 +899,14 @@ public class Queries {
     //#endregion
 
 
-    // These functions to be deleted after integrating the users history table
-    public static Pair<NewTxn, NewTxn> getFirstAndLastTransactionssByAddress(String address) {
+    /* TODO: This function was previously used to get the first and last txns for a user but since it was very slow
+        it was replaced by this function getFirstAndLastTransactionsByAddress.
+        What we need to consider here is that the new function works with the new db design which has not been implemented yet
+        on the main explorer because we need to reset the db so if any changes need to be done to the main explorer without resetting
+        the db we need to replace the new function by this function temporarily.
+        Note that the test explorer already supports these changes since the db was reset for it!!
+    */
+    public static Pair<NewTxn, NewTxn> getFirstAndLastTransactionsByAddressOld(String address) {
         CompletableFuture<NewTxn> firstTxnFuture = CompletableFuture.supplyAsync(() -> {
             NewTxn firstTxn = null;
             String tableName = getTransactionsTableName("0");
@@ -970,84 +976,43 @@ public class Queries {
 
         return new Pair<>(null, null);
     }
-    public static void populateUsersHistoryTable() {
-        logger.info("Starting to populate UsersHistory table...");
 
-        for (int shardIndex = 0; shardIndex < NUMBER_OF_SHARDS; shardIndex++) {
-            String tableName = "\"Transactions_Shard_" + shardIndex + "\"";
+    /* TODO: We also have this function to get a user txns count but we changed it since in the new db design where we added the
+        users history table we can get the txn count of a user directly from the table.
+        So same thing here for this function we need to check where the user's txns count is being returned
+        and replace it by the old count function if we are not resetting the database.
+        Note that the test explorer already supports these changes since the db was reset for it!!
+     */
+    public static int getTotalTxnCountOld(String address) {
+        int totalCount = 0;
 
-            String addressesSql = "SELECT DISTINCT address FROM ( " +
-                    "SELECT from_address as address FROM " + tableName +
-                    " UNION SELECT to_address as address FROM " + tableName +
-                    " WHERE to_address IS NOT NULL) AS all_addresses";
+        String tableName = getTransactionsTableName("0");
 
-            Set<String> addresseSet = new HashSet<>();
+        String sql = "SELECT COUNT(*) AS total_count FROM " + tableName +
+                " WHERE " + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ?;";
 
-            try (QueryResult result = executeQuery(addressesSql)) {
-                ResultSet rs = result.ResultSet();
-                while (rs.next()) {
-                    addresseSet.add(rs.getString("address"));
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            for (String address : addresseSet) {
-                try {
-                    String selectFromQuery = "SELECT COUNT(*) AS count FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ?";
-                    String selectToQuery = "SELECT COUNT(*) AS count FROM " + tableName + " WHERE " + TO_ADDRESS + " = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, address);
+            preparedStatement.setString(2, address);
 
-                    String formattedAddress = address;
-                    if (!address.startsWith("0x")) {
-                        try {
-                            new BigInteger(address);  // If it's a number, use as is
-                        } catch (NumberFormatException e) {
-                            formattedAddress = "0x" + address;  // Not a number, add prefix
-                        }
-                    }
-
-                    CompletableFuture<Integer> fromCountFuture = CompletableFuture.supplyAsync(() -> {
-                        try (QueryResult result = executeQuery(selectFromQuery, address)) {
-                            ResultSet rs = result.ResultSet();
-                            return rs.next() ? rs.getInt("count") : 0;
-                        } catch (SQLException e) {
-                            logger.error("Failed to get sender address txns count: {}", e.getLocalizedMessage());
-                            return 0;
-                        }
-                    });
-
-                    CompletableFuture<Integer> toCountFuture = CompletableFuture.supplyAsync(() -> {
-                        try (QueryResult result = executeQuery(selectToQuery, address)) {
-                            ResultSet rs = result.ResultSet();
-                            return rs.next() ? rs.getInt("count") : 0;
-                        } catch (SQLException e) {
-                            logger.error("Failed to get receiver address txns count: {}", e.getLocalizedMessage());
-                            return 0;
-                        }
-                    });
-
-                    Pair<NewTxn, NewTxn> firstLastTxns = getFirstAndLastTransactionssByAddress(address);
-
-                    int totalCount = fromCountFuture.get() + toCountFuture.get();
-
-                    String insertSql = "INSERT INTO \"UsersHistory\"(" +
-                            "address, " +
-                            "transaction_count, " +
-                            "first_txn_timestamp, " +
-                            "first_txn_hash, " +
-                            "last_txn_timestamp," +
-                            "last_txn_hash) VALUES(?,?,?,?,?,?)";
-                    executeUpdate(
-                            insertSql, formattedAddress.toLowerCase(), totalCount, firstLastTxns.first.timestamp(), firstLastTxns.first.hash(),
-                            firstLastTxns.second.timestamp(), firstLastTxns.second.hash()
-                    );
-                } catch (Exception e) {
-                    e.printStackTrace();
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                if (rs.next()) {
+                    totalCount = rs.getInt("total_count");
                 }
             }
-            logger.info("Successfully flushed");
+        } catch (Exception e) {
+            logger.error(e.toString());
         }
+
+        return totalCount;
     }
 
+    /* TODO: For future devs working on the explorer if db is being reset consider adding a new table
+        which will hold the total txns count and on each block maybe or a specific interval we update the count since now
+        to get the txns count we are counting them from the txns table which is not scalable but for now we are caching them
+        which works fine and smoothly.
+    */
 
     //#region Helpers
     private static NewTxn populateNewTxnObject(ResultSet rs) throws SQLException {
@@ -1070,14 +1035,7 @@ public class Queries {
         return "\"Transactions_Shard_" + shardIndex + "\"";
     }
 
-    public static class Pair<T, U> {
-        public final T first;
-        public final U second;
-
-        public Pair(T first, U second) {
-            this.first = first;
-            this.second = second;
-        }
+    public record Pair<T, U>(T first, U second) {
     }
     //#endregion
 

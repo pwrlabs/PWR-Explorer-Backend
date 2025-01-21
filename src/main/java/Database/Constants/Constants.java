@@ -29,7 +29,6 @@ public class Constants {
     public static final String FIRST_TXN_HASH = "first_txn_hash";
     public static final String LAST_TXN_TIMESTAMP = "last_txn_timestamp";
     public static final String LAST_TXN_HASH = "last_txn_hash";
-    public static final String ID = "id";
 
 
 }

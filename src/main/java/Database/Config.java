@@ -34,8 +34,8 @@ public class Config {
             //#endregion
 
             //#region Local explorer
-            // databasePassword = config.optString("databasePassword", "Kriko2004");
-            // databaseName = config.optString("databaseName", "testexplorer");
+//             databasePassword = config.optString("databasePassword", "Kriko2004");
+//             databaseName = config.optString("databaseName", "testexplorer");
             //#endregion
 
         } catch (Exception e) {

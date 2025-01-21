@@ -5,6 +5,7 @@ import Database.Config;
 import Database.DatabaseInitialization;
 import Core.Synchronizer;
 import Database.Queries;
+import Services.*;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 
 import java.io.IOException;
@@ -49,12 +50,17 @@ public class Main {
         RateLimiter.initRateLimiter();
 
         DatabaseInitialization.initialize();
-        Queries.populateUsersHistoryTable();
 
         // test explorer
         PWRJ pwrj = new PWRJ(Config.getPwrRpcUrl());
 
-        GET.run(pwrj);
+        BlockService.initialize(pwrj);
+        NodeService.initialize(pwrj);
+        StakingService.initialize(pwrj);
+        TransactionService.initialize(pwrj);
+        GeneralService.initialize(pwrj);
+
+        GET.run();
         POST.run(pwrj);
 
         Synchronizer.sync(pwrj);

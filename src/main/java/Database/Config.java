@@ -24,13 +24,13 @@ public class Config {
             databaseUserName = config.optString("databaseUserName", "postgres");
 
             //#region Main explorer configs
-            // databaseName = config.optString("databaseName", "pwrexplorer");
-            // databasePassword = config.optString("databasePassword", "new_password");
+             databaseName = config.optString("databaseName", "pwrexplorer");
+             databasePassword = config.optString("databasePassword", "new_password");
             //#endregion
 
             //#region Test explorer configs
-            databaseName = config.optString("databaseName", "testexplorer");
-            databasePassword = config.optString("databasePassword", "KUX3bgHxE4ksPRrpu");
+//            databaseName = config.optString("databaseName", "testexplorer");
+//            databasePassword = config.optString("databasePassword", "KUX3bgHxE4ksPRrpu");
             //#endregion
 
             //#region Local explorer

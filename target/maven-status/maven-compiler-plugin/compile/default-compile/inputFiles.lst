@@ -3,6 +3,7 @@ C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\API\IptablesBlocker.java
 C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\API\POST.java
 C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\API\RateLimiter.java
 C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Core\Cache\CacheManager.java
+C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Core\Processor.java
 C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Core\Synchronizer.java
 C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Database\Config.java
 C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Database\Constants\Constants.java
@@ -14,5 +15,12 @@ C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\DataModel\NewTxn.java
 C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\DataModel\UserTransactionInfo.java
 C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Main.java
 C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Network\OHTTP.java
+C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Services\BlockService.java
+C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Services\GeneralService.java
+C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Services\NodeService.java
+C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Services\StakingService.java
+C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Services\TransactionService.java
+C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Utils\Helpers.java
+C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Utils\ResponseBuilder.java
 C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Utils\Settings.java
 C:\Users\yobiz\PWR-Explorer-Backend\src\main\java\Utils\Stats.java

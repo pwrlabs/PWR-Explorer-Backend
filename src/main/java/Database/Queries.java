@@ -104,17 +104,16 @@ public class Queries {
 
     public static void upsertUserHistory(String address, String txnHash, long txnTimestamp, int incrementCount) {
         String sql = "INSERT INTO \"UsersHistory\" (" +
-                "\"address\", " +
-                "\"transaction_count\", " +
-                "\"first_txn_timestamp\", " +
-                "\"first_txn_hash\", " +
-                "\"last_txn_timestamp\", " +
-                "\"last_txn_hash\"" +
-                ") VALUES (?, ?, ?, ?, ?, ?) " +
-                "ON CONFLICT (\"address\") DO UPDATE SET " +
-                "\"transaction_count\" = \"UsersHistory\".\"transaction_count\" + ?, " +
-                "\"last_txn_timestamp\" = ?, " +
-                "\"last_txn_hash\" = ?";
+                ADDRESS + ", " +
+                TRANSACTIONS_COUNT + ", " +
+                FIRST_TXN_TIMESTAMP + ", " +
+                FIRST_TXN_HASH + ", " +
+                LAST_TXN_TIMESTAMP + ", " +
+                LAST_TXN_HASH + ") VALUES (?, ?, ?, ?, ?, ?) " +
+                "ON CONFLICT (" + ADDRESS + ") DO UPDATE SET " +
+                TRANSACTIONS_COUNT + " = \"UsersHistory\"." + TRANSACTIONS_COUNT + " + ?, " +
+                LAST_TXN_TIMESTAMP + " = ?, " +
+                LAST_TXN_HASH + " = ?";
 
         try {
             executeUpdate(sql, address, incrementCount, txnTimestamp, txnHash, txnTimestamp, txnHash, incrementCount, txnTimestamp, txnHash);
@@ -732,7 +731,7 @@ public class Queries {
     }
 
     public static int getTotalTxnCount(String address) {
-        String sql = "SELECT transaction_count FROM \"UsersHistory\" WHERE address = ?";
+        String sql = "SELECT " + TRANSACTIONS_COUNT + " FROM \"UsersHistory\" WHERE " + ADDRESS + " = ?";
 
         try (QueryResult result = executeQuery(sql, "0x" + address.toLowerCase())) {
             ResultSet rs = result.ResultSet();
@@ -750,8 +749,8 @@ public class Queries {
         NewTxn firstTxn = null;
         NewTxn lastTxn = null;
 
-        String sql = "SELECT first_txn_timestamp, first_txn_hash, " +
-                "last_txn_timestamp, last_txn_hash " +
+        String sql = "SELECT " + FIRST_TXN_HASH + ", " + FIRST_TXN_TIMESTAMP + ", " +
+                LAST_TXN_TIMESTAMP + ", " + LAST_TXN_HASH + " " +
                 "FROM \"UsersHistory\" WHERE address = ?";
 
         try (QueryResult result = executeQuery(sql, "0x" + address.toLowerCase())) {
@@ -759,12 +758,12 @@ public class Queries {
             if (rs.next()) {
                 // Populate first transaction
                 firstTxn = new NewTxn(
-                        rs.getString("first_txn_hash"),
+                        rs.getString(FIRST_TXN_HASH),
                         0,
                         0,
                         "",
                         "",
-                        rs.getLong("first_txn_timestamp"),
+                        rs.getLong(FIRST_TXN_TIMESTAMP),
                         0,
                         "",
                         0,
@@ -773,12 +772,12 @@ public class Queries {
 
                 // Populate last transaction
                 lastTxn = new NewTxn(
-                        rs.getString("last_txn_hash"),
+                        rs.getString(LAST_TXN_HASH),
                         0,
                         0,
                         "",
                         "",
-                        rs.getLong("last_txn_timestamp"),
+                        rs.getLong(LAST_TXN_TIMESTAMP),
                         0,
                         "",
                         0,

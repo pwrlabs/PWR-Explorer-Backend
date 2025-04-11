@@ -1,8 +1,8 @@
 package Services;
 
 import Core.Cache.CacheManager;
+import com.github.pwrlabs.pwrj.entities.Validator;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
-import com.github.pwrlabs.pwrj.record.validator.Validator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;

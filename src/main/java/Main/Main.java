@@ -1,10 +1,10 @@
+package Main;
+
 import API.GET;
-import API.POST;
 import API.RateLimiter;
 import Database.Config;
 import Database.DatabaseInitialization;
 import Core.Synchronizer;
-import Database.Queries;
 import Services.*;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 
@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import static spark.Spark.*;
 
 public class Main {
+    public static final PWRJ pwrj = new PWRJ(Config.getPwrRpcUrl());
 
     public static void main(String[] args) throws NoSuchMethodException, IOException, SQLException {
         port(8081);
@@ -61,7 +62,6 @@ public class Main {
         GeneralService.initialize(pwrj);
 
         GET.run();
-        POST.run(pwrj);
 
         Synchronizer.sync(pwrj);
     }

@@ -1,7 +1,7 @@
 package Core;
 
+import com.github.pwrlabs.pwrj.entities.Block;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
-import com.github.pwrlabs.pwrj.record.block.Block;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import static Database.Queries.*;
@@ -24,13 +24,14 @@ public class Synchronizer {
                         try {
                             Block block = pwrj.getBlockByNumberExcludingDataAndExtraData(blockToCheck);
                             try {
-                                insertBlock(block.getNumber(), block.getHash().toLowerCase(), block.getSubmitter().substring(2),
-                                        block.getTimestamp(), block.getTransactionCount(), block.getReward(), block.getSize(), block.processedWithoutCriticalErrors()
+                                String proposer = block.getProposer().startsWith("0x") ? block.getProposer() : "0x" + block.getProposer();
+                                insertBlock(block.getBlockNumber(), block.getBlockHash().toLowerCase(), proposer,
+                                        block.getTimeStamp(), block.getTransactionCount(), block.getBlockReward(), block.getBlockSize(), block.isProcessedWithoutCriticalErrors()
                                 );
 
                                 blocks++;
                                 if (blocks % 10 == 0) {
-                                    logger.info("Scanned block: {}", block.getNumber());
+                                    logger.info("Scanned block: {}", block.getBlockNumber());
                                     blocks = 0;
                                 }
                             } catch (Exception e) {

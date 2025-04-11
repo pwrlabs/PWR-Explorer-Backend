@@ -1,15 +1,16 @@
 package Core;
 
 import DataModel.UserTransactionInfo;
-import com.github.pwrlabs.pwrj.record.block.Block;
-import com.github.pwrlabs.pwrj.record.transaction.DelegateTransaction;
-import com.github.pwrlabs.pwrj.record.transaction.JoinTransaction;
-import com.github.pwrlabs.pwrj.record.transaction.Transaction;
-import com.github.pwrlabs.pwrj.record.transaction.WithdrawTransaction;
+import Main.Main;
+import Utils.Settings;
+import com.github.pwrlabs.pwrj.entities.Block;
+import com.github.pwrlabs.pwrj.entities.FalconTransaction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,26 +22,35 @@ public class Processor {
     private static final Map<String, UserTransactionInfo> userTransactionsBuffer = new ConcurrentHashMap<>();
     private static long timeSinceLastFlush = System.currentTimeMillis();
 
-    public static void processIncomingBlock(Block block) {
-        for (Transaction txn : block.getTransactions()) {
-            if (txn instanceof DelegateTransaction delegateTxn) {
-                updateInitialDelegations(delegateTxn.getReceiver(), delegateTxn.getSender(), delegateTxn.getValue());
-            } else if (txn instanceof WithdrawTransaction withdrawTxn) {
-                updateInitialDelegations(withdrawTxn.getReceiver(), withdrawTxn.getSender(), withdrawTxn.getValue());
-            } else if (txn instanceof JoinTransaction joinTxn) {
+    public static void processIncomingBlock(Block block) throws Exception {
+        List<FalconTransaction> transactions = new ArrayList<>();
+        List<String> txnHashes = block.getTransactionHashes();
+        if(txnHashes != null || !txnHashes.isEmpty()) transactions = Main.pwrj.getTransactionsByHashes(txnHashes);
+
+        for (FalconTransaction txn : transactions) {
+            long value = 0;
+            if (txn instanceof FalconTransaction.FalconTransfer payableTxn) {
+                value = payableTxn.getAmount();
+            } else if (txn instanceof FalconTransaction.PayableVidaDataTxn vidaDataTxn) {
+                value = vidaDataTxn.getValue();
+            } else if (txn instanceof FalconTransaction.TransferPWRFromVidaTxn transferFromVidaTxn) {
+                value = transferFromVidaTxn.getAmount();
+            }
+
+            if (txn instanceof FalconTransaction.FalconJoinAsValidator joinTxn) {
                 insertValidator(joinTxn.getSender().toLowerCase(), txn.getTimestamp());
             }
 
             try {
-                insertTxn(txn.getHash().toLowerCase(), block.getNumber(), txn.getPositionInTheBlock(),
+                insertTxn(txn.getTransactionHash().toLowerCase(), block.getBlockNumber(), txn.getPositionInBlock(),
                         txn.getSender().substring(2), txn.getReceiver(), txn.getTimestamp(),
-                        txn.getValue(), txn.getType(), txn.getFee(), !txn.hasError());
+                        value, txn.getType(), txn.getPaidTotalFee(), !txn.isSuccess());
 
-                processUserTransaction(txn.getSender().toLowerCase(), txn.getHash(), txn.getTimestamp());
-                processUserTransaction(txn.getReceiver().toLowerCase(), txn.getHash(), txn.getTimestamp());
+                processUserTransaction(txn.getSender().toLowerCase(), txn.getTransactionHash(), txn.getTimestamp());
+                processUserTransaction(txn.getReceiver().toLowerCase(), txn.getTransactionHash(), txn.getTimestamp());
 
             } catch (Exception e) {
-                logger.error("Error inserting transaction: {} {}", txn.getHash(), e.getLocalizedMessage());
+                logger.error("Error inserting transaction: {} {}", txn.getTransactionHash(), e.getLocalizedMessage());
             }
         }
     }

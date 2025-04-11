@@ -2,12 +2,11 @@ package Services;
 
 import Core.Cache.CacheManager;
 import DataModel.NewTxn;
+import com.github.pwrlabs.pwrj.entities.FalconTransaction;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
-import com.github.pwrlabs.pwrj.record.transaction.PayableVmDataTransaction;
-import com.github.pwrlabs.pwrj.record.transaction.Transaction;
-import com.github.pwrlabs.pwrj.record.transaction.VmDataTransaction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.util.encoders.Hex;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import spark.Request;
@@ -71,17 +70,24 @@ public class TransactionService {
 
             String txnHash = request.queryParams("txnHash").toLowerCase();
 
-            Transaction txn = pwrj.getTransactionByHash(txnHash);
+            FalconTransaction txn = pwrj.getTransactionByHash(txnHash);
             if (txn == null) return getError(response, "Invalid DataModel.Block.Txn Hash");
 
             String data = null;
-            if (txn instanceof VmDataTransaction) {
-                data = ((VmDataTransaction) txn).getData();
-            } else if (txn instanceof PayableVmDataTransaction) {
-                data = ((PayableVmDataTransaction) txn).getData();
+            if (txn instanceof FalconTransaction.PayableVidaDataTxn vidaDataTxn) {
+                data = Hex.toHexString(vidaDataTxn.getData());
             }
 
-            long txnFee = txn.getFee();
+            long txnFee = txn.getPaidTotalFee();
+
+            long value = 0;
+            if(txn instanceof FalconTransaction.PayableVidaDataTxn vidaDataTxn) {
+                value = vidaDataTxn.getValue();
+            } else if (txn instanceof FalconTransaction.FalconTransfer v) {
+                value = v.getAmount();
+            } else if (txn instanceof FalconTransaction.TransferPWRFromVidaTxn v) {
+                value = v.getAmount();
+            }
 
             BigDecimal sparks = new BigDecimal(txnFee);
             BigDecimal pwrAmount = sparks.divide(BigDecimal.valueOf(1000000000L), 9, RoundingMode.HALF_EVEN);
@@ -94,15 +100,14 @@ public class TransactionService {
                     "timeStamp", txn.getTimestamp() / 1000,
                     "from", txn.getSender(),
                     "to", txn.getReceiver(),
-                    "value", txn.getValue(),
-                    "valueInUsd", txn.getValue(),
-                    "success", !txn.hasError(),
+                    "value", value,
+                    "valueInUsd", value, //TODO: Add conversion to USD
+                    "success", txn.isSuccess(),
                     "txnFee", txnFee,
                     "txnFeeInUsd", feeValueInUSD,
                     "data", data == null ? data : data.toLowerCase(),
                     "size", txn.getSize(),
-                    "errorMessage", txn.getErrorMessage() != null ? txn.getErrorMessage() : null,
-                    "extraData", txn.getExtraData()
+                    "errorMessage", txn.getErrorMessage() != null ? txn.getErrorMessage() : null
             );
         } catch (Exception e) {
             return getError(response, "Failed to get txn details: " + e.getLocalizedMessage());

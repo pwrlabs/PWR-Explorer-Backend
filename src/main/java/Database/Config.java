@@ -23,7 +23,7 @@ public class Config {
             pwrRpcUrl = config.optString("pwrRpcUrl", "https://pwrrpc.pwrlabs.io/");
             databaseUserName = config.optString("databaseUserName", "postgres");
 
-            //#region Main explorer configs
+            //#region Main.Main explorer configs
              databaseName = config.optString("databaseName", "pwrexplorer");
              databasePassword = config.optString("databasePassword", "new_password");
             //#endregion

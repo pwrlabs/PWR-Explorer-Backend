@@ -7,6 +7,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.util.*;
+import Main.Main;
 
 public class User extends DBM {
     private List<Long> blocksWhereHasTxn = new LinkedList<>();
@@ -48,7 +49,7 @@ public class User extends DBM {
     public void checkDelegation(String validator) {
         try {
             if (initialDelegations == null) return;
-            long delegatedPWR = PWRJ.getDelegatedPWR(getAddress(), validator);
+            long delegatedPWR = Main.pwrj.getDelegatedPWR(getAddress(), validator);
 
             if (delegatedPWR == 0) {
                 initialDelegations.remove(validator.toLowerCase());

@@ -8,10 +8,9 @@ import Main.Settings;
 import User.Users;
 import User.User;
 import Validator.Validators;
-import com.github.pwrlabs.pwrj.Delegator.Delegator;
-import com.github.pwrlabs.pwrj.Transaction.Transaction;
-import com.github.pwrlabs.pwrj.Validator.Validator;
-import com.github.pwrlabs.pwrj.protocol.PWRJ;
+import com.github.pwrlabs.pwrj.entities.Delegator;
+import com.github.pwrlabs.pwrj.entities.FalconTransaction;
+import com.github.pwrlabs.pwrj.entities.Validator;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import Txn.Txns;
@@ -27,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import Main.Main;
 
 import static spark.Spark.get;
 
@@ -97,7 +97,7 @@ public class GET {
                         "marketCap", 1000000000L,
                         "totalTransactionsCount", Txns.getTxnCount(),
                         "blocksCount", blockNumberToCheck,
-                        "validators", PWRJ.getActiveValidatorsCount(),
+                        "validators", Main.pwrj.getActiveValidatorsCount(),
                         "tps", Blocks.getAverageTps(100),
                         "txns", txns,
                         "blocks", blocks
@@ -184,16 +184,16 @@ public class GET {
 
                 long blockNumber = Long.parseLong(request.queryParams("blockNumber"));
 
-                com.github.pwrlabs.pwrj.Block.Block block = PWRJ.getBlockByNumber(blockNumber);
+                com.github.pwrlabs.pwrj.entities.Block block = Main.pwrj.getBlockByNumber(blockNumber);
                 if(block == null) return getError(response, "Invalid Block Number");
 
                 return getSuccess(
                         "blockHeight", blockNumber,
-                        "timeStamp", block.getTimestamp(),
+                        "timeStamp", block.getTimeStamp(),
                         "txnsCount", block.getTransactionCount(),
-                        "blockSize", block.getSize(),
-                        "blockReward", block.getReward(),
-                        "blockSubmitter", block.getSubmitter(),
+                        "blockSize", block.getBlockSize(),
+                        "blockReward", block.getBlockReward(),
+                        "blockSubmitter", block.getProposer(),
                         "blockConfirmations", Blocks.getLatestBlockNumber() - blockNumber);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -212,35 +212,40 @@ public class GET {
                 int previousTxnsCount = (page - 1) * count;
                 int totalTxnCount, totalPages;
 
-                com.github.pwrlabs.pwrj.Block.Block block = PWRJ.getBlockByNumber(blockNumber);
+                com.github.pwrlabs.pwrj.entities.Block block = Main.pwrj.getBlockByNumber(blockNumber);
                 if(block == null) return getError(response, "Invalid Block Number");
 
                 int txnsCount = 0;
                 JSONArray txns = new JSONArray();
-                Transaction[] txnsArray = block.getTransactions();
-                //Txn[] txnsArray = block.getTxns();
+                List<FalconTransaction> transactions = Main.pwrj.getTransactionsByHashes(block.getTransactionHashes());
 
-                if(txnsArray == null) totalTxnCount = 0;
-                else totalTxnCount = txnsArray.length;
+                if(transactions == null) totalTxnCount = 0;
+                else totalTxnCount = transactions.size();
 
                 totalPages = totalTxnCount / count;
                 if(totalTxnCount % count != 0) ++totalPages;
 
-                for(int t = previousTxnsCount; t < txnsArray.length; ++t) {
-                    Transaction txn = txnsArray[t];
-                    //Txn txn = txnsArray[t];
-                    if(txn == null) continue;
+                for(FalconTransaction txn: transactions) {
                     if(txnsCount == count) break;
+
+                    long value = 0;
+                    if(txn instanceof FalconTransaction.FalconTransfer) {
+                        FalconTransaction.FalconTransfer transferTxn = (FalconTransaction.FalconTransfer) txn;
+                        value = transferTxn.getAmount();
+                    } else if (txn instanceof FalconTransaction.PayableVidaDataTxn) {
+                        FalconTransaction.PayableVidaDataTxn vmDataTxn = (FalconTransaction.PayableVidaDataTxn) txn;
+                        value = vmDataTxn.getValue();
+                    }
 
                     JSONObject object = new JSONObject();
 
-                    object.put("txnHash", txn.getHash());
+                    object.put("txnHash", txn.getTransactionHash());
                     object.put("txnType", txn.getType());
                     object.put("blockNumber", blockNumber);
-                    object.put("timeStamp", block.getTimestamp());
+                    object.put("timeStamp", block.getTimeStamp());
                     object.put("from", txn.getSender());
-                    object.put("to", txn.getTo());
-                    object.put("value", txn.getValue());
+                    object.put("to", txn.getReceiver());
+                    object.put("value", value);
 
                     txns.put(object);
                     ++txnsCount;
@@ -393,7 +398,7 @@ public class GET {
 
                 String address = request.queryParams("userAddress").toLowerCase();
 
-                long balance = PWRJ.getBalanceOfAddress(address);
+                long balance = Main.pwrj.getBalanceOfAddress(address);
                 long usdValue = balance * Settings.getPrice();
                 BigDecimal usdValueBigDec = new BigDecimal(usdValue).divide(BigDecimal.valueOf((long) Math.pow(10, 11)));
 
@@ -409,7 +414,7 @@ public class GET {
                 response.header("Content-Type", "application/json");
                 String userAddress = request.queryParams("userAddress");
 
-                return getSuccess("nonce", PWRJ.getNonceOfAddress(userAddress));
+                return getSuccess("nonce", Main.pwrj.getNonceOfAddress(userAddress));
             } catch (Exception e) {
                 e.printStackTrace();
                 return getError(response, e.getLocalizedMessage());
@@ -520,8 +525,8 @@ public class GET {
                 int count = Integer.parseInt(request.queryParams("count"));
                 int page = Integer.parseInt(request.queryParams("page"));
 
-                List<Validator> activeValidators = PWRJ.getAllValidators();
-                List<Validator> standbyValidators = PWRJ.getStandbyValidators();
+                List<Validator> activeValidators = Main.pwrj.getAllValidators();
+                List<Validator> standbyValidators = Main.pwrj.getStandbyValidators();
                 int totalValidatorsCount = activeValidators.size() + standbyValidators.size();
                 int availablePages = totalValidatorsCount / count;
                 if(totalValidatorsCount % count != 0) ++availablePages;
@@ -541,8 +546,8 @@ public class GET {
 
                 List<String> activeValidatorsList = new LinkedList<>();
                 for(Validator validator : activeValidators) activeValidatorsList.add(validator.getAddress());
-//                BigDecimal oldShareValues = PWRJ.getShareValue(activeValidatorsList, blockNumberToCheck);
-//                JSONObject currentShareValues = PWRJ.getShareValue(activeValidatorsList, currentBlockNumber);
+//                BigDecimal oldShareValues = Main.pwrj.getShareValue(activeValidatorsList, blockNumberToCheck);
+//                JSONObject currentShareValues = Main.pwrj.getShareValue(activeValidatorsList, currentBlockNumber);
 
 //                Map<String, BigDecimal> apyByValidator = new HashMap<>();
 //                for(String validator: activeValidatorsList) {
@@ -569,7 +574,7 @@ public class GET {
 
                 int startingIndex = (page - 1) * count;
                 JSONArray validatorsArray = new JSONArray();
-                long activeVotingPower = PWRJ.getActiveVotingPower();
+                long activeVotingPower = Main.pwrj.getActiveVotingPower();
                 for(int t = startingIndex; t < totalValidatorsCount; ++t) {
                     Validator validator;
 
@@ -606,9 +611,9 @@ public class GET {
                 metadata.put("previousPage", page > 1 ? page - 1 : -1);
 
                 return getSuccess(
-                        "activeValidatorsCount", PWRJ.getActiveValidatorsCount(),
-                        "activeVotingPower", BigDecimal.valueOf(PWRJ.getActiveVotingPower()).divide(BigDecimal.TEN.pow(9), 0, BigDecimal.ROUND_HALF_UP),
-                        "delegatorsCount", PWRJ.getTotalDelegatorsCount(),
+                        "activeValidatorsCount", Main.pwrj.getActiveValidatorsCount(),
+                        "activeVotingPower", BigDecimal.valueOf(Main.pwrj.getActiveVotingPower()).divide(BigDecimal.TEN.pow(9), 0, BigDecimal.ROUND_HALF_UP),
+                        "delegatorsCount", Main.pwrj.getTotalDelegatorsCount(),
                         "validators", validatorsArray,
                         "metadata", metadata);
             } catch (Exception e) {
@@ -625,14 +630,14 @@ public class GET {
                 int count = Integer.parseInt(request.queryParams("count"));
                 int page = Integer.parseInt(request.queryParams("page"));
 
-                Validator v = PWRJ.getValidator(validatorAddress);
+                Validator v = Main.pwrj.getValidator(validatorAddress);
                 if(v == null) return getError(response, "Invalid Validator Address");
 
                 int totalPages = v.getDelegatorsCount() / count;
                 if(v.getDelegatorsCount() % count != 0) ++totalPages;
                 int startingIndex = (page - 1) * count;
 
-                List<Delegator> delegators = v.getDelegators();
+                List<Delegator> delegators = v.getDelegators(Main.pwrj);
                 JSONArray delegatorsArray = new JSONArray();
                 for (int t = startingIndex; t < v.getDelegatorsCount(); ++t) {
                     Delegator delegator = delegators.get(t);
@@ -686,7 +691,7 @@ public class GET {
                 for(String validator: delegatedValidators) {
                     long delegatedPWR = u.getDelegatedAmount(validator);
                     totalDelegatedPWR += delegatedPWR;
-                    totalRewards += PWRJ.getDelegatedPWR(userAddress, validator) - delegatedPWR;
+                    totalRewards += Main.pwrj.getDelegatedPWR(userAddress, validator) - delegatedPWR;
                 }
 
                 JSONArray portfolioAllocation = new JSONArray();
@@ -705,8 +710,8 @@ public class GET {
                 long blockNumberToCheck = currentBlockNumber - 34560;
                 if(blockNumberToCheck < 0) blockNumberToCheck = 1;
                 long timeDifference = Blocks.getBlock(currentBlockNumber).getTimeStamp() - Blocks.getBlock(blockNumberToCheck).getTimeStamp();
-//                JSONObject oldShareValues = PWRJ.getShareValue(delegatedValidators, blockNumberToCheck);
-//                JSONObject currentShareValues = PWRJ.getShareValue(delegatedValidators, currentBlockNumber);
+//                JSONObject oldShareValues = Main.pwrj.getShareValue(delegatedValidators, blockNumberToCheck);
+//                JSONObject currentShareValues = Main.pwrj.getShareValue(delegatedValidators, currentBlockNumber);
 
 //                Map<String, BigDecimal> apyByValidator = new HashMap<>();
 //                for(String validator: delegatedValidators) {
@@ -730,13 +735,13 @@ public class GET {
 //                }
 
                 for(String validator: delegatedValidators) {
-                    Validator v = PWRJ.getValidator(validator);
+                    Validator v = Main.pwrj.getValidator(validator);
 
                     JSONObject object = new JSONObject();
                     object.put("name", validator);
                     object.put("status", v.getStatus());
                     object.put("votingPower", v.getVotingPower());
-                    object.put("totalPowerShare", BigDecimal.valueOf(v.getVotingPower()).divide(BigDecimal.valueOf(PWRJ.getActiveVotingPower()), 4, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100)));
+                    object.put("totalPowerShare", BigDecimal.valueOf(v.getVotingPower()).divide(BigDecimal.valueOf(Main.pwrj.getActiveVotingPower()), 4, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100)));
                     object.put("delegatedPWR", u.getDelegatedAmount(validator));
                     object.put("apy", 5);
                 }

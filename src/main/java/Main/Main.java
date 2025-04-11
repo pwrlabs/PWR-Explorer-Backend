@@ -1,7 +1,6 @@
 package Main;
 
 import API.GET;
-import API.POST;
 import API.RateLimiter;
 import PWRChain.Synchronizer;
 import User.User;
@@ -12,6 +11,7 @@ import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import static spark.Spark.*;
 
 public class Main {
+    public static final PWRJ pwrj = new PWRJ("http://localhost:8085/");
 
     public static void main(String[] args) throws NoSuchMethodException {
         port(8080);
@@ -45,12 +45,9 @@ public class Main {
         });
         before((request, response) -> response.header("Access-Control-Allow-Origin", "*"));
 
-        PWRJ.setRpcNodeUrl("https://pwrrpc.pwrlabs.io/");
-
         RateLimiter.initRateLimiter();
 
         GET.run();
-        POST.run();
 
         DBM.loadAllObjectsFromDatabase(Block.Block.class);
         DBM.loadAllObjectsFromDatabase(VM.class);

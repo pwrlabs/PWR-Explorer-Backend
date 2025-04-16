@@ -53,8 +53,6 @@ public class Queries {
             long blockNumber, String blockHash, String feeRecipient, long timestamp, int transactionsCount,
             long blockReward, int size, boolean success
     ) {
-        String blockNumberStr = "" + blockNumber;
-        new Block(blockHash, blockNumberStr, timestamp, feeRecipient, blockReward, size, transactionsCount);
         String sql = "INSERT INTO \"Block\" (" +
                 BLOCK_NUMBER + ", " +
                 BLOCK_HASH + ", " +
@@ -254,6 +252,10 @@ public class Queries {
         NewTxn txn = null;
         String tableName = getTransactionsTableName(hash);
 
+        if (hash != null && hash.startsWith("0x")) {
+            hash = hash.substring(2);
+        }
+
         String sql = "SELECT * FROM " + tableName + " WHERE " + HASH + " = ?;";
 
         try (QueryResult result = executeQuery(sql, hash)) {
@@ -288,17 +290,21 @@ public class Queries {
         List<NewTxn> txns = new ArrayList<>();
         String tableName = getTransactionsTableName("0");
 
+        pageSize = Math.min(Math.max(1, pageSize), 1000);
+        page = Math.max(1, page);
+
         if (pageSize * page > 100_000) {
             page = (int) Math.ceil((double) 100_000 / pageSize);
         }
 
+        int offset = Math.max(0, (page - 1) * pageSize);
+
         String sql = "SELECT * " +
                 "FROM " + tableName +
-                " WHERE id > ? " +
-                "ORDER BY id DESC " +
-                "LIMIT ?;";
+                " ORDER BY block_number DESC, position_in_block ASC " +
+                "LIMIT ? OFFSET ?;";
 
-        try (QueryResult result = executeQuery(sql, page, pageSize)) {
+        try (QueryResult result = executeQuery(sql, pageSize, offset)) {
             ResultSet rs = result.ResultSet();
             while (rs.next()) {
                 NewTxn txn = populateNewTxnObject(rs);

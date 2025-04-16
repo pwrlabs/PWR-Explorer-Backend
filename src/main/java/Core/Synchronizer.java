@@ -14,7 +14,6 @@ public class Synchronizer {
         new Thread(() -> {
             long blockToCheck = getLastBlockNumber();
             if (blockToCheck == 0) blockToCheck = 1;
-
             while (true) {
                 try {
                     long latestBlockNumber = pwrj.getLatestBlockNumber();
@@ -22,7 +21,7 @@ public class Synchronizer {
                     while (blockToCheck <= latestBlockNumber) {
                         long startTime = System.currentTimeMillis();
                         try {
-                            Block block = pwrj.getBlockByNumberExcludingDataAndExtraData(blockToCheck);
+                            Block block = pwrj.getBlockByNumber(blockToCheck);
                             try {
                                 String proposer = block.getProposer().startsWith("0x") ? block.getProposer() : "0x" + block.getProposer();
                                 insertBlock(block.getBlockNumber(), block.getBlockHash().toLowerCase(), proposer,

@@ -7,6 +7,8 @@ import static spark.Spark.path;
 
 public class GET {
     public static void run() {
+        get("/", (req, res) -> "Server is running");
+
         get("/test/", (request, response) -> {
             try {
                 response.header("Content-Type", "application/json");

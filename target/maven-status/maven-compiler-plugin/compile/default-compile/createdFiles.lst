@@ -1,8 +1,6 @@
 Utils\Settings.class
 Utils\Stats.class
 Core\Synchronizer.class
-API\POST.class
-Main.class
 API\IptablesBlocker.class
 Database\DatabaseConnection.class
 Services\StakingService.class
@@ -23,6 +21,7 @@ Utils\ResponseBuilder.class
 Database\DatabaseInitialization.class
 Core\Cache\CacheManager.class
 Network\OHTTP.class
+Main\Main.class
 Services\BlockService.class
 API\RateLimiter.class
 DataModel\NewTxn.class

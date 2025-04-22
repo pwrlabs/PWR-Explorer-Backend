@@ -20,7 +20,7 @@ public class GET {
 
         //Explorer Calls
         get("/explorerInfo/", GeneralService::getExplorerInfo);
-        get("/dailyStats", GeneralService::getDailyStats);
+        get("/dailyStats", GeneralService::getDailyStats);//not used in UI
 
         // Block calls
         get("/latestBlocks/", BlockService::getLatestBlocks);

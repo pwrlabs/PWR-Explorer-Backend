@@ -31,6 +31,8 @@ public class NodeService {
     }
 
     public static Object getNodesInfo(Request request, Response response) throws Exception {
+        response.header("Content-Type", "application/json");
+
         int count = validateAndParseCountParam(request.queryParams("count"), response);
         int page = validateAndParsePageParam(request.queryParams("page"), response);
         int offset = (page - 1) * count;
@@ -70,7 +72,7 @@ public class NodeService {
 
                 // Create and populate node object
                 nodesArray.put(new JSONObject()
-                        .put("address", "0x" + address)
+                        .put("address", returnHexStringWith0x(address))
                         .put("host", node.getIp())
                         .put("votingPowerInPercentage", votingPower)
                         .put("votingPowerInPwr", node.getVotingPower())

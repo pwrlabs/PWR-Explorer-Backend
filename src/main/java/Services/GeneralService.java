@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static Database.Queries.getLastXTransactions;
+import static Utils.Helpers.returnHexStringWith0x;
 import static Utils.ResponseBuilder.getError;
 import static Utils.ResponseBuilder.getSuccess;
 
@@ -46,7 +47,7 @@ public class GeneralService {
                     object.put("timeStamp", block.timeStamp() / 1000);
                     object.put("txnsCount", block.txnCount());
                     object.put("blockReward", block.blockReward());
-                    object.put("blockSubmitter", "0x" + block.blockSubmitter());
+                    object.put("blockSubmitter", returnHexStringWith0x(block.blockSubmitter()));
                     blocks.put(object);
                 }
                 return new JSONArray().put(blocks);
@@ -58,10 +59,10 @@ public class GeneralService {
                 for (NewTxn txn : txnsList) {
                     if (txn == null) continue;
                     JSONObject object = new JSONObject();
-                    object.put("txnHash", txn.hash());
+                    object.put("txnHash", returnHexStringWith0x(txn.hash()));
                     object.put("timeStamp", txn.timestamp() / 1000);
-                    object.put("from", "0x" + txn.fromAddress());
-                    object.put("to", txn.toAddress());
+                    object.put("from", returnHexStringWith0x(txn.fromAddress()));
+                    object.put("to", returnHexStringWith0x(txn.toAddress()));
                     object.put("value", txn.value());
                     txns.put(object);
                 }
@@ -125,7 +126,7 @@ public class GeneralService {
                 object.put("timeStamp", block.timeStamp() / 1000);
                 object.put("txnsCount", block.txnCount());
                 object.put("blockReward", block.blockReward());
-                object.put("blockSubmitter", "0x" + block.blockSubmitter());
+                object.put("blockSubmitter", returnHexStringWith0x(block.blockSubmitter()));
 
                 blocks.put(object);
             }
@@ -134,10 +135,10 @@ public class GeneralService {
             for (NewTxn txn : txnsList) {
                 if (txn == null) continue;
                 JSONObject object = new JSONObject();
-                object.put("txnHash", txn.hash());
+                object.put("txnHash", returnHexStringWith0x(txn.hash()));
                 object.put("timeStamp", txn.timestamp() / 1000);
-                object.put("from", "0x" + txn.fromAddress());
-                object.put("to", txn.toAddress());
+                object.put("from", returnHexStringWith0x(txn.fromAddress()));
+                object.put("to", returnHexStringWith0x(txn.toAddress()));
                 object.put("value", txn.value());
 
                 txns.put(object);

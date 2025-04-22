@@ -20,7 +20,7 @@ public class Config {
         }
 
         try {
-            pwrRpcUrl = config.optString("pwrRpcUrl", "https://pwrrpc.pwrlabs.io/");
+            pwrRpcUrl = config.optString("pwrRpcUrl", "http://46.101.151.203:8085/");
             databaseUserName = config.optString("databaseUserName", "postgres");
 
             //#region Main.Main explorer configs

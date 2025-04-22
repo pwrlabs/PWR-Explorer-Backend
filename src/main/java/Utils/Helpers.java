@@ -58,12 +58,12 @@ public class Helpers {
         BigDecimal feeValueInUSD = pwrAmount.multiply(ONE_PWR_TO_USD).setScale(9, RoundingMode.HALF_EVEN);
 
         JSONObject object = new JSONObject();
-        object.put("txnHash", txn.hash());
+        object.put("txnHash", returnHexStringWith0x(txn.hash()));
         object.put("txnType", txn.txnType());
         object.put("block", txn.blockNumber());
         object.put("timeStamp", txn.timestamp() / 1000);
-        object.put("from", txn.fromAddress());
-        object.put("to", txn.toAddress());
+        object.put("from", returnHexStringWith0x(txn.fromAddress()));
+        object.put("to", returnHexStringWith0x(txn.toAddress()));
         object.put("value", txn.value());
         object.put("txnFee", fee);
         object.put("valueInUsd", txn.value());
@@ -72,5 +72,14 @@ public class Helpers {
         );
         return object;
     }
-
+    /**
+     * * Adds '0x' prefix to a hex string if it doesn't already have it.
+     */
+    public static String returnHexStringWith0x(String hexString){
+        if (hexString.startsWith("0x")) {
+            return hexString.toLowerCase();
+        } else {
+            return "0x" + hexString.toLowerCase();
+        }
+    }
 }

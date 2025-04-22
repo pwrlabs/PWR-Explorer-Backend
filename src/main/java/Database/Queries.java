@@ -439,6 +439,11 @@ public class Queries {
     }
 
     public static List<NewTxn> getUserTxns(String address, int page, int pageSize) {
+        if(address.startsWith("0x")){
+            address= address.substring(2);
+        }
+        address= address.toLowerCase();
+
         List<NewTxn> txns = new ArrayList<>();
 
         if (pageSize * page > 100_000) {
@@ -736,30 +741,17 @@ public class Queries {
         return totalCount;
     }
 
-    public static int getTotalTxnCount(String address) {
-        String sql = "SELECT " + TRANSACTIONS_COUNT + " FROM \"UsersHistory\" WHERE " + ADDRESS + " = ?";
-
-        try (QueryResult result = executeQuery(sql, "0x" + address.toLowerCase())) {
-            ResultSet rs = result.ResultSet();
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (Exception e) {
-            logger.error("Error getting results from parallel queries", e);
-        }
-
-        return 0;
-    }
-
     public static Pair<NewTxn, NewTxn> getFirstAndLastTransactionsByAddress(String address) {
+        if(address.startsWith("0x")){
+            address= address.substring(2);
+        }
+        address = address.toLowerCase();
         NewTxn firstTxn = null;
         NewTxn lastTxn = null;
 
-        String sql = "SELECT " + FIRST_TXN_HASH + ", " + FIRST_TXN_TIMESTAMP + ", " +
-                LAST_TXN_TIMESTAMP + ", " + LAST_TXN_HASH + " " +
-                "FROM \"UsersHistory\" WHERE address = ?";
+        String sql = "SELECT * FROM \"UsersHistory\" WHERE address = ?";
 
-        try (QueryResult result = executeQuery(sql, "0x" + address.toLowerCase())) {
+        try (QueryResult result = executeQuery(sql, address)) {
             ResultSet rs = result.ResultSet();
             if (rs.next()) {
                 // Populate first transaction

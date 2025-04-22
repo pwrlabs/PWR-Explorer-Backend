@@ -15,8 +15,7 @@ import spark.Response;
 import java.util.List;
 
 import static Database.Queries.*;
-import static Utils.Helpers.validateAndParseCountParam;
-import static Utils.Helpers.validateAndParsePageParam;
+import static Utils.Helpers.*;
 import static Utils.ResponseBuilder.getError;
 import static Utils.ResponseBuilder.getSuccess;
 
@@ -47,7 +46,7 @@ public class BlockService {
                 object.put("timeStamp", block.timeStamp() / 1000);
                 object.put("txnsCount", block.txnCount());
                 object.put("blockReward", block.blockReward());
-                object.put("blockSubmitter", "0x" + block.blockSubmitter());
+                object.put("blockSubmitter", returnHexStringWith0x(block.blockSubmitter()));
                 blocksArray.put(object);
             }
 
@@ -77,12 +76,12 @@ public class BlockService {
 
             return getSuccess(
                     "blockHeight", blockNumber,
-                    "blockHash", "0x" + block.blockHash(),
+                    "blockHash", returnHexStringWith0x(block.blockHash()),
                     "timeStamp", block.timeStamp() / 1000,
                     "txnsCount", block.txnCount(),
                     "blockSize", block.blockSize(),
                     "blockReward", block.blockReward(),
-                    "blockSubmitter", "0x" + block.blockSubmitter(),
+                    "blockSubmitter", returnHexStringWith0x(block.blockSubmitter()),
                     "blockConfirmations", cacheManager.getBlocksCount() - blockNumber);
         } catch (Exception e) {
             return getError(response, "Failed to get block details: " + e.getLocalizedMessage());
@@ -136,7 +135,7 @@ public class BlockService {
 
                 JSONObject object = new JSONObject();
 
-                object.put("txnHash", txn.hash());
+                object.put("txnHash", returnHexStringWith0x(txn.hash()));
                 object.put("txnType", txn.txnType());
                 object.put("blockNumber", blockNumber);
                 object.put("timeStamp", block.timeStamp() / 1000);

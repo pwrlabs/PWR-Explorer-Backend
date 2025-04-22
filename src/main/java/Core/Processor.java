@@ -42,8 +42,9 @@ public class Processor {
             }
 
             try {
+                String sender = txn.getSender().startsWith("0x") ? txn.getSender().substring(2) : txn.getSender();
                 insertTxn(txn.getTransactionHash().toLowerCase(), block.getBlockNumber(), txn.getPositionInBlock(),
-                        txn.getSender().substring(2), txn.getReceiver(), txn.getTimestamp(),
+                        sender, txn.getReceiver(), txn.getTimestamp(),
                         value, txn.getType(), txn.getPaidTotalFee(), !txn.isSuccess());
 
                 processUserTransaction(txn.getSender().toLowerCase(), txn.getTransactionHash(), txn.getTimestamp());

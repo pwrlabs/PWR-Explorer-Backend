@@ -75,7 +75,7 @@ public class TransactionService {
 
             String data = null;
             if (txn instanceof FalconTransaction.PayableVidaDataTxn vidaDataTxn) {
-                data = Hex.toHexString(vidaDataTxn.getData());
+                data = returnHexStringWith0x(Hex.toHexString(vidaDataTxn.getData()));
             }
 
             long txnFee = txn.getPaidTotalFee();
@@ -94,18 +94,18 @@ public class TransactionService {
 
             BigDecimal feeValueInUSD = pwrAmount.multiply(ONE_PWR_TO_USD).setScale(9, RoundingMode.HALF_EVEN);
             return getSuccess(
-                    "txnHash", txnHash,
+                    "txnHash", returnHexStringWith0x(txnHash),
                     "txnType", txn.getType(),
                     "blockNumber", txn.getBlockNumber(),
                     "timeStamp", txn.getTimestamp() / 1000,
-                    "from", txn.getSender(),
-                    "to", txn.getReceiver(),
+                    "from", returnHexStringWith0x(txn.getSender()),
+                    "to", returnHexStringWith0x(txn.getReceiver()),
                     "value", value,
                     "valueInUsd", value, //TODO: Add conversion to USD
                     "success", txn.isSuccess(),
                     "txnFee", txnFee,
                     "txnFeeInUsd", feeValueInUSD,
-                    "data", data == null ? data : data.toLowerCase(),
+                    "data", data == null ? "0x" : data.toLowerCase(),
                     "size", txn.getSize(),
                     "errorMessage", txn.getErrorMessage() != null ? txn.getErrorMessage() : null
             );
@@ -123,13 +123,14 @@ public class TransactionService {
             if (address == null) {
                 return getError(response, "Address is required");
             }
-            address = address.substring(2).toLowerCase();
+            if(address.startsWith("0x"))address = address.substring(2);
+            address= address.toLowerCase();
 
             int count = validateAndParseCountParam(request.queryParams("count"), response);
             int page = validateAndParsePageParam(request.queryParams("page"), response);
 
             List<NewTxn> txns = getUserTxns(address, page, count);
-            int totalTxnCount = getTotalTxnCount(address);
+            int totalTxnCount = getTotalTxnCountOld(address);
             System.out.println("=========== " +totalTxnCount);
 
             JSONArray transactions = new JSONArray();
@@ -149,7 +150,7 @@ public class TransactionService {
             JSONObject firstLastTxnsObject = new JSONObject();
             if (firstLastTxns.first() != null) {
                 JSONObject firstTxnObject = new JSONObject();
-                firstTxnObject.put("txnHash", firstLastTxns.first().hash());
+                firstTxnObject.put("txnHash", returnHexStringWith0x(firstLastTxns.first().hash()));
                 firstTxnObject.put("block", firstLastTxns.first().blockNumber());
                 firstTxnObject.put("timeStamp", firstLastTxns.first().timestamp() / 1000);
                 firstLastTxnsObject.put("firstTransaction", firstTxnObject);
@@ -157,7 +158,7 @@ public class TransactionService {
 
             if (firstLastTxns.second() != null) {
                 JSONObject lastTxnObject = new JSONObject();
-                lastTxnObject.put("txnHash", firstLastTxns.second().hash());
+                lastTxnObject.put("txnHash", returnHexStringWith0x(firstLastTxns.second().hash()));
                 lastTxnObject.put("block", firstLastTxns.second().blockNumber());
                 lastTxnObject.put("timeStamp", firstLastTxns.second().timestamp() / 1000);
                 firstLastTxnsObject.put("lastTransaction", lastTxnObject);

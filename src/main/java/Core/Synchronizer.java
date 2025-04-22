@@ -12,7 +12,7 @@ public class Synchronizer {
 
     public static void sync(PWRJ pwrj) {
         new Thread(() -> {
-            long blockToCheck = getLastBlockNumber();
+            long blockToCheck = getLastBlockNumber()+1;
             if (blockToCheck == 0) blockToCheck = 1;
             while (true) {
                 try {

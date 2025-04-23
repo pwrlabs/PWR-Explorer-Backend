@@ -24,7 +24,7 @@ Copy the built JAR from the build stage here we should put the new jar name
 COPY --from=build /app/target/PWR-Explorer-1.0-SNAPSHOT.jar /app/Explorer-Backend-dev.jar
 
 Expose the port that the server will listen on
-EXPOSE 8080
+EXPOSE 8081
 
 Default command to run the JAR file
 CMD ["java", "-jar", "/app/Explorer-Backend-dev.jar"]

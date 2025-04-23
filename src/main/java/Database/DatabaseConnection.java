@@ -12,7 +12,7 @@ public class DatabaseConnection {
         HikariConfig config = new HikariConfig();
         config.setPassword(Config.getDatabasePassword());
 
-        config.setJdbcUrl("jdbc:postgresql://localhost:5432/" + Config.getDatabaseName() + "?characterEncoding=UTF-8");
+        config.setJdbcUrl(Config.getDbURL());
         config.setUsername(Config.getDatabaseUserName());
         config.setMaximumPoolSize(10);
 

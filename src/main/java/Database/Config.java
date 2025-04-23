@@ -1,66 +1,39 @@
 package Database;
 
-import org.json.JSONObject;
-
-import java.io.File;
-import java.nio.file.Files;
+import io.github.cdimascio.dotenv.Dotenv;
 
 public class Config {
-    private static String pwrRpcUrl, databaseUserName, databasePassword, databaseName;
+    private static final Dotenv dotenv = Dotenv.load();
 
-    static {
-        File configFile = new File("config.json");
-        JSONObject config = new JSONObject();
-        if (configFile.exists()) {
-            try {
-                config = new JSONObject(Files.readString(configFile.toPath()));
-            } catch (Exception e) {
-                System.err.println("Database.Config:static:Failed to load config file: " + e);
-            }
+    public static String getDbURL() {
+        String dbURL = dotenv.get("DB_URL");
+        if (dbURL == null || dbURL.trim().isEmpty()) {
+            throw new IllegalStateException("Database URL not found in environment variables");
         }
-
-        try {
-            pwrRpcUrl = config.optString("pwrRpcUrl", "http://46.101.151.203:8085/");
-            databaseUserName = config.optString("databaseUserName", "postgres");
-
-            //#region Main.Main explorer configs
-             databaseName = config.optString("databaseName", "pwrexplorer");
-             databasePassword = config.optString("databasePassword", "new_password");
-            //#endregion
-
-            //#region Test explorer configs
-//            databaseName = config.optString("databaseName", "testexplorer");
-//            databasePassword = config.optString("databasePassword", "KUX3bgHxE4ksPRrpu");
-            //#endregion
-
-            //#region Local explorer
-//             databasePassword = config.optString("databasePassword", "Kriko2004");
-//             databaseName = config.optString("databaseName", "testexplorer");
-            //#endregion
-
-        } catch (Exception e) {
-            System.err.println("Database.Config:static:Failed to load config file: " + e);
-
-            System.exit(0);
-        }
+        return dbURL;
     }
 
+    public static String getDatabasePassword() {
+        String dbPassword = dotenv.get("DB_PASSWORD");
+        if (dbPassword == null || dbPassword.trim().isEmpty()) {
+            throw new IllegalStateException("Database password not found in environment variables");
+        }
+        return dbPassword;
+    }
 
-    //#region Getters
     public static String getPwrRpcUrl() {
+        String pwrRpcUrl = dotenv.get("PWR_RPC_URL");
+        if (pwrRpcUrl == null || pwrRpcUrl.trim().isEmpty()) {
+            throw new IllegalStateException("PWR RPC URL not found in environment variables");
+        }
         return pwrRpcUrl;
     }
 
     public static String getDatabaseUserName() {
-        return databaseUserName;
+        String dbUserName = dotenv.get("DB_USERNAME");
+        if (dbUserName == null || dbUserName.trim().isEmpty()) {
+            throw new IllegalStateException("Database username not found in environment variables");
+        }
+        return dbUserName;
     }
-
-    public static String getDatabasePassword() {
-        return databasePassword;
-    }
-
-    public static String getDatabaseName() {
-        return databaseName;
-    }
-    //#endregion
 }

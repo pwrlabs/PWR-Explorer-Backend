@@ -22,7 +22,7 @@ public class Config {
     }
 
     public static String getPwrRpcUrl() {
-        String pwrRpcUrl = dotenv.get("PWR_RPC_URL");
+        String pwrRpcUrl = dotenv.get("RPC_URL");
         if (pwrRpcUrl == null || pwrRpcUrl.trim().isEmpty()) {
             throw new IllegalStateException("PWR RPC URL not found in environment variables");
         }

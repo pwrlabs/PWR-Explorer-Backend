@@ -48,4 +48,4 @@ jobs:
           docker pull ${{ env.DOCKER_IMAGE }}:${{ github.run_number }}
 
           # Run the Docker container
-          docker run -d --name my-explorer-container -v /root/.env:/app/.env -p 8080:8080 ${{ secrets.DOCKER_IMAGE }}:${{ github.run_number }}
+          docker run -d --name my-explorer-container -v /root/.env:/app/.env -p 8081:8081 ${{ secrets.DOCKER_IMAGE }}:${{ github.run_number }}

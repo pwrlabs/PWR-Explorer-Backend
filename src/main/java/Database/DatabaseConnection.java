@@ -10,10 +10,7 @@ public class DatabaseConnection {
 
     static {
         HikariConfig config = new HikariConfig();
-        config.setPassword(Config.getDatabasePassword());
-
         config.setJdbcUrl(Config.getDbURL());
-        config.setUsername(Config.getDatabaseUserName());
         config.setMaximumPoolSize(10);
 
         dataSource = new HikariDataSource(config);

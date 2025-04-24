@@ -30,6 +30,18 @@ public class DatabaseInitialization {
         }
     }
 
+    public static void resetDatabase() {
+        logger.info("Resetting database - dropping and recreating all tables...");
+
+        // Drop all tables first
+        dropTables();
+
+        // Then reinitialize
+        initialize();
+
+        logger.info("Database reset completed successfully.");
+    }
+
     private static final String initializeBlock = "CREATE TABLE IF NOT EXISTS \"Block\" (" +
             BLOCK_NUMBER + " BIGINT PRIMARY KEY, " +
             BLOCK_HASH + " VARCHAR(256), " +
@@ -110,7 +122,7 @@ public class DatabaseInitialization {
         }
     }
 
-    private static void dropTables() {
+    public static void dropTables() {
         try (Connection connection = getConnection()) {
             // Drop tables with foreign key constraints first (transactions tables that reference Block)
             for (int i = 0; i < NUMBER_OF_SHARDS; i++) {

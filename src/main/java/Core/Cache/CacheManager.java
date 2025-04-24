@@ -314,4 +314,29 @@ public class CacheManager {
             return 0.0;
         }
     }
+
+    public void resetCache() {
+        logger.info("Resetting all caches...");
+
+        blocksCache.synchronous().invalidateAll();
+        recentTxnCache.synchronous().invalidateAll();
+        activeValidatorsCountCache.synchronous().invalidateAll();
+        blocksCountCache.synchronous().invalidateAll();
+        totalTxnCountCache.synchronous().invalidateAll();
+        fourteenDaysTxnCache.synchronous().invalidateAll();
+        averageTpsCache.synchronous().invalidateAll();
+        blockStatsCache.synchronous().invalidateAll();
+        validatorsCache.synchronous().invalidateAll();
+        standByValidatorsCountCache.synchronous().invalidateAll();
+        activeVotingPowerCache.synchronous().invalidateAll();
+        totalVotingPowerCache.synchronous().invalidateAll();
+        txnsCountPast24Hours.synchronous().invalidateAll();
+        txnsFeesPast24Hours.synchronous().invalidateAll();
+        averageTxnFeesPast24Hours.synchronous().invalidateAll();
+        avgTxnFeePercentageChangeCache.synchronous().invalidateAll();
+        totalTxnFeesPercentageChangeCache.synchronous().invalidateAll();
+        txnCountPercentageChangeCache.synchronous().invalidateAll();
+
+        logger.info("All caches have been reset successfully.");
+    }
 }

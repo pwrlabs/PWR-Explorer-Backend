@@ -50,6 +50,10 @@ public class GET {
             get("/portfolio/", StakingService::getPortfolio);
         });
         get("/stats", StakingService::getStats);
+
+        path("/admin/", () -> {
+            get("reset/", AdminService::resetSystem);
+        });
     }
 }
 

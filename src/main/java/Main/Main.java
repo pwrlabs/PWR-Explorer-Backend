@@ -2,6 +2,7 @@ package Main;
 
 import API.GET;
 import API.RateLimiter;
+import Core.Cache.CacheManager;
 import Database.Config;
 import Database.DatabaseInitialization;
 import Core.Synchronizer;
@@ -15,6 +16,8 @@ import static spark.Spark.*;
 
 public class Main {
     public static final PWRJ pwrj = new PWRJ(Config.getPwrRpcUrl());
+    public static CacheManager cacheManager;
+    public static Thread synchronizerThread;
 
     public static void main(String[] args) throws NoSuchMethodException, IOException, SQLException {
         port(8081);
@@ -52,8 +55,7 @@ public class Main {
 
         DatabaseInitialization.initialize();
 
-        // test explorer
-        PWRJ pwrj = new PWRJ(Config.getPwrRpcUrl());
+        cacheManager = new CacheManager(pwrj);
 
         BlockService.initialize(pwrj);
         NodeService.initialize(pwrj);
@@ -63,6 +65,29 @@ public class Main {
 
         GET.run();
 
-        Synchronizer.sync(pwrj);
+        startSynchronizer(pwrj);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Shutting down... Stopping synchronizer");
+            Synchronizer.stop();
+        }));
+    }
+
+    public static void startSynchronizer(PWRJ pwrj) {
+        if (Synchronizer.isRunning()) {
+            System.out.println("Cannot start synchronizer: already running");
+            return;
+        }
+
+        synchronizerThread = new Thread(() -> {
+            try {
+                Synchronizer.sync(pwrj);
+            } catch (Exception e) {
+                System.err.println("Error in synchronizer thread: " + e.getMessage());
+            }
+        });
+
+        synchronizerThread.setName("Synchronizer-Thread");
+        synchronizerThread.start();
     }
 }

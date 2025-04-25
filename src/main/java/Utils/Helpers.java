@@ -78,8 +78,10 @@ public class Helpers {
     public static String returnHexStringWith0x(String hexString){
         if (hexString.startsWith("0x")) {
             return hexString.toLowerCase();
-        } else {
+        }
+        if (hexString.length() >= 40 && hexString.matches("[0-9a-fA-F]+")) {
             return "0x" + hexString.toLowerCase();
         }
+        return hexString.toLowerCase();
     }
 }

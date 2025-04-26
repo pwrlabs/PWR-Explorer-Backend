@@ -1,7 +1,6 @@
 package Services;
 
 import Core.Synchronizer;
-import Core.Cache.CacheManager;
 import Database.DatabaseInitialization;
 import Main.Main;
 import org.apache.logging.log4j.LogManager;

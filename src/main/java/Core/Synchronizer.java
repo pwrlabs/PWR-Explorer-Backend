@@ -30,7 +30,7 @@ public class Synchronizer {
                         try {
                             String proposer = block.getProposer().startsWith("0x") ? block.getProposer() : "0x" + block.getProposer();
                             insertBlock(block.getBlockNumber(), block.getBlockHash().toLowerCase(), proposer,
-                                    block.getTimeStamp(), block.getTransactionCount(), block.getBlockReward(), block.getBlockSize(), block.isProcessedWithoutCriticalErrors()
+                                    block.getTimestamp(), block.getTransactionCount(), block.getBlockReward(), block.getBlockSize(), block.isProcessedWithoutCriticalErrors()
                             );
                             blocks++;
                             if (blocks % 10 == 0) {

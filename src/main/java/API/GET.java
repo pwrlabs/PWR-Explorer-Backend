@@ -39,10 +39,6 @@ public class GET {
         get("/balanceOf/", GeneralService::getBalanceOf);
         get("/nonceOfUser/", GeneralService::getNonceOfUser);
 
-        // Node calls
-        get("/nodesInfo/", NodeService::getNodesInfo);
-        get("/nodesStatus/", NodeService::getNodesStatus);
-
         // Staking calls
         path("/staking/", () -> {
             get("homePageInfo/", StakingService::getHomePageInfo);

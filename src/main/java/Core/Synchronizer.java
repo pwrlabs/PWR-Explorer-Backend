@@ -28,8 +28,7 @@ public class Synchronizer {
                     try {
                         Block block = pwrj.getBlockByNumber(blockToCheck);
                         try {
-                            String proposer = block.getProposer().startsWith("0x") ? block.getProposer() : "0x" + block.getProposer();
-                            insertBlock(block.getBlockNumber(), block.getBlockHash().toLowerCase(), proposer,
+                            insertBlock(block.getBlockNumber(), block.getBlockHash().toLowerCase(), block.getProposer().toLowerCase(),
                                     block.getTimestamp(), block.getTransactionCount(), block.getBlockReward(), block.getBlockSize(), block.isProcessedWithoutCriticalErrors()
                             );
                             blocks++;

@@ -64,8 +64,8 @@ public class DatabaseInitialization {
             ADDRESS + " VARCHAR(62) PRIMARY KEY, " +
             JOINING_TIME + " BIGINT, " +
             LIFETIME_REWARDS + " BIGINT, " +
-            SUBMITTED_BLOCKS + " INTEGER, " +
-            BLOCKS_SUBMITTED + " BIGINT)";
+            SUBMITTED_BLOCKS_COUNT + " INTEGER, " +
+            LATEST_BLOCK_NUMBER + " BIGINT) ";
 
     private static final String initializeUsersHistory = "CREATE TABLE IF NOT EXISTS \"UsersHistory\" (" +
             ADDRESS + " VARCHAR(256) PRIMARY KEY, " +

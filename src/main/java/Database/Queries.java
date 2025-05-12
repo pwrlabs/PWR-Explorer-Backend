@@ -3,6 +3,7 @@ package Database;
 import DataModel.Block;
 import Utils.Settings;
 import DataModel.NewTxn;
+import com.google.common.math.BigIntegerMath;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
@@ -22,7 +23,6 @@ public class Queries {
     private static final Logger logger = LogManager.getLogger(Queries.class);
     private static final int NUMBER_OF_SHARDS = 1;
 
-    //#region Insert functions
     public static void insertTxn(
             String hash, long blockNumber, int positionInBlock, String fromAddress, String toAddress,
             long timestamp, long value, String txnType, long txnFee, Boolean success
@@ -85,12 +85,16 @@ public class Queries {
     }
 
     public static void insertValidator(String address, long joiningTime) {
+        address = address.toLowerCase();
+        if(address.startsWith("0x")){
+            address = address.substring(2);
+        }
         String sql = "INSERT INTO \"Validator\" (" +
                 ADDRESS + ", " +
                 JOINING_TIME + ", " +
                 LIFETIME_REWARDS + ", " +
-                SUBMITTED_BLOCKS + ", " +
-                BLOCKS_SUBMITTED +
+                SUBMITTED_BLOCKS_COUNT + ", " +
+                LATEST_BLOCK_NUMBER +
                 ") VALUES (?,?,0,0,0)";
 
         try {
@@ -120,10 +124,7 @@ public class Queries {
             throw new RuntimeException("Failed to upsert user history", e);
         }
     }
-    //#endregion
 
-
-    //#region Update functions
     public static void updateInitialDelegations(String userAddress, String validatorAddress, long initialDelegation) {
         String sql = "INSERT INTO \"InitialDelegation\" (" + USER_ADDRESS + ", " + VALIDATOR_ADDRESS + ", " + INITIAL_DELEGATION + ") " +
                 "VALUES (?, ?, ?) " +
@@ -153,10 +154,7 @@ public class Queries {
             logger.error("Failed to update block {}: {}", blockNumber, e.getLocalizedMessage());
         }
     }
-    //#endregion
 
-
-    //#region Get functions
     public static Block getDbBlock(long blockNumber) {
         String sql = "SELECT * FROM \"Block\" WHERE " + BLOCK_NUMBER + " = ?;";
         Block block = null;
@@ -830,6 +828,10 @@ public class Queries {
     }
 
     public static JSONArray getBlocksCreated(String address, int pageSize, int page) {
+        address = address.toLowerCase();
+        if(address.startsWith("0x")){
+            address = address.substring(2);
+        }
         String sql = "SELECT " + BLOCK_NUMBER + ", " + TIMESTAMP + ", " + SUCCESS + ", " + BLOCK_REWARD + ", " + TRANSACTIONS_COUNT + " " +
                 "FROM \"Block\" WHERE LOWER(" + FEE_RECIPIENT + ") = ? " +
                 "ORDER BY " + TIMESTAMP + " DESC " +
@@ -866,7 +868,11 @@ public class Queries {
     }
 
     public static int getBlocksSubmitted(String address) {
-        String sql = "SELECT COUNT(" + BLOCK_HASH + ") FROM \"Block\" WHERE LOWER(" + FEE_RECIPIENT + ") = ?";
+        address = address.toLowerCase();
+        if(address.startsWith("0x")){
+            address = address.substring(2);
+        }
+        String sql = "SELECT " + SUBMITTED_BLOCKS_COUNT + " FROM \"Validator\" WHERE LOWER(" + ADDRESS + ") = ?";
 
         try (QueryResult result = executeQuery(sql, address)) {
             ResultSet rs = result.ResultSet();
@@ -881,7 +887,12 @@ public class Queries {
     }
 
     public static boolean isNewUser(String address) {
+        address = address.toLowerCase();
+        if(address.startsWith("0x")){
+            address = address.substring(2);
+        }
         System.out.println("Checking address " + address);
+        logger.info("Checking if user exists: {}", address);
         String sql = "SELECT COUNT(*) FROM \"UsersHistory\" WHERE \"address\" = ?";
         try (QueryResult result = executeQuery(sql, "0x" + address)) {
             ResultSet rs = result.ResultSet();
@@ -893,8 +904,6 @@ public class Queries {
         }
         return false;
     }
-    //#endregion
-
 
     /* TODO: This function was previously used to get the first and last txns for a user but since it was very slow
         it was replaced by this function getFirstAndLastTransactionsByAddress.
@@ -981,6 +990,10 @@ public class Queries {
         Note that the test explorer already supports these changes since the db was reset for it!!
      */
     public static int getTotalTxnCountOld(String address) {
+        address = address.toLowerCase();
+        if(address.startsWith("0x")){
+            address = address.substring(2);
+        }
         int totalCount = 0;
 
         String tableName = getTransactionsTableName("0");
@@ -1011,7 +1024,6 @@ public class Queries {
         which works fine and smoothly.
     */
 
-    //#region Helpers
     private static NewTxn populateNewTxnObject(ResultSet rs) throws SQLException {
         return new NewTxn(
                 rs.getString(HASH),
@@ -1034,10 +1046,7 @@ public class Queries {
 
     public record Pair<T, U>(T first, U second) {
     }
-    //#endregion
 
-
-    //#region sql executors
     private record QueryResult(
             Connection connection,
             PreparedStatement statement,
@@ -1076,6 +1085,86 @@ public class Queries {
             stmt.executeUpdate();
         }
     }
-    //#endregion
 
+    public static long getMaxProcessedBlockNumber() {
+        String sql = "SELECT MAX(" + BLOCK_NUMBER + ") FROM \"Block\"";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+                long maxBlock = rs.getLong(1);
+                return maxBlock > 0 ? maxBlock : 0;
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to get max processed block number: {}", e.getMessage());
+        }
+
+        return 0;
+    }
+
+    public static void incrementSubmittedBlocksCount(String address) {
+        address = address.toLowerCase();
+        if(address.startsWith("0x")){
+            address = address.substring(2);
+        }
+        String sql = "UPDATE \"Validator\" SET " +
+                SUBMITTED_BLOCKS_COUNT+ " = " + SUBMITTED_BLOCKS_COUNT + " + 1 " +
+                "WHERE " + ADDRESS + " = ?;";
+        try {
+            executeUpdate(sql, address.toLowerCase());
+        } catch (Exception e) {
+            logger.error("Failed to increment submitted blocks count for validator {}: {}", address, e.getLocalizedMessage());
+        }
+    }
+
+    public static void updateLifetimeReward(String address, long lifetimeRewards) {
+        address = address.toLowerCase();
+        if(address.startsWith("0x")){
+            address = address.substring(2);
+        }
+        String sql = "UPDATE \"Validator\" SET " +
+                LIFETIME_REWARDS + " = " + LIFETIME_REWARDS + " + ? " +
+                "WHERE " + ADDRESS + " = ?;";
+
+        try {
+            executeUpdate(sql, lifetimeRewards, address.toLowerCase());
+        } catch (Exception e) {
+            logger.error("Failed to update lifetime rewards for validator {}: {}", address, e.getLocalizedMessage());
+        }
+    }
+
+    public static long getLifetimeRewards(String address) {
+        address = address.toLowerCase();
+        if(address.startsWith("0x")){
+            address = address.substring(2);
+        }
+        String sql = "SELECT " + LIFETIME_REWARDS + " FROM \"Validator\" WHERE " + ADDRESS + " = ?";
+
+        try (QueryResult result = executeQuery(sql, address)) {
+            ResultSet rs = result.ResultSet();
+            if (rs.next()) {
+                return rs.getLong(LIFETIME_REWARDS);
+            }
+        } catch (Exception e) {
+            logger.error("Failed to get lifetime rewards for validator {}: {}", address, e.getLocalizedMessage());
+        }
+        return 0;
+    }
+
+    public static void updateLatestBlockNumber(String address, long blockNumber) {
+        address = address.toLowerCase();
+        if(address.startsWith("0x")){
+            address = address.substring(2);
+        }
+        String sql = "UPDATE \"Validator\" SET " +
+                LATEST_BLOCK_NUMBER + " = ? " +
+                "WHERE " + ADDRESS + " = ?;";
+        try {
+            executeUpdate(sql, blockNumber, address.toLowerCase());
+        } catch (Exception e) {
+            logger.error("Failed to update latest block number for validator {}: {}", address, e.getLocalizedMessage());
+        }
+    }
 }

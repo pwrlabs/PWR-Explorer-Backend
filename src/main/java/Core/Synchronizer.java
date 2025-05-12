@@ -1,11 +1,14 @@
 package Core;
 
 import com.github.pwrlabs.pwrj.entities.Block;
+import com.github.pwrlabs.pwrj.entities.Validator;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import Database.Queries;
 
 import static Database.Queries.*;
 
@@ -21,8 +24,28 @@ public class Synchronizer {
         logger.info("Synchronizer starting at block {}", blockToCheck);
         while (running.get()) {
             try {
+
+                long startBlockNumber = Math.max(Queries.getMaxProcessedBlockNumber(), 1);
+                logger.info("Starting synchronization from block: {}", startBlockNumber);
+                if (startBlockNumber == 0 || startBlockNumber == 1) {
+                    Block block = pwrj.getBlockByNumber(1);
+                    List<Validator> validators = pwrj.getActiveValidators();
+
+                    if (validators != null && !validators.isEmpty()) {
+                        logger.info("Inserting {} validators into the database", validators.size());
+                        for (Validator validator : validators) {
+                            String address = validator.getAddress();
+                            long joiningTime = block.getTimestamp();
+                            insertValidator(address, joiningTime);
+                        }
+                    } else {
+                        logger.warn("No active validators found");
+                    }
+                }
+
                 long latestBlockNumber = pwrj.getLatestBlockNumber();
                 logger.info("Latest block number {}", latestBlockNumber);
+
                 while (blockToCheck <= latestBlockNumber && running.get()) {
                     long startTime = System.currentTimeMillis();
                     try {
@@ -31,6 +54,9 @@ public class Synchronizer {
                             insertBlock(block.getBlockNumber(), block.getBlockHash().toLowerCase(), block.getProposer().toLowerCase(),
                                     block.getTimestamp(), block.getTransactionCount(), block.getBlockReward(), block.getBlockSize(), block.isProcessedWithoutCriticalErrors()
                             );
+                            Queries.updateLifetimeReward(block.getProposer().toLowerCase(), block.getBlockReward());
+                            Queries.incrementSubmittedBlocksCount(block.getProposer().toLowerCase());
+                            Queries.updateLatestBlockNumber(block.getProposer(), Long.parseLong(String.valueOf(block.getBlockNumber())));
                             blocks++;
                             if (blocks % 10 == 0) {
                                 logger.info("Scanned block: {}", block.getBlockNumber());

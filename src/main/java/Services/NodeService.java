@@ -9,7 +9,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import spark.Request;
 import spark.Response;
-
+import Database.Queries;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -44,13 +44,11 @@ public class NodeService {
             BigDecimal hundredBD = BigDecimal.valueOf(100L);
             BigDecimal millionBD = BigDecimal.valueOf(1000000000L);
 
-            // Fetch data once
             List<Validator> nodes = cacheManager.getActiveValidators();
             totalNodesCount = nodes.size();
             int standbyNodesCount = cacheManager.getStandByValidatorsCount();
             long totalVotingPower = cacheManager.getTotalVotingPower();
 
-            // Calculate pagination bounds
             int startIndex = Math.min(offset, totalNodesCount);
             int endIndex = Math.min(offset + count, totalNodesCount);
             List<Validator> paginatedNodes = nodes.subList(startIndex, endIndex);
@@ -60,17 +58,14 @@ public class NodeService {
             for (Validator node : paginatedNodes) {
                 String address = node.getAddress();
 
-                // Calculate voting power percentage
                 BigDecimal votingPower = new BigDecimal(node.getVotingPower())
                         .divide(activeVotingPower, 7, RoundingMode.HALF_UP)
                         .multiply(hundredBD)
                         .setScale(5, RoundingMode.HALF_UP);
 
-                // Calculate shares
-                BigDecimal sharesInPwr = new BigDecimal(node.getShares())
+                BigDecimal sharesInPwr = new BigDecimal(Queries.getLifetimeRewards(address))
                         .divide(millionBD, 9, RoundingMode.HALF_EVEN);
 
-                // Create and populate node object
                 nodesArray.put(new JSONObject()
                         .put("address", returnHexStringWith0x(address))
                         .put("host", node.getIp())

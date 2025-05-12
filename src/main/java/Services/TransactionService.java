@@ -87,6 +87,8 @@ public class TransactionService {
                 value = v.getAmount();
             } else if (txn instanceof FalconTransaction.TransferPWRFromVidaTxn v) {
                 value = v.getAmount();
+            } else if (txn instanceof FalconTransaction.FalconDelegate v){
+                value = v.getPwrAmount();
             }
 
             BigDecimal sparks = new BigDecimal(txnFee);

@@ -35,6 +35,8 @@ public class Processor {
                 value = vidaDataTxn.getValue();
             } else if (txn instanceof FalconTransaction.TransferPWRFromVidaTxn transferFromVidaTxn) {
                 value = transferFromVidaTxn.getAmount();
+            } else if (txn instanceof FalconTransaction.FalconDelegate delegateTxn) {
+                value = delegateTxn.getPwrAmount();
             }
 
             if (txn instanceof FalconTransaction.FalconJoinAsValidator joinTxn) {

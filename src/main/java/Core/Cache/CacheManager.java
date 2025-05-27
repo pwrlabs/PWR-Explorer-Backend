@@ -44,22 +44,22 @@ public class CacheManager {
     public CacheManager(PWRJ pwrj) {
         blocksCache = Caffeine.newBuilder()
                 .maximumSize(4)
-                .expireAfterWrite(10, TimeUnit.SECONDS)
+                .expireAfterWrite(2, TimeUnit.SECONDS)
                 .buildAsync(Queries::getLastXBlocks);
 
         recentTxnCache = Caffeine.newBuilder()
                 .maximumSize(4)
-                .expireAfterWrite(10, TimeUnit.SECONDS)
+                .expireAfterWrite(2, TimeUnit.SECONDS)
                 .buildAsync(Queries::getLastXTransactions);
 
         activeValidatorsCountCache = Caffeine.newBuilder()
                 .maximumSize(1)
-                .expireAfterWrite(1, TimeUnit.MINUTES)
+                .expireAfterWrite(2, TimeUnit.SECONDS)
                 .buildAsync(key -> pwrj.getActiveValidatorsCount());
 
         blocksCountCache = Caffeine.newBuilder()
                 .maximumSize(1)
-                .expireAfterWrite(20, TimeUnit.SECONDS)
+                .expireAfterWrite(2, TimeUnit.SECONDS)
                 .buildAsync(key -> getLastBlockNumber());
 
         averageTpsCache = Caffeine.newBuilder()
@@ -80,7 +80,7 @@ public class CacheManager {
         // special caches with automatics background refetch
         totalTxnCountCache = Caffeine.newBuilder()
                 .maximumSize(1)
-                .refreshAfterWrite(30, TimeUnit.SECONDS)
+                .refreshAfterWrite(2, TimeUnit.SECONDS)
                 .scheduler(Scheduler.systemScheduler())
                 .buildAsync(key -> Queries.getTotalTransactionCount());
 

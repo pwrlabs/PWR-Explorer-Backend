@@ -36,4 +36,20 @@ public class Config {
         }
         return dbUserName;
     }
+
+    public static String getDiscordBotToken() {
+        String discordBotToken = dotenv.get("DISCORD_BOT_TOKEN");
+        if (discordBotToken == null || discordBotToken.trim().isEmpty()) {
+            throw new IllegalStateException("Discord bot token not found in environment variables");
+        }
+        return discordBotToken;
+    }
+
+    public static String getDiscordChannelId() {
+        String discordChannelId = dotenv.get("DISCORD_CHANNEL_ID");
+        if (discordChannelId == null || discordChannelId.trim().isEmpty()) {
+            throw new IllegalStateException("Discord channel ID not found in environment variables");
+        }
+        return discordChannelId;
+    }
 }

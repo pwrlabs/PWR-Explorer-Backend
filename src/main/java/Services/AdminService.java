@@ -76,4 +76,43 @@ public class AdminService {
             return getError(response, "System reset already in progress");
         }
     }
+
+    public static void resetSystemInternal(String reason) {
+        boolean islocked = lock.tryLock();
+        if(islocked) {
+            try {
+                logger.info("Initiating automatic system reset due to: {}", reason);
+                new Thread(() -> {
+                    try {
+                        logger.info("Stopping synchronizer...");
+                        Synchronizer.stop();
+                        int maxWaitTime = 5;
+                        int waitedTime = 0;
+                        while (Synchronizer.isRunning() && waitedTime < maxWaitTime) {
+                            try {
+                                Thread.sleep(500);
+                                waitedTime += 0.5;
+                            } catch (InterruptedException e) {
+                                logger.warn("Interrupted while waiting for synchronizer to stop", e);
+                                break;
+                            }
+                        }
+                        logger.info("Resetting database...");
+                        DatabaseInitialization.resetDatabase();
+                        logger.info("Resetting cache...");
+                        if (Main.cacheManager != null) {
+                            Main.cacheManager.resetCache();
+                        }
+                        logger.info("Restarting synchronizer...");
+                        Main.startSynchronizer(Main.pwrj);
+                        logger.info("System reset completed successfully");
+                    } catch (Exception e) {
+                        logger.error("Error during system reset: ", e);
+                    }
+                }).start();
+            } finally {
+                lock.unlock();
+            }
+        }
+    }
 }

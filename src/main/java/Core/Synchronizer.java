@@ -1,5 +1,6 @@
 package Core;
 
+import Services.AdminService;
 import Services.DiscordAlertService;
 import com.github.pwrlabs.pwrj.entities.Block;
 import com.github.pwrlabs.pwrj.entities.Validator;
@@ -48,6 +49,12 @@ public class Synchronizer {
                 try {
                     latestBlockNumber = pwrj.getLatestBlockNumber();
                     logger.info("Latest block number {}", latestBlockNumber);
+                    if (latestBlockNumber < blockToCheck) {
+                        logger.warn("RPC reset detected! RPC block: {}, Expected: {}", latestBlockNumber, blockToCheck);
+                        DiscordAlertService.handleRpcReset();
+                        AdminService.resetSystemInternal("RPC reset detected");
+                        return;
+                    }
                     DiscordAlertService.handleRpcRecovery();
                 } catch (Exception e) {
                     logger.error("Error getting latest block number", e);

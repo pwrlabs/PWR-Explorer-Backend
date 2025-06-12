@@ -26,7 +26,7 @@ public class HealthCheckService {
     private static final String POSTMARK_SERVER_URL = "api.postmarkapp.com";
     private static final String POSTMARK_TOKEN = "7c24d497-d46a-40e3-b7d9-cb14fdf3d760";
     private static final String FROM_EMAIL = "social@pwrlabs.io";
-    private static final String TO_EMAIL = "amir619halabi@gmail.com";
+    private static final String TO_EMAIL = "rawad@pwrlabs.io";
     private static final String EXPLORER_ENDPOINT = "http://localhost:8082/explorerInfo/";
     private static final long BLOCK_TIMEOUT_MINUTES = 10;
     private static final String PWR_RPC_URL = "https://pwrrpc.pwrlabs.io/";

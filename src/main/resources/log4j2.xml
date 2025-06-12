@@ -19,6 +19,10 @@
         <Root level="info">
             <AppenderRef ref="Console"/>
         </Root>
+        <!-- Suppress reflections logs -->
+        <Logger name="org.reflections" level="warn" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
         <!-- Logger for capturing ERROR level logs to file -->
         <Logger name="ErrorLogger" level="error" additivity="false">
             <AppenderRef ref="ErrorFile"/>

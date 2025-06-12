@@ -1,5 +1,6 @@
 package Core;
 
+import Services.DiscordAlertService;
 import com.github.pwrlabs.pwrj.entities.Block;
 import com.github.pwrlabs.pwrj.entities.Validator;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
@@ -43,8 +44,16 @@ public class Synchronizer {
                     }
                 }
 
-                long latestBlockNumber = pwrj.getLatestBlockNumber();
-                logger.info("Latest block number {}", latestBlockNumber);
+                long latestBlockNumber;
+                try {
+                    latestBlockNumber = pwrj.getLatestBlockNumber();
+                    logger.info("Latest block number {}", latestBlockNumber);
+                    DiscordAlertService.handleRpcRecovery();
+                } catch (Exception e) {
+                    logger.error("Error getting latest block number", e);
+                    DiscordAlertService.handleRpcFailure();
+                    throw e;
+                }
 
                 while (blockToCheck <= latestBlockNumber && running.get()) {
                     long startTime = System.currentTimeMillis();

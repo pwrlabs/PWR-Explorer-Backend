@@ -26,6 +26,7 @@ public class DiscordAlertService {
     private static final String BOT_TOKEN = Config.getDiscordBotToken();
     private static final String CHANNEL_ID = Config.getDiscordChannelId();
     private static final long BLOCK_TIMEOUT_MINUTES = 10;
+    private static final AtomicBoolean isRpcDown = new AtomicBoolean(false);
     private static final AtomicBoolean isBlockchainDown = new AtomicBoolean(false);
 
     private static JDA jda;
@@ -193,6 +194,20 @@ public class DiscordAlertService {
                 success -> logger.info("Discord message sent successfully to channel: {}", channel.getName()),
                 failure -> logger.error("Failed to send Discord message: {}", failure.getMessage())
         );
+    }
+
+    public static void handleRpcFailure() {
+        boolean wasUp = !isRpcDown.getAndSet(true);
+        if (wasUp) {
+            sendDownAlert("RPC connection failed");
+        }
+    }
+
+    public static void handleRpcRecovery() {
+        boolean wasDown = isRpcDown.getAndSet(false);
+        if (wasDown) {
+            sendUpAlert();
+        }
     }
 
     public static String getBotDebugInfo() {

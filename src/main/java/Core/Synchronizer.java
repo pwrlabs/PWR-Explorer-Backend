@@ -1,5 +1,6 @@
 package Core;
 
+import Services.AdminService;
 import Services.DiscordAlertService;
 import com.github.pwrlabs.pwrj.entities.Block;
 import com.github.pwrlabs.pwrj.entities.Validator;
@@ -104,6 +105,7 @@ public class Synchronizer {
     private static void handleChainReset(long expected, long actual) {
         logger.warn("Chain reset detected! Expected: {}, Actual: {}", expected, actual);
         DiscordAlertService.handleRpcReset();
+        AdminService.resetSystemInternal("Chain reset detected - Expected: " + expected + ", Actual: " + actual);
     }
 
     private static boolean processBlock(PWRJ pwrj, long blockNumber) {

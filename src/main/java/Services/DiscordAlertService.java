@@ -210,6 +210,16 @@ public class DiscordAlertService {
         }
     }
 
+    public static void handleRpcReset() {
+        try {
+            String message = "@everyone ⚠️ RPC Reset Detected - Auto-resetting DB!";
+            sendDiscordMessage(message);
+            logger.info("RPC reset alert sent to Discord");
+        } catch (Exception e) {
+            logger.error("Failed to send RPC reset alert: {}", e.getMessage(), e);
+        }
+    }
+
     public static String getBotDebugInfo() {
         if (jda == null) {
             return "Discord bot not initialized";

@@ -43,9 +43,17 @@ public class Synchronizer {
                     continue;
                 }
 
-                if (blockToCheck > chainLatestBlock) {
-                    handleChainReset(blockToCheck, chainLatestBlock);
+                long lastStoredBlock = getLastBlockNumber();
+                if (chainLatestBlock < lastStoredBlock) {
+                    handleChainReset(lastStoredBlock, chainLatestBlock);
                     blockToCheck = 1;
+                    continue;
+                }
+
+                if (blockToCheck > chainLatestBlock) {
+                    if (running) {
+                        Thread.sleep(1000);
+                    }
                     continue;
                 }
 

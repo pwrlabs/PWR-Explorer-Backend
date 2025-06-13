@@ -23,7 +23,7 @@ public class Main {
     private static final Logger logger = LogManager.getLogger(Main.class);
 
     public static void main(String[] args) throws NoSuchMethodException, IOException, SQLException {
-        port(8082);
+        port(8081);
 
         options("/*",
                 (request, response) -> {

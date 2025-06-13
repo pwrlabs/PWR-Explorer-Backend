@@ -220,32 +220,38 @@ public class DiscordAlertService {
         }
     }
 
-    public static String getBotDebugInfo() {
-        if (jda == null) {
-            return "Discord bot not initialized";
+    public static Object getBotDebugInfo(Request req, Response res) {
+        try {
+            res.header("Content-Type", "text/plain");
+            if (jda == null) {
+                return "Discord bot not initialized";
+            }
+
+            StringBuilder info = new StringBuilder();
+            info.append("Bot Status: ").append(jda.getStatus()).append("\n");
+            info.append("Bot User: ").append(jda.getSelfUser().getName()).append("\n");
+            info.append("Guilds: ").append(jda.getGuilds().size()).append("\n");
+
+            TextChannel targetChannel = jda.getTextChannelById(CHANNEL_ID);
+            if (targetChannel != null) {
+                info.append("Target Channel Found: ").append(targetChannel.getName())
+                        .append(" in ").append(targetChannel.getGuild().getName()).append("\n");
+                info.append("Can Talk: ").append(targetChannel.canTalk()).append("\n");
+            } else {
+                info.append("Target Channel NOT FOUND\n");
+                info.append("Available Channels:\n");
+                jda.getTextChannels().forEach(channel ->
+                        info.append("- ").append(channel.getName())
+                                .append(" (ID: ").append(channel.getId())
+                                .append(") in ").append(channel.getGuild().getName()).append("\n")
+                );
+            }
+
+            return info.toString();
+        } catch (Exception e) {
+            logger.error("Error retrieving bot status info: {}", e.getMessage(), e);
+            return getError(res, "Failed to get bot status: " + e.getMessage());
         }
-
-        StringBuilder info = new StringBuilder();
-        info.append("Bot Status: ").append(jda.getStatus()).append("\n");
-        info.append("Bot User: ").append(jda.getSelfUser().getName()).append("\n");
-        info.append("Guilds: ").append(jda.getGuilds().size()).append("\n");
-
-        TextChannel targetChannel = jda.getTextChannelById(CHANNEL_ID);
-        if (targetChannel != null) {
-            info.append("Target Channel Found: ").append(targetChannel.getName())
-                    .append(" in ").append(targetChannel.getGuild().getName()).append("\n");
-            info.append("Can Talk: ").append(targetChannel.canTalk()).append("\n");
-        } else {
-            info.append("Target Channel NOT FOUND\n");
-            info.append("Available Channels:\n");
-            jda.getTextChannels().forEach(channel ->
-                    info.append("- ").append(channel.getName())
-                            .append(" (ID: ").append(channel.getId())
-                            .append(") in ").append(channel.getGuild().getName()).append("\n")
-            );
-        }
-
-        return info.toString();
     }
 
     private static class ExplorerHealthInfo {

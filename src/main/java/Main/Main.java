@@ -22,8 +22,8 @@ public class Main {
     public static Thread synchronizerThread;
     private static final Logger logger = LogManager.getLogger(Main.class);
 
-    public static void main(String[] args) throws NoSuchMethodException, IOException, SQLException {
-        port(8082);
+    public static void main(String[] args) throws InterruptedException {
+        port(8081);
 
         options("/*",
                 (request, response) -> {
@@ -84,6 +84,10 @@ public class Main {
 
         GET.run();
 
+        while (!DiscordAlertService.isReady()) {
+            logger.info("⏳ Waiting for Discord bot to initialize...");
+            Thread.sleep(1000);
+        }
         startSynchronizer(pwrj);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

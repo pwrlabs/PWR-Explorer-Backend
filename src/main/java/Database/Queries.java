@@ -891,8 +891,6 @@ public class Queries {
         if(address.startsWith("0x")){
             address = address.substring(2);
         }
-        System.out.println("Checking address " + address);
-        logger.info("Checking if user exists: {}", address);
         String sql = "SELECT COUNT(*) FROM \"UsersHistory\" WHERE \"address\" = ?";
         try (QueryResult result = executeQuery(sql, "0x" + address)) {
             ResultSet rs = result.ResultSet();

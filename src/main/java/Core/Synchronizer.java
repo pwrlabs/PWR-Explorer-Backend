@@ -12,21 +12,21 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import Database.Queries;
 
+import static Database.Constants.Constants.BLOCK_TIMEOUT_MINUTES;
 import static Database.Queries.*;
 
 public class Synchronizer {
     private static final Logger logger = LogManager.getLogger(Synchronizer.class);
-    private static final long BLOCK_TIMEOUT_MINUTES = 10;
 
     private static volatile boolean running = false;
     private static volatile boolean rpcHealthy = true;
     private static volatile boolean blockchainHealthy = true;
     private static int blockCounter = 0;
+    private static long previousBlockTimestamp = -1;
+    private static long previousBlockNumber = -1;
 
     public static void sync(PWRJ pwrj) {
         running = true;
@@ -85,7 +85,6 @@ public class Synchronizer {
             if (startBlockNumber <= 1) {
                 Block block = pwrj.getBlockByNumber(1);
                 List<Validator> validators = pwrj.getActiveValidators();
-
                 if (validators != null && !validators.isEmpty()) {
                     for (Validator validator : validators) {
                         insertValidator(validator.getAddress(), block.getTimestamp());
@@ -153,24 +152,51 @@ public class Synchronizer {
 
     private static void checkBlockHealth(Block block) {
         try {
-            LocalDateTime blockTime = LocalDateTime.ofInstant(
-                    Instant.ofEpochMilli(block.getTimestamp()),
-                    ZoneId.systemDefault()
-            );
-
-            long minutesSince = Duration.between(blockTime, LocalDateTime.now()).toMinutes();
-            boolean isHealthy = minutesSince < BLOCK_TIMEOUT_MINUTES;
-
-            if (!isHealthy && blockchainHealthy) {
-                blockchainHealthy = false;
-                logger.warn("Blockchain unhealthy: Block {} is {} minutes old",
-                        block.getBlockNumber(), minutesSince);
-                DiscordAlertService.handleRpcFailure();
-            } else if (isHealthy && !blockchainHealthy) {
-                blockchainHealthy = true;
-                logger.info("Blockchain recovered");
-                DiscordAlertService.handleRpcRecovery();
+            long currentBlockNumber = block.getBlockNumber();
+            long currentTimestamp = block.getTimestamp();
+            if (previousBlockNumber == -1 || previousBlockTimestamp == -1) {
+                previousBlockNumber = currentBlockNumber;
+                previousBlockTimestamp = currentTimestamp;
+                logger.info("Initializing block health check with first block: {}", currentBlockNumber);
+                return;
             }
+            if (currentBlockNumber <= previousBlockNumber) {
+                logger.debug("Skipping block {} because block number is not newer than previous ({})", currentBlockNumber, previousBlockNumber);
+                return;
+            }
+            if (currentTimestamp <= previousBlockTimestamp) {
+                logger.debug("Skipping block {} because timestamp is not newer than previous ({} <= {})",
+                        currentBlockNumber, currentTimestamp, previousBlockTimestamp);
+                return;
+            }
+            logger.info("Block {} timestamp = {}, previous = {}", currentBlockNumber,
+                    Instant.ofEpochMilli(currentTimestamp), Instant.ofEpochMilli(previousBlockTimestamp));
+            long diffMillis = currentTimestamp - previousBlockTimestamp;
+            long diffMinutes = Duration.ofMillis(diffMillis).toMinutes();
+            logger.info("Block {}, time diff with previous = {} minutes", currentBlockNumber, diffMinutes);
+            if (diffMinutes >= BLOCK_TIMEOUT_MINUTES) {
+                if (!DiscordAlertService.isBlockchainDown.get()) {
+                    logger.warn("Blockchain unhealthy: Block {} is {} minutes old", currentBlockNumber, diffMinutes);
+                    DiscordAlertService.handleBlockchainDown(
+                            "Block interval too large",
+                            currentBlockNumber,
+                            Instant.ofEpochMilli(currentTimestamp).toString(),
+                            diffMinutes
+                    );
+                }
+            } else if (DiscordAlertService.isBlockchainDown.get()) {
+                logger.info("Blockchain recovered with block {} at {} ({} mins diff)",
+                        currentBlockNumber,
+                        Instant.ofEpochMilli(currentTimestamp),
+                        diffMinutes);
+                DiscordAlertService.handleBlockchainUp(
+                        currentBlockNumber,
+                        Instant.ofEpochMilli(currentTimestamp).toString(),
+                        diffMinutes
+                );
+            }
+            previousBlockNumber = currentBlockNumber;
+            previousBlockTimestamp = currentTimestamp;
         } catch (Exception e) {
             logger.error("Error checking block health for {}", block.getBlockNumber(), e);
         }
@@ -182,7 +208,6 @@ public class Synchronizer {
                     block.getProposer().toLowerCase(), block.getTimestamp(),
                     block.getTransactionCount(), block.getBlockReward(),
                     block.getBlockSize(), block.isProcessedWithoutCriticalErrors());
-
             Queries.updateLifetimeReward(block.getProposer().toLowerCase(), block.getBlockReward());
             Queries.incrementSubmittedBlocksCount(block.getProposer().toLowerCase());
             Queries.updateLatestBlockNumber(block.getProposer(), block.getBlockNumber());

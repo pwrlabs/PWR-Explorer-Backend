@@ -30,5 +30,5 @@ public class Constants {
     public static final String LAST_TXN_HASH = "last_txn_hash";
     public static final String SUBMITTED_BLOCKS_COUNT = "submitted_blocks_count";
     public static final String LATEST_BLOCK_NUMBER = "latest_block_number";
-
+    public static final long BLOCK_TIMEOUT_MINUTES = 1;
 }

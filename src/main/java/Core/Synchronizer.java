@@ -111,7 +111,7 @@ public class Synchronizer {
 
     private static void handleChainReset(long expected, long actual) {
         logger.warn("Chain reset detected! Expected: {}, Actual: {}", expected, actual);
-        DiscordAlertService.handleRpcReset();
+//        DiscordAlertService.handleRpcReset();
         AdminService.resetSystemInternal("Chain reset detected - Expected: " + expected + ", Actual: " + actual);
     }
 
@@ -177,23 +177,23 @@ public class Synchronizer {
             if (diffMinutes >= BLOCK_TIMEOUT_MINUTES) {
                 if (!DiscordAlertService.isBlockchainDown.get()) {
                     logger.warn("Blockchain unhealthy: Block {} is {} minutes old", currentBlockNumber, diffMinutes);
-                    DiscordAlertService.handleBlockchainDown(
-                            "Block interval too large",
-                            currentBlockNumber,
-                            Instant.ofEpochMilli(currentTimestamp).toString(),
-                            diffMinutes
-                    );
+//                    DiscordAlertService.handleBlockchainDown(
+//                            "Block interval too large",
+//                            currentBlockNumber,
+//                            Instant.ofEpochMilli(currentTimestamp).toString(),
+//                            diffMinutes
+//                    );
                 }
             } else if (DiscordAlertService.isBlockchainDown.get()) {
                 logger.info("Blockchain recovered with block {} at {} ({} mins diff)",
                         currentBlockNumber,
                         Instant.ofEpochMilli(currentTimestamp),
                         diffMinutes);
-                DiscordAlertService.handleBlockchainUp(
-                        currentBlockNumber,
-                        Instant.ofEpochMilli(currentTimestamp).toString(),
-                        diffMinutes
-                );
+//                DiscordAlertService.handleBlockchainUp(
+//                        currentBlockNumber,
+//                        Instant.ofEpochMilli(currentTimestamp).toString(),
+//                        diffMinutes
+//                );
             }
             previousBlockNumber = currentBlockNumber;
             previousBlockTimestamp = currentTimestamp;
@@ -219,14 +219,14 @@ public class Synchronizer {
     private static void handleRpcError() {
         if (rpcHealthy) {
             rpcHealthy = false;
-            DiscordAlertService.handleRpcFailure();
+//            DiscordAlertService.handleRpcFailure();
         }
     }
 
     private static void handleRpcRecovery() {
         if (!rpcHealthy) {
             rpcHealthy = true;
-            DiscordAlertService.handleRpcRecovery();
+//            DiscordAlertService.handleRpcRecovery();
         }
     }
 

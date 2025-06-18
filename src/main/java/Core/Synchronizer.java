@@ -148,7 +148,7 @@ public class Synchronizer {
         } catch (Exception e) {
             String errorMessage = e.getMessage();
             if (errorMessage != null && errorMessage.contains("400")) {
-                logger.debug("Block {} not ready yet, skipping: {}", blockNumber, errorMessage);
+                logger.debug("getBlockByNumber error : Block {} not ready yet, skipping: {}", blockNumber, errorMessage);
                 return null;
             } else {
                 logger.error("RPC error getting block {}: {}", blockNumber, errorMessage, e);

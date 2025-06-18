@@ -25,7 +25,7 @@ public class DiscordAlertService {
 
     private static final String BOT_TOKEN = Config.getDiscordBotToken();
     private static final String CHANNEL_ID = Config.getDiscordChannelId();
-    private static final AtomicBoolean isRpcDown = new AtomicBoolean(false);
+    public static final AtomicBoolean isRpcDown = new AtomicBoolean(false);
     public static final AtomicBoolean isBlockchainDown = new AtomicBoolean(false);
     private static final AtomicBoolean isBotReady = new AtomicBoolean(false);
     private static volatile long lastDownAlertTime = 0; // in millis
@@ -183,7 +183,8 @@ public class DiscordAlertService {
     }
 
     public static void sendDownAlert(String reason, long blockNumber, String blockTime, long gapMinutes) {
-        String message = String.format("@everyone \uD83D\uDEA8 Explorer is DOWN!",blockNumber, gapMinutes, reason);
+        String message = String.format("@everyone 🚨 Explorer is DOWN! \n**Reason:** %s \n**Block:** %d \n**Gap:** %d minutes",
+                reason, blockNumber, gapMinutes);
         try {
             sendDiscordMessage(message);
         } catch (Exception e) {
@@ -192,7 +193,8 @@ public class DiscordAlertService {
     }
 
     public static void sendUpAlert(long blockNumber, String blockTime, long gapMinutes) {
-        String message = String.format("@everyone ✅  Explorer is back UP!",blockNumber, gapMinutes);
+        String message = String.format("@everyone ✅ Explorer is back UP! \n**Block:** %d \n**Gap:** %d minutes",
+                blockNumber, gapMinutes);
         try {
             sendDiscordMessage(message);
         } catch (Exception e) {

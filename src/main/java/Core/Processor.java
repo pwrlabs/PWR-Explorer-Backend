@@ -74,9 +74,6 @@ public class Processor {
         if (userTransactionsBuffer.isEmpty()) {
             return;
         }
-
-        logger.info("Flushing transaction buffer with {} users", userTransactionsBuffer.size());
-
         Map<String, UserTransactionInfo> batchToProcess = new HashMap<>(userTransactionsBuffer);
         userTransactionsBuffer.clear();
 
@@ -100,7 +97,6 @@ public class Processor {
                     );
                 }
             }
-            logger.info("Successfully flushed transaction buffer");
         } catch (Exception e) {
             logger.error("Error flushing transaction buffer: {}", e.getLocalizedMessage());
             userTransactionsBuffer.putAll(batchToProcess);

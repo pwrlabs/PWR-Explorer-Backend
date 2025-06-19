@@ -10,13 +10,12 @@ import org.apache.logging.log4j.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import Database.Queries;
 
 import static Database.Constants.Constants.BLOCK_TIMEOUT_MINUTES;
 import static Database.Queries.*;
+import static Services.DiscordAlertService.isRpcDown;
 
 public class Synchronizer {
     private static final Logger logger = LogManager.getLogger(Synchronizer.class);
@@ -59,7 +58,15 @@ public class Synchronizer {
 
                 while (blockToCheck <= chainLatestBlock && running) {
                     if (!processBlock(pwrj, blockToCheck)) {
-                        break;
+                        if (isRpcDown.get()) {// Check if we should continue or break
+                            break;// Actual RPC error - break the loop
+                        } else {
+                            // Just a "block not ready" condition - skip this block and try the next one
+                            logger.debug("Skipping block {} (not ready), continuing with next block", blockToCheck);
+                            blockToCheck++;
+                            throttleProcessing();
+                            continue;
+                        }
                     }
                     blockToCheck++;
                     throttleProcessing();
@@ -99,9 +106,11 @@ public class Synchronizer {
 
     private static long getChainLatestBlock(PWRJ pwrj) {
         try {
-            long latest = pwrj.getLatestBlockNumber();
-            handleRpcRecovery();
-            return latest;
+            long latestBlock = pwrj.getLatestBlockNumber();
+            if (isRpcDown.get()) {
+                handleRpcRecovery();
+            }
+            return latestBlock;
         } catch (Exception e) {
             logger.error("Error getting latest block number", e);
             handleRpcError();
@@ -121,16 +130,9 @@ public class Synchronizer {
             if (block == null) {
                 return false;
             }
-
             checkBlockHealth(block);
             insertBlockData(block);
             Processor.processIncomingBlock(block);
-
-            if (++blockCounter % 10 == 0) {
-                logger.info("Processed block: {}", blockNumber);
-                blockCounter = 0;
-            }
-
             return true;
         } catch (Exception e) {
             logger.error("Error processing block {}", blockNumber, e);
@@ -144,9 +146,15 @@ public class Synchronizer {
             handleRpcRecovery();
             return block;
         } catch (Exception e) {
-            logger.error("Error getting block {}", blockNumber, e);
-            handleRpcError();
-            return null;
+            String errorMessage = e.getMessage();
+            if (errorMessage != null && errorMessage.contains("400")) {
+                logger.debug("getBlockByNumber error : Block {} not ready yet, skipping: {}", blockNumber, errorMessage);
+                return null;
+            } else {
+                logger.error("RPC error getting block {}: {}", blockNumber, errorMessage, e);
+                handleRpcError();
+                return null;
+            }
         }
     }
 
@@ -169,12 +177,12 @@ public class Synchronizer {
                         currentBlockNumber, currentTimestamp, previousBlockTimestamp);
                 return;
             }
-            logger.info("Block {} timestamp = {}, previous = {}", currentBlockNumber,
-                    Instant.ofEpochMilli(currentTimestamp), Instant.ofEpochMilli(previousBlockTimestamp));
             long diffMillis = currentTimestamp - previousBlockTimestamp;
             long diffMinutes = Duration.ofMillis(diffMillis).toMinutes();
-            logger.info("Block {}, time diff with previous = {} minutes", currentBlockNumber, diffMinutes);
             if (diffMinutes >= BLOCK_TIMEOUT_MINUTES) {
+                logger.info("Block {} timestamp = {}, previous = {}", currentBlockNumber, Instant.ofEpochMilli(currentTimestamp), Instant.ofEpochMilli(previousBlockTimestamp));
+                logger.info("Block {}, time diff with previous = {} minutes", currentBlockNumber, diffMinutes);
+
                 if (!DiscordAlertService.isBlockchainDown.get()) {
                     logger.warn("Blockchain unhealthy: Block {} is {} minutes old", currentBlockNumber, diffMinutes);
 //                    DiscordAlertService.handleBlockchainDown(
@@ -185,6 +193,10 @@ public class Synchronizer {
 //                    );
                 }
             } else if (DiscordAlertService.isBlockchainDown.get()) {
+                // Log recovery info
+                logger.info("Block {} timestamp = {}, previous = {}", currentBlockNumber,
+                        Instant.ofEpochMilli(currentTimestamp), Instant.ofEpochMilli(previousBlockTimestamp));
+                logger.info("Block {}, time diff with previous = {} minutes", currentBlockNumber, diffMinutes);
                 logger.info("Blockchain recovered with block {} at {} ({} mins diff)",
                         currentBlockNumber,
                         Instant.ofEpochMilli(currentTimestamp),

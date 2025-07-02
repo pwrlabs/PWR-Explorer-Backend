@@ -3,6 +3,7 @@ package Database;
 import DataModel.Block;
 import Utils.Settings;
 import DataModel.NewTxn;
+import com.github.pwrlabs.pwrj.entities.FalconTransaction;
 import com.google.common.math.BigIntegerMath;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,6 +15,7 @@ import java.math.BigInteger;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static Database.Constants.Constants.*;
@@ -23,11 +25,8 @@ public class Queries {
     private static final Logger logger = LogManager.getLogger(Queries.class);
     private static final int NUMBER_OF_SHARDS = 1;
 
-    public static void insertTxn(
-            String hash, long blockNumber, int positionInBlock, String fromAddress, String toAddress,
-            long timestamp, long value, String txnType, long txnFee, Boolean success
-    ) {
-        String tableName = getTransactionsTableName("0");
+    public static void batchInsertTxns(List<FalconTransaction> txns) {
+        String tableName = getTransactionsTableName("0");  // or dynamic if needed
         String sql = "INSERT INTO " + tableName + " (" +
                 HASH + ", " +
                 BLOCK_NUMBER + ", " +
@@ -39,20 +38,51 @@ public class Queries {
                 TXN_TYPE + ", " +
                 TXN_FEE + ", " +
                 SUCCESS +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
-        try {
-            executeUpdate(sql, hash, blockNumber, positionInBlock,
-                    fromAddress.toLowerCase(), toAddress.toLowerCase(), timestamp,
-                    value, txnType, txnFee, success);
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            conn.setAutoCommit(false);
+
+            for (FalconTransaction txn : txns) {
+                long value = 0;
+                if (txn instanceof FalconTransaction.FalconTransfer t) {
+                    value = t.getAmount();
+                } else if (txn instanceof FalconTransaction.PayableVidaDataTxn t) {
+                    value = t.getValue();
+                } else if (txn instanceof FalconTransaction.TransferPWRFromVidaTxn t) {
+                    value = t.getAmount();
+                } else if (txn instanceof FalconTransaction.FalconDelegate t) {
+                    value = t.getPwrAmount();
+                }
+
+                String from = txn.getSender().startsWith("0x") ? txn.getSender().substring(2) : txn.getSender();
+                String to = txn.getReceiver() != null ? txn.getReceiver() : "";
+
+                pstmt.setString(1, txn.getTransactionHash().toLowerCase());
+                pstmt.setLong(2, txn.getBlockNumber());
+                pstmt.setInt(3, txn.getPositionInBlock());
+                pstmt.setString(4, from.toLowerCase());
+                pstmt.setString(5, to.toLowerCase());
+                pstmt.setLong(6, txn.getTimestamp());
+                pstmt.setLong(7, value);
+                pstmt.setString(8, txn.getType());
+                pstmt.setLong(9, txn.getPaidTotalFee());
+                pstmt.setBoolean(10, txn.isSuccess());
+
+                pstmt.addBatch();
+            }
+
+            pstmt.executeBatch();
+            conn.commit();
+
         } catch (Exception e) {
-            logger.error("Failed to insert txn {}:  ", hash, e);
+            throw new RuntimeException("Batch insert transactions failed: " + e.getMessage(), e);
         }
     }
 
-    public static void insertBlock(
-            long blockNumber, String blockHash, String feeRecipient, long timestamp, int transactionsCount,
-            long blockReward, int size, boolean success
-    ) {
+    public static void insertBlock(List<com.github.pwrlabs.pwrj.entities.Block> blocks) {
         String sql = "INSERT INTO \"Block\" (" +
                 BLOCK_NUMBER + ", " +
                 BLOCK_HASH + ", " +
@@ -62,31 +92,35 @@ public class Queries {
                 BLOCK_REWARD + ", " +
                 BLOCK_SIZE + ", " +
                 SUCCESS +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?);";  // Add one more placeholder for success
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setLong(1, blockNumber);
-            preparedStatement.setString(2, blockHash);
-            preparedStatement.setString(3, feeRecipient);
-            preparedStatement.setLong(4, timestamp);
-            preparedStatement.setInt(5, transactionsCount);
-            preparedStatement.setLong(6, blockReward);
-            preparedStatement.setInt(7, size);
-            preparedStatement.setBoolean(8, success);  // Set the success parameter
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            conn.setAutoCommit(false);
 
-//            logger.info("QUERY: {}", preparedStatement.toString());
-//            logger.info("Inserted Block {} Successfully", blockNumber);
+            for (com.github.pwrlabs.pwrj.entities.Block block : blocks) {
+                pstmt.setLong(1, block.getBlockNumber());
+                pstmt.setString(2, block.getBlockHash().toLowerCase());
+                pstmt.setString(3, block.getProposer().toLowerCase());
+                pstmt.setLong(4, block.getTimestamp());
+                pstmt.setInt(5, block.getTransactionCount());
+                pstmt.setLong(6, block.getBlockReward());
+                pstmt.setInt(7, block.getBlockSize());
+                pstmt.setBoolean(8, block.isProcessedWithoutCriticalErrors());
 
-            preparedStatement.executeUpdate();
+                pstmt.addBatch();
+            }
+
+            pstmt.executeBatch();
+            conn.commit();
         } catch (Exception e) {
-            logger.error("Failed to insert block {}: {} ", blockNumber, e.getLocalizedMessage());
+            logger.error("Failed to insert from block {} -> {}: ", blocks.getFirst().getBlockNumber(), blocks.getLast().getBlockNumber(), e);
         }
     }
 
     public static void insertValidator(String address, long joiningTime) {
         address = address.toLowerCase();
-        if(address.startsWith("0x")){
+        if (address.startsWith("0x")) {
             address = address.substring(2);
         }
         String sql = "INSERT INTO \"Validator\" (" +
@@ -437,10 +471,10 @@ public class Queries {
     }
 
     public static List<NewTxn> getUserTxns(String address, int page, int pageSize) {
-        if(address.startsWith("0x")){
-            address= address.substring(2);
+        if (address.startsWith("0x")) {
+            address = address.substring(2);
         }
-        address= address.toLowerCase();
+        address = address.toLowerCase();
 
         List<NewTxn> txns = new ArrayList<>();
 
@@ -740,8 +774,8 @@ public class Queries {
     }
 
     public static Pair<NewTxn, NewTxn> getFirstAndLastTransactionsByAddress(String address) {
-        if(address.startsWith("0x")){
-            address= address.substring(2);
+        if (address.startsWith("0x")) {
+            address = address.substring(2);
         }
         address = address.toLowerCase();
         NewTxn firstTxn = null;
@@ -829,7 +863,7 @@ public class Queries {
 
     public static JSONArray getBlocksCreated(String address, int pageSize, int page) {
         address = address.toLowerCase();
-        if(address.startsWith("0x")){
+        if (address.startsWith("0x")) {
             address = address.substring(2);
         }
         String sql = "SELECT " + BLOCK_NUMBER + ", " + TIMESTAMP + ", " + SUCCESS + ", " + BLOCK_REWARD + ", " + TRANSACTIONS_COUNT + " " +
@@ -869,7 +903,7 @@ public class Queries {
 
     public static int getBlocksSubmitted(String address) {
         address = address.toLowerCase();
-        if(address.startsWith("0x")){
+        if (address.startsWith("0x")) {
             address = address.substring(2);
         }
         String sql = "SELECT " + SUBMITTED_BLOCKS_COUNT + " FROM \"Validator\" WHERE LOWER(" + ADDRESS + ") = ?";
@@ -888,7 +922,7 @@ public class Queries {
 
     public static boolean isNewUser(String address) {
         address = address.toLowerCase();
-        if(address.startsWith("0x")){
+        if (address.startsWith("0x")) {
             address = address.substring(2);
         }
         String sql = "SELECT COUNT(*) FROM \"UsersHistory\" WHERE \"address\" = ?";
@@ -989,7 +1023,7 @@ public class Queries {
      */
     public static int getTotalTxnCountOld(String address) {
         address = address.toLowerCase();
-        if(address.startsWith("0x")){
+        if (address.startsWith("0x")) {
             address = address.substring(2);
         }
         int totalCount = 0;
@@ -1102,24 +1136,36 @@ public class Queries {
         return 0;
     }
 
-    public static void incrementSubmittedBlocksCount(String address) {
-        address = address.toLowerCase();
-        if(address.startsWith("0x")){
-            address = address.substring(2);
-        }
-        String sql = "UPDATE \"Validator\" SET " +
-                SUBMITTED_BLOCKS_COUNT+ " = " + SUBMITTED_BLOCKS_COUNT + " + 1 " +
-                "WHERE " + ADDRESS + " = ?;";
-        try {
-            executeUpdate(sql, address.toLowerCase());
+    public static void incrementSubmittedBlocksCount(List<com.github.pwrlabs.pwrj.entities.Block> blocks) {
+        String sql = "UPDATE \"Validator\" SET submitted_blocks_count = submitted_blocks_count + 1 WHERE address = ?;";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            conn.setAutoCommit(false);
+
+            for (com.github.pwrlabs.pwrj.entities.Block block : blocks) {
+                String address = block.getProposer().toLowerCase();
+                if (address.startsWith("0x")) {
+                    address = address.substring(2);
+                }
+
+                pstmt.setString(1, address);
+                pstmt.addBatch();
+            }
+
+            pstmt.executeBatch();
+            conn.commit();
+
         } catch (Exception e) {
-            logger.error("Failed to increment submitted blocks count for validator {}: {}", address, e.getLocalizedMessage());
+            logger.error("Failed to batch increment submitted blocks count: {}", e.getMessage());
         }
     }
 
+
     public static void updateLifetimeReward(String address, long lifetimeRewards) {
         address = address.toLowerCase();
-        if(address.startsWith("0x")){
+        if (address.startsWith("0x")) {
             address = address.substring(2);
         }
         String sql = "UPDATE \"Validator\" SET " +
@@ -1135,7 +1181,7 @@ public class Queries {
 
     public static long getLifetimeRewards(String address) {
         address = address.toLowerCase();
-        if(address.startsWith("0x")){
+        if (address.startsWith("0x")) {
             address = address.substring(2);
         }
         String sql = "SELECT " + LIFETIME_REWARDS + " FROM \"Validator\" WHERE " + ADDRESS + " = ?";
@@ -1151,18 +1197,35 @@ public class Queries {
         return 0;
     }
 
-    public static void updateLatestBlockNumber(String address, long blockNumber) {
-        address = address.toLowerCase();
-        if(address.startsWith("0x")){
-            address = address.substring(2);
-        }
-        String sql = "UPDATE \"Validator\" SET " +
-                LATEST_BLOCK_NUMBER + " = ? " +
-                "WHERE " + ADDRESS + " = ?;";
-        try {
-            executeUpdate(sql, blockNumber, address.toLowerCase());
+    public static void updateLatestBlockNumber(List<com.github.pwrlabs.pwrj.entities.Block> blocks) {
+        Map<String, Long> proposerLatestBlock = blocks.stream()
+                .collect(Collectors.toMap(
+                        b -> {
+                            String addr = b.getProposer().toLowerCase();
+                            return addr.startsWith("0x") ? addr.substring(2) : addr;
+                        },
+                        b -> b.getBlockNumber(),
+                        Math::max
+                ));
+
+        String sql = "UPDATE \"Validator\" SET latest_block_number = ? WHERE address = ?;";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            conn.setAutoCommit(false);
+
+            for (Map.Entry<String, Long> entry : proposerLatestBlock.entrySet()) {
+                pstmt.setLong(1, entry.getValue());
+                pstmt.setString(2, entry.getKey());
+                pstmt.addBatch();
+            }
+
+            pstmt.executeBatch();
+            conn.commit();
+
         } catch (Exception e) {
-            logger.error("Failed to update latest block number for validator {}: {}", address, e.getLocalizedMessage());
+            logger.error("Failed to batch update latest block numbers: {}", e.getMessage());
         }
     }
 }

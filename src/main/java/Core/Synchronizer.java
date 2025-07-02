@@ -28,7 +28,7 @@ public class Synchronizer {
     private static long previousBlockTimestamp = -1;
     private static long previousBlockNumber = -1;
     private static final List<Block> blockBuffer = new ArrayList<>();
-    private static final int BATCH_SIZE = 20;             // example
+    private static final int BATCH_SIZE = 10;             // example
     private static final long BATCH_MAX_TIME_MS = 2000;   // 2 sec
     private static long batchStartTime = 0;
 

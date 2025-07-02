@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import Database.Queries;
 
@@ -26,6 +27,10 @@ public class Synchronizer {
     private static int blockCounter = 0;
     private static long previousBlockTimestamp = -1;
     private static long previousBlockNumber = -1;
+    private static final List<Block> blockBuffer = new ArrayList<>();
+    private static final int BATCH_SIZE = 20;             // example
+    private static final long BATCH_MAX_TIME_MS = 2000;   // 2 sec
+    private static long batchStartTime = 0;
 
     public static void sync(PWRJ pwrj) {
         running = true;
@@ -120,7 +125,7 @@ public class Synchronizer {
 
     private static void handleChainReset(long expected, long actual) {
         logger.warn("Chain reset detected! Expected: {}, Actual: {}", expected, actual);
-        DiscordAlertService.handleRpcReset();
+//        DiscordAlertService.handleRpcReset();
         AdminService.resetSystemInternal("Chain reset detected - Expected: " + expected + ", Actual: " + actual);
     }
 
@@ -130,9 +135,26 @@ public class Synchronizer {
             if (block == null) {
                 return false;
             }
+
             checkBlockHealth(block);
-            insertBlockData(block);
-            Processor.processIncomingBlock(block);
+            blockBuffer.add(block);
+
+            if (blockBuffer.size() == 1) {
+                batchStartTime = System.currentTimeMillis();
+            }
+
+            long now = System.currentTimeMillis();
+
+            boolean sizeReached = blockBuffer.size() >= BATCH_SIZE;
+            boolean timeReached = (now - batchStartTime) >= BATCH_MAX_TIME_MS;
+
+            if (sizeReached || timeReached) {
+                insertBlockData(blockBuffer);
+                Processor.processIncomingBlocks(blockBuffer);
+                blockBuffer.clear();
+                batchStartTime = 0;
+            }
+
             return true;
         } catch (Exception e) {
             logger.error("Error processing block {}", blockNumber, e);
@@ -185,12 +207,12 @@ public class Synchronizer {
 
                 if (!DiscordAlertService.isBlockchainDown.get()) {
                     logger.warn("Blockchain unhealthy: Block {} is {} minutes old", currentBlockNumber, diffMinutes);
-                    DiscordAlertService.handleBlockchainDown(
-                            "Block interval too large",
-                            currentBlockNumber,
-                            Instant.ofEpochMilli(currentTimestamp).toString(),
-                            diffMinutes
-                    );
+//                    DiscordAlertService.handleBlockchainDown(
+//                            "Block interval too large",
+//                            currentBlockNumber,
+//                            Instant.ofEpochMilli(currentTimestamp).toString(),
+//                            diffMinutes
+//                    );
                 }
             } else if (DiscordAlertService.isBlockchainDown.get()) {
                 // Log recovery info
@@ -201,11 +223,11 @@ public class Synchronizer {
                         currentBlockNumber,
                         Instant.ofEpochMilli(currentTimestamp),
                         diffMinutes);
-                DiscordAlertService.handleBlockchainUp(
-                        currentBlockNumber,
-                        Instant.ofEpochMilli(currentTimestamp).toString(),
-                        diffMinutes
-                );
+//                DiscordAlertService.handleBlockchainUp(
+//                        currentBlockNumber,
+//                        Instant.ofEpochMilli(currentTimestamp).toString(),
+//                        diffMinutes
+//                );
             }
             previousBlockNumber = currentBlockNumber;
             previousBlockTimestamp = currentTimestamp;
@@ -214,31 +236,28 @@ public class Synchronizer {
         }
     }
 
-    private static void insertBlockData(Block block) {
+    private static void insertBlockData(List<Block> blocks) {
         try {
-            insertBlock(block.getBlockNumber(), block.getBlockHash().toLowerCase(),
-                    block.getProposer().toLowerCase(), block.getTimestamp(),
-                    block.getTransactionCount(), block.getBlockReward(),
-                    block.getBlockSize(), block.isProcessedWithoutCriticalErrors());
-            Queries.updateLifetimeReward(block.getProposer().toLowerCase(), block.getBlockReward());
-            Queries.incrementSubmittedBlocksCount(block.getProposer().toLowerCase());
-            Queries.updateLatestBlockNumber(block.getProposer(), block.getBlockNumber());
+            insertBlock(blocks);
+            Queries.incrementSubmittedBlocksCount(blocks);
+            Queries.updateLatestBlockNumber(blocks);
         } catch (Exception e) {
-            logger.error("Error inserting block {}", block.getBlockNumber(), e);
+            logger.error("Error inserting from block {} -> {}", blocks.getFirst().getBlockNumber(), blocks.getLast().getBlockNumber(), e);
         }
     }
+
 
     private static void handleRpcError() {
         if (rpcHealthy) {
             rpcHealthy = false;
-            DiscordAlertService.handleRpcFailure();
+//            DiscordAlertService.handleRpcFailure();
         }
     }
 
     private static void handleRpcRecovery() {
         if (!rpcHealthy) {
             rpcHealthy = true;
-            DiscordAlertService.handleRpcRecovery();
+//            DiscordAlertService.handleRpcRecovery();
         }
     }
 

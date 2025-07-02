@@ -19,8 +19,8 @@ public class AdminService {
 
     public static Object resetSystem(Request request, Response response) {
         response.header("Content-Type", "application/json");
-        boolean islocked = lock.tryLock();
-        if(islocked) {
+        boolean isLocked = lock.tryLock();
+        if(isLocked) {
             try {
                 logger.info("Initiating system reset...");
                 new Thread(() -> {

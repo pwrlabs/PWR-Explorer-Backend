@@ -15,46 +15,40 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static Database.Queries.*;
-import static Database.Queries.insertTxn;
 
 public class Processor {
     private static final Logger logger = LogManager.getLogger(Processor.class);
     private static final Map<String, UserTransactionInfo> userTransactionsBuffer = new ConcurrentHashMap<>();
     private static long timeSinceLastFlush = System.currentTimeMillis();
 
-    public static void processIncomingBlock(Block block) throws Exception {
-        List<FalconTransaction> transactions = new ArrayList<>();
-        List<String> txnHashes = block.getTransactionHashes();
-        if(txnHashes != null || !txnHashes.isEmpty()) transactions = Main.pwrj.getTransactionsByHashes(txnHashes);
+    public static void processIncomingBlocks(List<Block> blocks) throws Exception {
+        List<FalconTransaction> allTxns = new ArrayList<>();
 
-        for (FalconTransaction txn : transactions) {
-            long value = 0;
-            if (txn instanceof FalconTransaction.FalconTransfer payableTxn) {
-                value = payableTxn.getAmount();
-            } else if (txn instanceof FalconTransaction.PayableVidaDataTxn vidaDataTxn) {
-                value = vidaDataTxn.getValue();
-            } else if (txn instanceof FalconTransaction.TransferPWRFromVidaTxn transferFromVidaTxn) {
-                value = transferFromVidaTxn.getAmount();
-            } else if (txn instanceof FalconTransaction.FalconDelegate delegateTxn) {
-                value = delegateTxn.getPwrAmount();
+        for (Block block : blocks) {
+            List<String> txnHashes = block.getTransactionHashes();
+            if (txnHashes != null && !txnHashes.isEmpty()) {
+                List<FalconTransaction> transactions = Main.pwrj.getTransactionsByHashes(txnHashes);
+
+                for (FalconTransaction txn : transactions) {
+                    if (txn instanceof FalconTransaction.FalconJoinAsValidator joinTxn) {
+                        insertValidator(joinTxn.getSender().toLowerCase(), txn.getTimestamp());
+                    }
+
+                    processUserTransaction(txn.getSender().toLowerCase(), txn.getTransactionHash(), txn.getTimestamp());
+                    processUserTransaction(txn.getReceiver().toLowerCase(), txn.getTransactionHash(), txn.getTimestamp());
+                }
+
+                allTxns.addAll(transactions);
             }
+        }
 
-            if (txn instanceof FalconTransaction.FalconJoinAsValidator joinTxn) {
-                insertValidator(joinTxn.getSender().toLowerCase(), txn.getTimestamp());
-            }
-
-            try {
-                String sender = txn.getSender().startsWith("0x") ? txn.getSender().substring(2) : txn.getSender();
-                insertTxn(txn.getTransactionHash().toLowerCase(), block.getBlockNumber(), txn.getPositionInBlock(),
-                        sender, txn.getReceiver(), txn.getTimestamp(),
-                        value, txn.getType(), txn.getPaidTotalFee(), !txn.isSuccess());
-
-                processUserTransaction(txn.getSender().toLowerCase(), txn.getTransactionHash(), txn.getTimestamp());
-                processUserTransaction(txn.getReceiver().toLowerCase(), txn.getTransactionHash(), txn.getTimestamp());
-
-            } catch (Exception e) {
-                logger.error("Error inserting transaction: {} {}", txn.getTransactionHash(), e.getLocalizedMessage());
-            }
+        if (!allTxns.isEmpty()) {
+            batchInsertTxns(allTxns);
+            logger.info("Inserted {} transactions for blocks {} -> {}",
+                    allTxns.size(),
+                    blocks.getFirst().getBlockNumber(),
+                    blocks.getLast().getBlockNumber()
+            );
         }
     }
 

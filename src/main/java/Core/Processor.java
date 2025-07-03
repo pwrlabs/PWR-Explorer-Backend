@@ -29,11 +29,11 @@ public class Processor {
 
         for (Block block : blocks) {
             long blockStart = System.currentTimeMillis();
-            List<String> txnHashes = block.getTransactionHashes();
+//            List<String> txnHashes = block.getTransactionHashes();
 
             long fetchStart = System.currentTimeMillis();
-//            List<FalconTransaction> transactions = Main.pwrj.getBlockAndTransactions(block.getBlockNumber()).getSecond();
-            List<FalconTransaction> transactions = Main.pwrj.getTransactionsByHashes(txnHashes);
+            List<FalconTransaction> transactions = Main.pwrj.getBlockAndTransactions(block.getBlockNumber()).getSecond();
+//            List<FalconTransaction> transactions = Main.pwrj.getTransactionsByHashes(txnHashes);
 
             long fetchDuration = System.currentTimeMillis() - fetchStart;
             logger.info("Fetched transactions for block {} in {} ms", block.getBlockNumber(), fetchDuration);
@@ -77,7 +77,6 @@ public class Processor {
 
         logger.info("Total time for processIncomingBlocks: {} ms", System.currentTimeMillis() - totalStart);
     }
-
 
     private static void processUserTransaction(String address, String txnHash, long timestamp) {
         userTransactionsBuffer.compute(address, (key, existingInfo) -> {

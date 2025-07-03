@@ -42,6 +42,7 @@ public class Queries {
 
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            logger.info("Retrieved connection and started inserting txns");
 
             conn.setAutoCommit(false);
 
@@ -77,6 +78,8 @@ public class Queries {
             pstmt.executeBatch();
             conn.commit();
 
+            logger.info("Successfully inserted txns");
+
         } catch (Exception e) {
             throw new RuntimeException("Batch insert transactions failed: " + e.getMessage(), e);
         }
@@ -98,6 +101,8 @@ public class Queries {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
 
+            logger.info("Retrieved connection and started inserting blocks");
+
             for (com.github.pwrlabs.pwrj.entities.Block block : blocks) {
                 pstmt.setLong(1, block.getBlockNumber());
                 pstmt.setString(2, block.getBlockHash().toLowerCase());
@@ -113,6 +118,7 @@ public class Queries {
 
             pstmt.executeBatch();
             conn.commit();
+            logger.info("Successfully inserted blocks");
         } catch (Exception e) {
             logger.error("Failed to insert from block {} -> {}: ", blocks.getFirst().getBlockNumber(), blocks.getLast().getBlockNumber(), e);
         }

@@ -24,6 +24,7 @@ public class Processor {
     public static void processIncomingBlocks(List<Block> blocks) throws Exception {
         List<FalconTransaction> allTxns = new ArrayList<>();
 
+        logger.info("Started processing blocks");
         for (Block block : blocks) {
             List<String> txnHashes = block.getTransactionHashes();
             if (txnHashes != null && !txnHashes.isEmpty()) {
@@ -41,6 +42,7 @@ public class Processor {
                 allTxns.addAll(transactions);
             }
         }
+        logger.info("Finished processing blocks");
 
         if (!allTxns.isEmpty()) {
             batchInsertTxns(allTxns);

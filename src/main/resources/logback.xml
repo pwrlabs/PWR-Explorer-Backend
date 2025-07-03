@@ -1,0 +1,28 @@
+<configuration>
+    <!-- Console Appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>
+                %highlight(%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n)
+            </pattern>
+        </encoder>
+    </appender>
+
+    <!-- Set colors manually for INFO and ERROR -->
+    <logger name="ROOT" level="INFO" />
+
+    <!-- ERROR: All red -->
+    <logger name="ERROR_LOGGER" level="ERROR">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- INFO: All white (no color codes) -->
+    <logger name="INFO_LOGGER" level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- Root logger -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

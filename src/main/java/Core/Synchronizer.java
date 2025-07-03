@@ -3,44 +3,39 @@ package Core;
 import Services.AdminService;
 import Services.DiscordAlertService;
 import com.github.pwrlabs.pwrj.entities.Block;
-import com.github.pwrlabs.pwrj.entities.Validator;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import Database.Queries;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static Database.Constants.Constants.BLOCK_TIMEOUT_MINUTES;
 import static Database.Queries.*;
 import static Services.DiscordAlertService.isRpcDown;
 
 public class Synchronizer {
-    private static final Logger logger = LogManager.getLogger(Synchronizer.class);
-
+    private static final Logger logger = LoggerFactory.getLogger(Synchronizer.class);
     private static volatile boolean running = false;
     private static volatile boolean rpcHealthy = true;
-    private static volatile boolean blockchainHealthy = true;
-    private static int blockCounter = 0;
+    private static final boolean blockchainHealthy = true;
     private static long previousBlockTimestamp = -1;
     private static long previousBlockNumber = -1;
     private static final List<Block> blockBuffer = new ArrayList<>();
-    private static final int BATCH_SIZE = 10;             // example
-    private static final long BATCH_MAX_TIME_MS = 2000;   // 2 sec
+    private static final int BATCH_SIZE = 10;
+    private static final long BATCH_MAX_TIME_MS = 2000; //2 seconds
     private static long batchStartTime = 0;
 
     public static void sync(PWRJ pwrj) {
         running = true;
-        long blockToCheck = Math.max(getLastBlockNumber() + 1, 1);
+        long blockToCheck = 7198;
         logger.info("Synchronizer starting at block {}", blockToCheck);
 
         while (running) {
             try {
-                initializeValidatorsIfNeeded(pwrj);
-
                 long chainLatestBlock = getChainLatestBlock(pwrj);
                 if (chainLatestBlock == -1) {
                     Thread.sleep(5000);
@@ -91,24 +86,6 @@ public class Synchronizer {
         logger.info("Synchronizer has stopped");
     }
 
-    private static void initializeValidatorsIfNeeded(PWRJ pwrj) {
-        try {
-            long startBlockNumber = Math.max(Queries.getMaxProcessedBlockNumber(), 1);
-            if (startBlockNumber <= 1) {
-                Block block = pwrj.getBlockByNumber(1);
-                List<Validator> validators = pwrj.getActiveValidators();
-                if (validators != null && !validators.isEmpty()) {
-                    for (Validator validator : validators) {
-                        insertValidator(validator.getAddress(), block.getTimestamp());
-                    }
-                    logger.info("Inserted {} validators", validators.size());
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Error initializing validators", e);
-        }
-    }
-
     private static long getChainLatestBlock(PWRJ pwrj) {
         try {
             long latestBlock = pwrj.getLatestBlockNumber();
@@ -147,6 +124,7 @@ public class Synchronizer {
 
             boolean sizeReached = blockBuffer.size() >= BATCH_SIZE;
             boolean timeReached = (now - batchStartTime) >= BATCH_MAX_TIME_MS;
+            logger.info("time reached {}", timeReached);
 
             if (sizeReached || timeReached) {
                 insertBlockData(blockBuffer);
@@ -240,7 +218,9 @@ public class Synchronizer {
         try {
             insertBlock(blocks);
             Queries.incrementSubmittedBlocksCount(blocks);
+            logger.info("Incremented submitted blocks count");
             Queries.updateLatestBlockNumber(blocks);
+            logger.info("Updated latest block number");
         } catch (Exception e) {
             logger.error("Error inserting from block {} -> {}", blocks.getFirst().getBlockNumber(), blocks.getLast().getBlockNumber(), e);
         }

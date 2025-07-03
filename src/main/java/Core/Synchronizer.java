@@ -126,7 +126,10 @@ public class Synchronizer {
 
             boolean sizeReached = blockBuffer.size() >= BATCH_SIZE;
             boolean timeReached = (now - batchStartTime) >= BATCH_MAX_TIME_MS;
-            logger.info("time reached {}", timeReached);
+
+            if (timeReached) {
+                logger.info("time reached {}", true);
+            }
 
             if (sizeReached || timeReached) {
                 insertBlockData(blockBuffer);

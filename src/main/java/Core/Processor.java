@@ -34,7 +34,7 @@ public class Processor {
                 logger.info("Getting {} transactions by hashes for block {}", txnHashes.size(), block.getBlockNumber());
 
                 long fetchStart = System.currentTimeMillis();
-                List<FalconTransaction> transactions = Main.pwrj.getTransactionsByHashes(txnHashes);
+                List<FalconTransaction> transactions = Main.pwrj.getBlockAndTransactions(block.getBlockNumber()).getSecond();
                 long fetchDuration = System.currentTimeMillis() - fetchStart;
                 logger.info("Fetched transactions for block {} in {} ms", block.getBlockNumber(), fetchDuration);
 

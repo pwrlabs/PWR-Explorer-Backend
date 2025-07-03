@@ -85,7 +85,7 @@ public class StakingService {
             return getSuccess(
                     "activeValidatorsCount", cacheManager.getActiveValidatorsCount(),
                     "activeVotingPower", BigDecimal.valueOf(pwrj.getActiveVotingPower()).divide(BigDecimal.TEN.pow(9), 0, BigDecimal.ROUND_HALF_UP),
-                    "delegatorsCount", pwrj.getTotalDelegatorsCount(),
+                    "delegatorsCount", 0,
                     "validators", validatorsArray,
                     "metadata", metadata);
         } catch (Exception e) {
@@ -108,21 +108,22 @@ public class StakingService {
             if (v.getDelegatorsCount() % count != 0) ++totalPages;
             int startingIndex = (page - 1) * count;
 
-            List<Delegator> delegators = v.getDelegators(pwrj);
+//            List<Delegator> delegators = v.getDelegators(pwrj);
             JSONArray delegatorsArray = new JSONArray();
 
             try {
                 int delegatorsCount = Math.max(v.getDelegatorsCount(), 0);
 
                 for (int t = 0; t < delegatorsCount; t++) {
-                    Delegator delegator = delegators.get(t);
-                    if (delegator == null) continue;
+//                    Delegator delegator = delegators.get(t);
+//                    if (delegator == null) continue;
 
                     JSONObject object = new JSONObject();
 
-                    object.put("address", delegator.getAddress());
-                    object.put("delegatedPWR", BigDecimal.valueOf(delegator.getDelegatedPWR())
-                            .divide(BigDecimal.TEN.pow(9), 0, BigDecimal.ROUND_HALF_UP));
+                    object.put("address", "0x");
+                    object.put("delegatedPWR", 0);
+//                    object.put("delegatedPWR", BigDecimal.valueOf(delegator.getDelegatedPWR())
+//                            .divide(BigDecimal.TEN.pow(9), 0, BigDecimal.ROUND_HALF_UP));
 
                     delegatorsArray.put(object);
                 }

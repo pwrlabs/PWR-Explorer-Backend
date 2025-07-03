@@ -29,14 +29,13 @@ public class Processor {
 
         for (Block block : blocks) {
             long blockStart = System.currentTimeMillis();
-            List<String> txnHashes = block.getTransactionHashes();
-            if (txnHashes != null && !txnHashes.isEmpty()) {
-                logger.info("Getting {} transactions by hashes for block {}", txnHashes.size(), block.getBlockNumber());
+            long fetchStart = System.currentTimeMillis();
+            List<FalconTransaction> transactions = Main.pwrj.getBlockAndTransactions(block.getBlockNumber()).getSecond();
+            long fetchDuration = System.currentTimeMillis() - fetchStart;
+            logger.info("Fetched transactions for block {} in {} ms", block.getBlockNumber(), fetchDuration);
 
-                long fetchStart = System.currentTimeMillis();
-                List<FalconTransaction> transactions = Main.pwrj.getBlockAndTransactions(block.getBlockNumber()).getSecond();
-                long fetchDuration = System.currentTimeMillis() - fetchStart;
-                logger.info("Fetched transactions for block {} in {} ms", block.getBlockNumber(), fetchDuration);
+            if (transactions != null && !transactions.isEmpty()) {
+                logger.info("Getting {} transactions by hashes for block {}", transactions.size(), block.getBlockNumber());
 
                 long processStart = System.currentTimeMillis();
                 for (FalconTransaction txn : transactions) {

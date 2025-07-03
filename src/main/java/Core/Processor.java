@@ -22,14 +22,23 @@ public class Processor {
     private static long timeSinceLastFlush = System.currentTimeMillis();
 
     public static void processIncomingBlocks(List<Block> blocks) throws Exception {
+        long totalStart = System.currentTimeMillis();
         List<FalconTransaction> allTxns = new ArrayList<>();
 
-        logger.info("Started processing blocks");
+        logger.info("Started processing {} blocks", blocks.size());
+
         for (Block block : blocks) {
+            long blockStart = System.currentTimeMillis();
             List<String> txnHashes = block.getTransactionHashes();
             if (txnHashes != null && !txnHashes.isEmpty()) {
-                List<FalconTransaction> transactions = Main.pwrj.getTransactionsByHashes(txnHashes);
+                logger.info("Getting {} transactions by hashes for block {}", txnHashes.size(), block.getBlockNumber());
 
+                long fetchStart = System.currentTimeMillis();
+                List<FalconTransaction> transactions = Main.pwrj.getTransactionsByHashes(txnHashes);
+                long fetchDuration = System.currentTimeMillis() - fetchStart;
+                logger.info("Fetched transactions for block {} in {} ms", block.getBlockNumber(), fetchDuration);
+
+                long processStart = System.currentTimeMillis();
                 for (FalconTransaction txn : transactions) {
                     if (txn instanceof FalconTransaction.FalconJoinAsValidator joinTxn) {
                         insertValidator(joinTxn.getSender().toLowerCase(), txn.getTimestamp());
@@ -38,21 +47,34 @@ public class Processor {
                     processUserTransaction(txn.getSender().toLowerCase(), txn.getTransactionHash(), txn.getTimestamp());
                     processUserTransaction(txn.getReceiver().toLowerCase(), txn.getTransactionHash(), txn.getTimestamp());
                 }
+                long processDuration = System.currentTimeMillis() - processStart;
+                logger.info("Processed {} transactions for block {} in {} ms", transactions.size(), block.getBlockNumber(), processDuration);
 
                 allTxns.addAll(transactions);
             }
+            long blockDuration = System.currentTimeMillis() - blockStart;
+            logger.info("Finished processing block {} in {} ms", block.getBlockNumber(), blockDuration);
         }
-        logger.info("Finished processing blocks");
+
+        logger.info("Finished processing all blocks in {} ms", System.currentTimeMillis() - totalStart);
 
         if (!allTxns.isEmpty()) {
+            long batchInsertStart = System.currentTimeMillis();
             batchInsertTxns(allTxns);
-            logger.info("Inserted {} transactions for blocks {} -> {}",
+            long batchInsertDuration = System.currentTimeMillis() - batchInsertStart;
+
+            logger.info(
+                    "Inserted {} transactions for blocks {} -> {} in {} ms",
                     allTxns.size(),
                     blocks.getFirst().getBlockNumber(),
-                    blocks.getLast().getBlockNumber()
+                    blocks.getLast().getBlockNumber(),
+                    batchInsertDuration
             );
         }
+
+        logger.info("Total time for processIncomingBlocks: {} ms", System.currentTimeMillis() - totalStart);
     }
+
 
     private static void processUserTransaction(String address, String txnHash, long timestamp) {
         userTransactionsBuffer.compute(address, (key, existingInfo) -> {

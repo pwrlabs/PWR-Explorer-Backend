@@ -36,6 +36,7 @@ public class Synchronizer {
 
         while (running) {
             try {
+                long startTime = System.currentTimeMillis();
                 long chainLatestBlock = getChainLatestBlock(pwrj);
                 if (chainLatestBlock == -1) {
                     Thread.sleep(5000);
@@ -50,9 +51,8 @@ public class Synchronizer {
                 }
 
                 if (blockToCheck > chainLatestBlock) {
-                    if (running) {
-                        Thread.sleep(1000);
-                    }
+                    long elapsedTime = System.currentTimeMillis() - startTime;
+                    if (elapsedTime > 0) Thread.sleep(elapsedTime);
                     continue;
                 }
 
@@ -72,14 +72,13 @@ public class Synchronizer {
                     throttleProcessing();
                 }
 
-                if (running) {
-                    Thread.sleep(1000);
-                }
+                long elapsedTime = System.currentTimeMillis() - startTime;
+                if (elapsedTime > 0) Thread.sleep(elapsedTime);
 
             } catch (Exception e) {
                 logger.error("Error in sync loop", e);
                 handleRpcError();
-                sleepSafely(5000);
+                sleepSafely(1000);
             }
         }
 

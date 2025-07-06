@@ -28,6 +28,7 @@ public class Synchronizer {
     private static final int BATCH_SIZE = 10;
     private static final long BATCH_MAX_TIME_MS = 2000; //2 seconds
     private static long batchStartTime = 0;
+    private static long sleepBetweenBlockFetches = 100;
 
     public static void sync(PWRJ pwrj) {
         running = true;
@@ -52,7 +53,7 @@ public class Synchronizer {
 
                 if (blockToCheck > chainLatestBlock) {
                     long elapsedTime = System.currentTimeMillis() - startTime;
-                    if (elapsedTime > 0) Thread.sleep(elapsedTime);
+                    if (elapsedTime < sleepBetweenBlockFetches) Thread.sleep(sleepBetweenBlockFetches - elapsedTime);
                     continue;
                 }
 
@@ -73,7 +74,7 @@ public class Synchronizer {
                 }
 
                 long elapsedTime = System.currentTimeMillis() - startTime;
-                if (elapsedTime > 0) Thread.sleep(elapsedTime);
+                if (elapsedTime < sleepBetweenBlockFetches) Thread.sleep(sleepBetweenBlockFetches - elapsedTime);
 
             } catch (Exception e) {
                 logger.error("Error in sync loop", e);

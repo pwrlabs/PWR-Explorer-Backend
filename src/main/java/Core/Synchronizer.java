@@ -24,7 +24,7 @@ public class Synchronizer {
     private static final boolean blockchainHealthy = true;
     private static long previousBlockTimestamp = -1;
     private static long previousBlockNumber = -1;
-    private static final List<Block> blockBuffer = new ArrayList<>();
+    private static final List<Long> blockBuffer = new ArrayList<>();
     private static final int BATCH_SIZE = 10;
     private static final long BATCH_MAX_TIME_MS = 2000; //2 seconds
     private static long batchStartTime = 0;
@@ -115,8 +115,8 @@ public class Synchronizer {
                 return false;
             }
 
-            checkBlockHealth(block);
-            blockBuffer.add(block);
+//            checkBlockHealth(block);
+            blockBuffer.add(blockNumber);
 
             if (blockBuffer.size() == 1) {
                 batchStartTime = System.currentTimeMillis();
@@ -132,7 +132,6 @@ public class Synchronizer {
             }
 
             if (sizeReached || timeReached) {
-                insertBlockData(blockBuffer);
                 Processor.processIncomingBlocks(blockBuffer);
                 blockBuffer.clear();
                 batchStartTime = 0;
@@ -163,73 +162,61 @@ public class Synchronizer {
         }
     }
 
-    private static void checkBlockHealth(Block block) {
-        try {
-            long currentBlockNumber = block.getBlockNumber();
-            long currentTimestamp = block.getTimestamp();
-            if (previousBlockNumber == -1 || previousBlockTimestamp == -1) {
-                previousBlockNumber = currentBlockNumber;
-                previousBlockTimestamp = currentTimestamp;
-                logger.info("Initializing block health check with first block: {}", currentBlockNumber);
-                return;
-            }
-            if (currentBlockNumber <= previousBlockNumber) {
-                logger.debug("Skipping block {} because block number is not newer than previous ({})", currentBlockNumber, previousBlockNumber);
-                return;
-            }
-            if (currentTimestamp <= previousBlockTimestamp) {
-                logger.debug("Skipping block {} because timestamp is not newer than previous ({} <= {})",
-                        currentBlockNumber, currentTimestamp, previousBlockTimestamp);
-                return;
-            }
-            long diffMillis = currentTimestamp - previousBlockTimestamp;
-            long diffMinutes = Duration.ofMillis(diffMillis).toMinutes();
-            if (diffMinutes >= BLOCK_TIMEOUT_MINUTES) {
-                logger.info("Block {} timestamp = {}, previous = {}", currentBlockNumber, Instant.ofEpochMilli(currentTimestamp), Instant.ofEpochMilli(previousBlockTimestamp));
-                logger.info("Block {}, time diff with previous = {} minutes", currentBlockNumber, diffMinutes);
-
-                if (!DiscordAlertService.isBlockchainDown.get()) {
-                    logger.warn("Blockchain unhealthy: Block {} is {} minutes old", currentBlockNumber, diffMinutes);
-//                    DiscordAlertService.handleBlockchainDown(
-//                            "Block interval too large",
-//                            currentBlockNumber,
-//                            Instant.ofEpochMilli(currentTimestamp).toString(),
-//                            diffMinutes
-//                    );
-                }
-            } else if (DiscordAlertService.isBlockchainDown.get()) {
-                // Log recovery info
-                logger.info("Block {} timestamp = {}, previous = {}", currentBlockNumber,
-                        Instant.ofEpochMilli(currentTimestamp), Instant.ofEpochMilli(previousBlockTimestamp));
-                logger.info("Block {}, time diff with previous = {} minutes", currentBlockNumber, diffMinutes);
-                logger.info("Blockchain recovered with block {} at {} ({} mins diff)",
-                        currentBlockNumber,
-                        Instant.ofEpochMilli(currentTimestamp),
-                        diffMinutes);
-//                DiscordAlertService.handleBlockchainUp(
+//    private static void checkBlockHealth(Block block) {
+//        try {
+//            long currentBlockNumber = block.getBlockNumber();
+//            long currentTimestamp = block.getTimestamp();
+//            if (previousBlockNumber == -1 || previousBlockTimestamp == -1) {
+//                previousBlockNumber = currentBlockNumber;
+//                previousBlockTimestamp = currentTimestamp;
+//                logger.info("Initializing block health check with first block: {}", currentBlockNumber);
+//                return;
+//            }
+//            if (currentBlockNumber <= previousBlockNumber) {
+//                logger.debug("Skipping block {} because block number is not newer than previous ({})", currentBlockNumber, previousBlockNumber);
+//                return;
+//            }
+//            if (currentTimestamp <= previousBlockTimestamp) {
+//                logger.debug("Skipping block {} because timestamp is not newer than previous ({} <= {})",
+//                        currentBlockNumber, currentTimestamp, previousBlockTimestamp);
+//                return;
+//            }
+//            long diffMillis = currentTimestamp - previousBlockTimestamp;
+//            long diffMinutes = Duration.ofMillis(diffMillis).toMinutes();
+//            if (diffMinutes >= BLOCK_TIMEOUT_MINUTES) {
+//                logger.info("Block {} timestamp = {}, previous = {}", currentBlockNumber, Instant.ofEpochMilli(currentTimestamp), Instant.ofEpochMilli(previousBlockTimestamp));
+//                logger.info("Block {}, time diff with previous = {} minutes", currentBlockNumber, diffMinutes);
+//
+//                if (!DiscordAlertService.isBlockchainDown.get()) {
+//                    logger.warn("Blockchain unhealthy: Block {} is {} minutes old", currentBlockNumber, diffMinutes);
+////                    DiscordAlertService.handleBlockchainDown(
+////                            "Block interval too large",
+////                            currentBlockNumber,
+////                            Instant.ofEpochMilli(currentTimestamp).toString(),
+////                            diffMinutes
+////                    );
+//                }
+//            } else if (DiscordAlertService.isBlockchainDown.get()) {
+//                // Log recovery info
+//                logger.info("Block {} timestamp = {}, previous = {}", currentBlockNumber,
+//                        Instant.ofEpochMilli(currentTimestamp), Instant.ofEpochMilli(previousBlockTimestamp));
+//                logger.info("Block {}, time diff with previous = {} minutes", currentBlockNumber, diffMinutes);
+//                logger.info("Blockchain recovered with block {} at {} ({} mins diff)",
 //                        currentBlockNumber,
-//                        Instant.ofEpochMilli(currentTimestamp).toString(),
-//                        diffMinutes
-//                );
-            }
-            previousBlockNumber = currentBlockNumber;
-            previousBlockTimestamp = currentTimestamp;
-        } catch (Exception e) {
-            logger.error("Error checking block health for {}", block.getBlockNumber(), e);
-        }
-    }
-
-    private static void insertBlockData(List<Block> blocks) {
-        try {
-            insertBlock(blocks);
-            Queries.incrementSubmittedBlocksCount(blocks);
-            logger.info("Incremented submitted blocks count");
-            Queries.updateLatestBlockNumber(blocks);
-            logger.info("Updated latest block number");
-        } catch (Exception e) {
-            logger.error("Error inserting from block {} -> {}", blocks.getFirst().getBlockNumber(), blocks.getLast().getBlockNumber(), e);
-        }
-    }
+//                        Instant.ofEpochMilli(currentTimestamp),
+//                        diffMinutes);
+////                DiscordAlertService.handleBlockchainUp(
+////                        currentBlockNumber,
+////                        Instant.ofEpochMilli(currentTimestamp).toString(),
+////                        diffMinutes
+////                );
+//            }
+//            previousBlockNumber = currentBlockNumber;
+//            previousBlockTimestamp = currentTimestamp;
+//        } catch (Exception e) {
+//            logger.error("Error checking block health for {}", block.getBlockNumber(), e);
+//        }
+//    }
 
 
     private static void handleRpcError() {

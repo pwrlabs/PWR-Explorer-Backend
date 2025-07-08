@@ -44,18 +44,19 @@ public class GET {
         get("/nodesStatus/", NodeService::getNodesStatus);
 
         // Staking calls
-        path("/staking/", () -> {
-            get("homePageInfo/", StakingService::getHomePageInfo);
-            get("validatorInfo/", StakingService::getValidatorInfo);
-            get("/portfolio/", StakingService::getPortfolio);
-        });
-        get("/stats", StakingService::getStats);
+//        path("/staking/", () -> {
+//            get("homePageInfo/", StakingService::getHomePageInfo);
+//            get("validatorInfo/", StakingService::getValidatorInfo);
+//            get("/portfolio/", StakingService::getPortfolio);
+//        });
+
+//        get("/stats", StakingService::getStats);
         get("/healthCheck/", HealthCheckService::checkBlockchainHealth);
         get("/discordAlert/", DiscordAlertService::checkBlockchainHealthAndAlert);
         get("/BotStatus/", DiscordAlertService::getBotDebugInfo);
-        path("/admin/", () -> {
-            get("reset/", AdminService::resetSystem);
-        });
+//        path("/admin/", () -> {
+//            get("reset/", AdminService::resetSystem);
+//        });
     }
 }
 

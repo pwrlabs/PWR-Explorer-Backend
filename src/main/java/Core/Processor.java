@@ -1,10 +1,12 @@
 package Core;
 
 import DataModel.UserTransactionInfo;
+import Database.Queries;
 import Main.Main;
 import Utils.Settings;
 import com.github.pwrlabs.pwrj.entities.Block;
 import com.github.pwrlabs.pwrj.entities.FalconTransaction;
+import io.pwrlabs.util.encoders.BiResult;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,53 +23,55 @@ public class Processor {
     private static final Map<String, UserTransactionInfo> userTransactionsBuffer = new ConcurrentHashMap<>();
     private static long timeSinceLastFlush = System.currentTimeMillis();
 
-    public static void processIncomingBlocks(List<Block> blocks) throws Exception {
+    public static void processIncomingBlocks(List<Long> blockNumbers) throws Exception {
         long totalStart = System.currentTimeMillis();
         List<FalconTransaction> allTxns = new ArrayList<>();
+        List<Block> blocks = new ArrayList<>();
 
-        logger.info("Started processing {} blocks", blocks.size());
+        logger.info("Started processing {} blocks", blockNumbers.size());
 
-        for (Block block : blocks) {
+        for (long blockNumber : blockNumbers) {
             long blockStart = System.currentTimeMillis();
-//            List<String> txnHashes = block.getTransactionHashes();
-
             long fetchStart = System.currentTimeMillis();
-            List<FalconTransaction> transactions = Main.pwrj.getBlockAndTransactions(block.getBlockNumber()).getSecond();
-//            List<FalconTransaction> transactions = Main.pwrj.getTransactionsByHashes(txnHashes);
+
+            BiResult<Block, List<FalconTransaction>> blockAndTransactions = Main.pwrj.getBlockAndTransactions(blockNumber);
+            Block block = blockAndTransactions.getFirst();
+            List<FalconTransaction> transactions = blockAndTransactions.getSecond();
 
             long fetchDuration = System.currentTimeMillis() - fetchStart;
             logger.info("Fetched transactions for block {} in {} ms", block.getBlockNumber(), fetchDuration);
 
-            if (transactions != null && !transactions.isEmpty()) {
-                logger.info("Getting {} transactions by hashes for block {}", transactions.size(), block.getBlockNumber());
+            logger.info("Getting {} transactions by hashes for block {}", transactions.size(), block.getBlockNumber());
 
-                long processStart = System.currentTimeMillis();
-                for (FalconTransaction txn : transactions) {
-                    if (txn instanceof FalconTransaction.FalconJoinAsValidator joinTxn) {
-                        insertValidator(joinTxn.getSender().toLowerCase(), txn.getTimestamp());
-                    }
-
-                    processUserTransaction(txn.getSender().toLowerCase(), txn.getTransactionHash(), txn.getTimestamp());
-                    processUserTransaction(txn.getReceiver().toLowerCase(), txn.getTransactionHash(), txn.getTimestamp());
+            long processStart = System.currentTimeMillis();
+            for (FalconTransaction txn : transactions) {
+                if (txn instanceof FalconTransaction.FalconJoinAsValidator joinTxn) {
+                    insertValidator(joinTxn.getSender().toLowerCase(), txn.getTimestamp());
                 }
-                long processDuration = System.currentTimeMillis() - processStart;
-                logger.info("Processed {} transactions for block {} in {} ms", transactions.size(), block.getBlockNumber(), processDuration);
 
-                allTxns.addAll(transactions);
+                processUserTransaction(txn.getSender().toLowerCase(), txn.getTransactionHash(), txn.getTimestamp());
+                processUserTransaction(txn.getReceiver().toLowerCase(), txn.getTransactionHash(), txn.getTimestamp());
             }
+            long processDuration = System.currentTimeMillis() - processStart;
+            logger.info("Processed {} transactions for block {} in {} ms", transactions.size(), block.getBlockNumber(), processDuration);
+
+            blocks.add(block);
+            allTxns.addAll(transactions);
             long blockDuration = System.currentTimeMillis() - blockStart;
             logger.info("Finished processing block {} in {} ms", block.getBlockNumber(), blockDuration);
         }
 
         logger.info("Finished processing all blocks in {} ms", System.currentTimeMillis() - totalStart);
 
-        if (!allTxns.isEmpty()) {
+        if (!allTxns.isEmpty() || !blocks.isEmpty()) {
             long batchInsertStart = System.currentTimeMillis();
+            insertBlockData(blocks);
             batchInsertTxns(allTxns);
             long batchInsertDuration = System.currentTimeMillis() - batchInsertStart;
 
             logger.info(
-                    "Inserted {} transactions for blocks {} -> {} in {} ms",
+                    "Inserted {} blocks and {} transactions for blocks {} -> {} in {} ms",
+                    blocks.size(),
                     allTxns.size(),
                     blocks.getFirst().getBlockNumber(),
                     blocks.getLast().getBlockNumber(),
@@ -130,5 +134,17 @@ public class Processor {
             return true;
         }
         return false;
+    }
+
+    private static void insertBlockData(List<Block> blocks) {
+        try {
+            insertBlock(blocks);
+            Queries.incrementSubmittedBlocksCount(blocks);
+            logger.info("Incremented submitted blocks count");
+            Queries.updateLatestBlockNumber(blocks);
+            logger.info("Updated latest block number");
+        } catch (Exception e) {
+            logger.error("Error inserting from block {} -> {}", blocks.getFirst().getBlockNumber(), blocks.getLast().getBlockNumber(), e);
+        }
     }
 }

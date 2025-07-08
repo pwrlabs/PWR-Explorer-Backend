@@ -22,7 +22,7 @@ public class Main {
     public static Thread synchronizerThread;
     private static final Logger logger = LogManager.getLogger(Main.class);
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws Exception {
         port(8081);
 
         options("/*",
@@ -74,7 +74,6 @@ public class Main {
 
         BlockService.initialize(pwrj);
         NodeService.initialize(pwrj);
-        StakingService.initialize(pwrj);
         TransactionService.initialize(pwrj);
         GeneralService.initialize(pwrj);
 

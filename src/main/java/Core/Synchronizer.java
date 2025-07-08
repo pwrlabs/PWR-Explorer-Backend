@@ -28,12 +28,11 @@ public class Synchronizer {
     private static final int BATCH_SIZE = 10;
     private static final long BATCH_MAX_TIME_MS = 2000; //2 seconds
     private static long batchStartTime = 0;
-    private static long sleepBetweenBlockFetches = 100;
+    private static final long sleepBetweenBlockFetches = 100;
 
     public static void sync(PWRJ pwrj) {
         running = true;
         long blockToCheck = Math.max(getLastBlockNumber() + 1, 1);
-//        long blockToCheck = 19758;
 
         logger.info("Synchronizer starting at block {}", blockToCheck);
 
@@ -110,11 +109,6 @@ public class Synchronizer {
 
     private static boolean processBlock(PWRJ pwrj, long blockNumber) {
         try {
-            Block block = getBlock(pwrj, blockNumber);
-            if (block == null) {
-                return false;
-            }
-
 //            checkBlockHealth(block);
             blockBuffer.add(blockNumber);
 

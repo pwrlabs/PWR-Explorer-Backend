@@ -212,7 +212,6 @@ public class Synchronizer {
 //        }
 //    }
 
-
     private static void handleRpcError() {
         if (rpcHealthy) {
             rpcHealthy = false;

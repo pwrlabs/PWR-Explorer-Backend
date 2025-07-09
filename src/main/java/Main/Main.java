@@ -88,6 +88,7 @@ public class Main {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Shutting down... Stopping synchronizer");
             Synchronizer.stop();
+
         }));
     }
 

@@ -28,6 +28,7 @@ public class DatabaseInitialization {
         for (String sql : initializationQueue) {
             initializeTable(sql);
         }
+        createAndInitializeBlockNumberTable();
     }
 
     public static void resetDatabase() {
@@ -74,6 +75,27 @@ public class DatabaseInitialization {
             FIRST_TXN_HASH + " VARCHAR(256), " +
             LAST_TXN_TIMESTAMP + " BIGINT, " +
             LAST_TXN_HASH + " VARCHAR(256))";
+
+    private static void createAndInitializeBlockNumberTable()  {
+        String sqlCreateTable = "CREATE TABLE IF NOT EXISTS \"LastBlock\" (" +
+                "id INTEGER PRIMARY KEY, " +
+                "block_number BIGINT, " +
+                "timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+                ");";
+
+        String sqlInsertInitial = "INSERT INTO \"LastBlock\" (id, block_number) " +
+                "SELECT 1, 0 " +
+                "WHERE NOT EXISTS (SELECT 1 FROM \"LastBlock\" WHERE id = 1);";
+
+        try (Connection connection = getConnection();
+             Statement stmt = connection.createStatement()) {
+
+            stmt.execute(sqlCreateTable);
+            stmt.execute(sqlInsertInitial);
+        } catch (SQLException e) {
+            logger.error("Failed to create and initialize latest block table", e);
+        }
+    }
 
 
     final static String[] initializationQueue = new String[]{
@@ -133,6 +155,7 @@ public class DatabaseInitialization {
             dropTable(connection, "\"InitialDelegation\"");
             dropTable(connection, "\"Validator\"");
             dropTable(connection, "\"UsersHistory\"");
+            dropTable(connection, "\"LatestBlock\"");
         } catch (Exception e) {
             logger.error("Error dropping tables: ", e);
         }

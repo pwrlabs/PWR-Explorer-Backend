@@ -34,31 +34,36 @@ public class Processor {
             long blockStart = System.currentTimeMillis();
             long fetchStart = System.currentTimeMillis();
 
-            BiResult<Block, List<FalconTransaction>> blockAndTransactions = Main.pwrj.getBlockAndTransactions(blockNumber);
-            Block block = blockAndTransactions.getFirst();
-            List<FalconTransaction> transactions = blockAndTransactions.getSecond();
+            try {
+                BiResult<Block, List<FalconTransaction>> blockAndTransactions = Main.pwrj.getBlockAndTransactions(blockNumber);
+                Block block = blockAndTransactions.getFirst();
+                List<FalconTransaction> transactions = blockAndTransactions.getSecond();
 
-            long fetchDuration = System.currentTimeMillis() - fetchStart;
-            logger.info("Fetched transactions for block {} in {} ms", block.getBlockNumber(), fetchDuration);
+                long fetchDuration = System.currentTimeMillis() - fetchStart;
+                logger.info("Fetched transactions for block {} in {} ms", block.getBlockNumber(), fetchDuration);
 
-            logger.info("Getting {} transactions by hashes for block {}", transactions.size(), block.getBlockNumber());
+                logger.info("Getting {} transactions by hashes for block {}", transactions.size(), block.getBlockNumber());
 
-            long processStart = System.currentTimeMillis();
-            for (FalconTransaction txn : transactions) {
-                if (txn instanceof FalconTransaction.FalconJoinAsValidator joinTxn) {
-                    insertValidator(joinTxn.getSender().toLowerCase(), txn.getTimestamp());
+                long processStart = System.currentTimeMillis();
+                for (FalconTransaction txn : transactions) {
+                    if (txn instanceof FalconTransaction.FalconJoinAsValidator joinTxn) {
+                        insertValidator(joinTxn.getSender().toLowerCase(), txn.getTimestamp());
+                    }
+
+                    processUserTransaction(txn.getSender().toLowerCase(), txn.getTransactionHash(), txn.getTimestamp());
+                    processUserTransaction(txn.getReceiver().toLowerCase(), txn.getTransactionHash(), txn.getTimestamp());
                 }
+                long processDuration = System.currentTimeMillis() - processStart;
+                logger.info("Processed {} transactions for block {} in {} ms", transactions.size(), block.getBlockNumber(), processDuration);
 
-                processUserTransaction(txn.getSender().toLowerCase(), txn.getTransactionHash(), txn.getTimestamp());
-                processUserTransaction(txn.getReceiver().toLowerCase(), txn.getTransactionHash(), txn.getTimestamp());
+                blocks.add(block);
+                allTxns.addAll(transactions);
+                long blockDuration = System.currentTimeMillis() - blockStart;
+                logger.info("Finished processing block {} in {} ms", block.getBlockNumber(), blockDuration);
+
+            } catch (Exception e) {
+                logger.error("Failed to fetch block {} and txns", blockNumber);
             }
-            long processDuration = System.currentTimeMillis() - processStart;
-            logger.info("Processed {} transactions for block {} in {} ms", transactions.size(), block.getBlockNumber(), processDuration);
-
-            blocks.add(block);
-            allTxns.addAll(transactions);
-            long blockDuration = System.currentTimeMillis() - blockStart;
-            logger.info("Finished processing block {} in {} ms", block.getBlockNumber(), blockDuration);
         }
 
         logger.info("Finished processing all blocks in {} ms", System.currentTimeMillis() - totalStart);
@@ -78,6 +83,9 @@ public class Processor {
                     batchInsertDuration
             );
         }
+
+        Queries.updateLastStoredBlock(blockNumbers.getLast());
+        logger.info("Updated latest block number");
 
         logger.info("Total time for processIncomingBlocks: {} ms", System.currentTimeMillis() - totalStart);
     }
@@ -141,8 +149,6 @@ public class Processor {
             insertBlock(blocks);
             Queries.incrementSubmittedBlocksCount(blocks);
             logger.info("Incremented submitted blocks count");
-            Queries.updateLatestBlockNumber(blocks);
-            logger.info("Updated latest block number");
         } catch (Exception e) {
             logger.error("Error inserting from block {} -> {}", blocks.getFirst().getBlockNumber(), blocks.getLast().getBlockNumber(), e);
         }

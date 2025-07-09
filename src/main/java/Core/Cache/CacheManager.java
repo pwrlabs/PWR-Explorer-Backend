@@ -60,7 +60,7 @@ public class CacheManager {
         blocksCountCache = Caffeine.newBuilder()
                 .maximumSize(1)
                 .expireAfterWrite(2, TimeUnit.SECONDS)
-                .buildAsync(key -> getLastBlockNumber());
+                .buildAsync(key -> getLastStoredBlock());
 
         averageTpsCache = Caffeine.newBuilder()
                 .maximumSize(2)

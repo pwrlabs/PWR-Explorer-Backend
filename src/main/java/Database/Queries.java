@@ -231,6 +231,30 @@ public class Queries {
         return 0;
     }
 
+    public static long getLastStoredBlock() {
+        String sql = "SELECT " + BLOCK_NUMBER + " FROM \"LastBlock\";";
+
+        try (QueryResult result = executeQuery(sql)) {
+            ResultSet rs = result.ResultSet();
+            if (rs.next()) {
+                return rs.getLong(1);
+            }
+        } catch (Exception e) {
+            logger.error("Failed to get last stored block number: {}", e.getLocalizedMessage());
+        }
+        return 0;
+    }
+
+    public static void updateLastStoredBlock(long blockNumber) {
+        String sql = "UPDATE \"LastBlock\" SET " + BLOCK_NUMBER + " = ?";
+
+        try {
+            executeUpdate(sql, blockNumber);
+        } catch (Exception e) {
+            logger.error("Failed to update last stored block number: {}", e.getLocalizedMessage());
+        }
+    }
+
     public static long getLatestBlockNumberForFeeRecipient(String feeRecipient) {
         String sql = "SELECT " + TIMESTAMP + " FROM \"Block\" " +
                 "WHERE LOWER(" + FEE_RECIPIENT + ") = ? " +

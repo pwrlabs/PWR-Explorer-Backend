@@ -10,8 +10,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import Database.Queries;
+import io.pwrlabs.util.encoders.BiResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.web3j.abi.datatypes.Int;
 
 import static Database.Constants.Constants.BLOCK_TIMEOUT_MINUTES;
 import static Database.Queries.*;
@@ -33,7 +35,7 @@ public class Synchronizer {
     public static void sync(PWRJ pwrj) {
         running = true;
         long blockToCheck = Math.max(getLastStoredBlock() + 1, 1);
-        blockToCheck = 117636;
+        blockToCheck = 117656;
 
         logger.info("Synchronizer starting at block {}", blockToCheck);
 
@@ -134,6 +136,7 @@ public class Synchronizer {
 
             return true;
         } catch (Exception e) {
+            blockBuffer.clear();
             logger.error("Error processing block {}", blockNumber, e);
             return false;
         }

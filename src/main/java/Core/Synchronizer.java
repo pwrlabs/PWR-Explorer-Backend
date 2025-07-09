@@ -60,7 +60,7 @@ public class Synchronizer {
                 }
 
                 while (blockToCheck <= chainLatestBlock && running) {
-                    if (!processBlock(pwrj, blockToCheck)) {
+                    if (!processBlock(blockToCheck)) {
                         if (isRpcDown.get()) {// Check if we should continue or break
                             break;// Actual RPC error - break the loop
                         } else {
@@ -108,9 +108,9 @@ public class Synchronizer {
         AdminService.resetSystemInternal("Chain reset detected - Expected: " + expected + ", Actual: " + actual);
     }
 
-    private static boolean processBlock(PWRJ pwrj, long blockNumber) {
+    private static boolean processBlock(long blockNumber) {
         try {
-//            checkBlockHealth(block);
+            // checkBlockHealth(block);
             blockBuffer.add(blockNumber);
 
             if (blockBuffer.size() == 1) {
@@ -135,25 +135,7 @@ public class Synchronizer {
             return true;
         } catch (Exception e) {
             logger.error("Error processing block {}", blockNumber, e);
-            return true;
-        }
-    }
-
-    private static Block getBlock(PWRJ pwrj, long blockNumber) {
-        try {
-            Block block = pwrj.getBlockByNumber(blockNumber);
-            handleRpcRecovery();
-            return block;
-        } catch (Exception e) {
-            String errorMessage = e.getMessage();
-            if (errorMessage != null && errorMessage.contains("400")) {
-                logger.debug("getBlockByNumber error : Block {} not ready yet, skipping: {}", blockNumber, errorMessage);
-                return null;
-            } else {
-                logger.error("RPC error getting block {}: {}", blockNumber, errorMessage, e);
-                handleRpcError();
-                return null;
-            }
+            return false;
         }
     }
 

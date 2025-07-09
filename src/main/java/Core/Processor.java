@@ -68,6 +68,9 @@ public class Processor {
 
         logger.info("Finished processing all blocks in {} ms", System.currentTimeMillis() - totalStart);
 
+        Queries.updateLastStoredBlock(blockNumbers.getLast());
+        logger.info("Updated latest block number");
+
         if (!allTxns.isEmpty() || !blocks.isEmpty()) {
             long batchInsertStart = System.currentTimeMillis();
             insertBlockData(blocks);
@@ -83,9 +86,6 @@ public class Processor {
                     batchInsertDuration
             );
         }
-
-        Queries.updateLastStoredBlock(blockNumbers.getLast());
-        logger.info("Updated latest block number");
 
         logger.info("Total time for processIncomingBlocks: {} ms", System.currentTimeMillis() - totalStart);
     }

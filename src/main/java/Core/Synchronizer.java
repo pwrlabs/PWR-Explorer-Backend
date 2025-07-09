@@ -35,7 +35,6 @@ public class Synchronizer {
     public static void sync(PWRJ pwrj) {
         running = true;
         long blockToCheck = Math.max(getLastStoredBlock() + 1, 1);
-//        blockToCheck = 117879;
 
         logger.info("Synchronizer starting at block {}", blockToCheck);
 
@@ -49,11 +48,11 @@ public class Synchronizer {
                 }
 
                 long lastStoredBlock = getLastStoredBlock();
-                if (chainLatestBlock < lastStoredBlock) {
-                    handleChainReset(lastStoredBlock, chainLatestBlock);
-                    blockToCheck = 1;
-                    continue;
-                }
+//                if (chainLatestBlock < lastStoredBlock) {
+//                    handleChainReset(lastStoredBlock, chainLatestBlock);
+//                    blockToCheck = 1;
+//                    continue;
+//                }
 
                 if (blockToCheck > chainLatestBlock) {
                     long elapsedTime = System.currentTimeMillis() - startTime;

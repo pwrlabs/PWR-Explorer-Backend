@@ -154,7 +154,7 @@ public class DatabaseInitialization {
             dropTable(connection, "\"InitialDelegation\"");
             dropTable(connection, "\"Validator\"");
             dropTable(connection, "\"UsersHistory\"");
-            dropTable(connection, "\"LatestBlock\"");
+            dropTable(connection, "\"LastBlock\"");
         } catch (Exception e) {
             logger.error("Error dropping tables: ", e);
         }

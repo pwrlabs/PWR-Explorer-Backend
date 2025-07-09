@@ -35,7 +35,7 @@ public class Synchronizer {
     public static void sync(PWRJ pwrj) {
         running = true;
         long blockToCheck = Math.max(getLastStoredBlock() + 1, 1);
-        blockToCheck = 117656;
+//        blockToCheck = 117879;
 
         logger.info("Synchronizer starting at block {}", blockToCheck);
 

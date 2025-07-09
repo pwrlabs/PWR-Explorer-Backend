@@ -89,7 +89,6 @@ public class DatabaseInitialization {
 
         try (Connection connection = getConnection();
              Statement stmt = connection.createStatement()) {
-
             stmt.execute(sqlCreateTable);
             stmt.execute(sqlInsertInitial);
         } catch (SQLException e) {

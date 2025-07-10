@@ -23,7 +23,6 @@ public class Constants {
     public static final String SUCCESS = "success";
     public static final String JOINING_TIME = "joining_time";
     public static final String LIFETIME_REWARDS = "lifetime_rewards";
-    public static final String SUBMITTED_BLOCKS = "submitted_blocks";
     public static final String FIRST_TXN_TIMESTAMP = "first_txn_timestamp";
     public static final String FIRST_TXN_HASH = "first_txn_hash";
     public static final String LAST_TXN_TIMESTAMP = "last_txn_timestamp";

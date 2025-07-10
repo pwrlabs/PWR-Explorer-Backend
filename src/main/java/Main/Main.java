@@ -69,7 +69,6 @@ public class Main {
         RateLimiter.initRateLimiter();
 
         DatabaseInitialization.initialize();
-
         cacheManager = new CacheManager(pwrj);
 
         BlockService.initialize(pwrj);
@@ -88,7 +87,6 @@ public class Main {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Shutting down... Stopping synchronizer");
             Synchronizer.stop();
-
         }));
     }
 

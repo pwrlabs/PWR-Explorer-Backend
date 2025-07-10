@@ -1,22 +1,14 @@
 package Core;
 
 import Services.AdminService;
-import Services.DiscordAlertService;
-import com.github.pwrlabs.pwrj.entities.Block;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import Database.Queries;
-import io.pwrlabs.util.encoders.BiResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.web3j.abi.datatypes.Int;
 
-import static Database.Constants.Constants.BLOCK_TIMEOUT_MINUTES;
-import static Database.Queries.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import static Database.Queries.getLastStoredBlock;
 import static Services.DiscordAlertService.isRpcDown;
 
 public class Synchronizer {

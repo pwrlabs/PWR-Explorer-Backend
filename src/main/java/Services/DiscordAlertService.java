@@ -5,8 +5,8 @@ import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
@@ -15,24 +15,27 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import static Database.Constants.Constants.BLOCK_TIMEOUT_MINUTES;
 
 import static Utils.ResponseBuilder.*;
 
 public class DiscordAlertService {
-    private static final Logger logger = LogManager.getLogger(DiscordAlertService.class);
+    private static final Logger logger = LoggerFactory.getLogger(DiscordAlertService.class);
 
     private static final String BOT_TOKEN = Config.getDiscordBotToken();
     private static final String CHANNEL_ID = Config.getDiscordChannelId();
     public static final AtomicBoolean isRpcDown = new AtomicBoolean(false);
     public static final AtomicBoolean isBlockchainDown = new AtomicBoolean(false);
     private static final AtomicBoolean isBotReady = new AtomicBoolean(false);
-    private static volatile long lastDownAlertTime = 0; // in millis
-    private static final long ALERT_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+    private static final long BLOCK_TIMEOUT_MINUTES = 5;
+    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     private static JDA jda;
     private static final PWRJ pwrj = new PWRJ(Config.getPwrRpcUrl());
+
     static {
         initializeDiscordBot();
     }
@@ -47,6 +50,12 @@ public class DiscordAlertService {
             if (targetChannel != null) {
                 logger.info("Successfully found target channel: {} in guild: {}",
                         targetChannel.getName(), targetChannel.getGuild().getName());
+                scheduler.scheduleAtFixedRate(
+                        DiscordAlertService::checkBlockchainHealthAndAlert,
+                        0,
+                        20,
+                        TimeUnit.SECONDS
+                );
             } else {
                 logger.warn("Target channel {} not found! Available channels:", CHANNEL_ID);
                 jda.getTextChannels().forEach(channel ->
@@ -59,9 +68,8 @@ public class DiscordAlertService {
         }
     }
 
-    public static String checkBlockchainHealthAndAlert(Request request, Response response) {
+    public static void checkBlockchainHealthAndAlert() {
         try {
-            response.header("Content-Type", "application/json");
             logger.info("Starting blockchain health check with Discord alerts...");
             ExplorerHealthInfo healthInfo = getExplorerHealth();
             if (healthInfo == null) {
@@ -71,34 +79,26 @@ public class DiscordAlertService {
                         "unknown",
                         -1
                 );
-                return getError(response, "PWR RPC unreachable").toString();
+//                return getError(response, "PWR RPC unreachable").toString();
             }
-            boolean isHealthy = healthInfo.minutesSinceLastBlock < BLOCK_TIMEOUT_MINUTES;
+            boolean isHealthy = healthInfo.minutesSinceLastBlock() < BLOCK_TIMEOUT_MINUTES;
             if (!isHealthy) {
                 String downReason = String.format("Latest block timestamp is %s (older than %d minutes)",
-                        healthInfo.latestBlockTime, BLOCK_TIMEOUT_MINUTES);
+                        healthInfo.latestBlockTime(), BLOCK_TIMEOUT_MINUTES);
 
                 DiscordAlertService.handleBlockchainDown(
                         downReason,
-                        Long.parseLong(healthInfo.latestBlockNumber),
-                        healthInfo.latestBlockTime,
-                        healthInfo.minutesSinceLastBlock
+                        healthInfo.latestBlockNumber(),
+                        healthInfo.latestBlockTime(),
+                        healthInfo.minutesSinceLastBlock()
                 );
             } else {
                 DiscordAlertService.handleBlockchainUp(
-                        Long.parseLong(healthInfo.latestBlockNumber),
-                        healthInfo.latestBlockTime,
-                        healthInfo.minutesSinceLastBlock
+                        healthInfo.latestBlockNumber(),
+                        healthInfo.latestBlockTime(),
+                        healthInfo.minutesSinceLastBlock()
                 );
             }
-
-            return "{\"status\":\"" + (isHealthy ? "UP" : "DOWN") +
-                    "\",\"latestBlockTime\":\"" + healthInfo.latestBlockTime +
-                    "\",\"minutesSinceLastBlock\":" + healthInfo.minutesSinceLastBlock +
-                    ",\"blockNumber\":\"" + healthInfo.latestBlockNumber +
-                    "\",\"timestamp\":\"" + LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) +
-                    "\",\"alertChannel\":\"Discord\"}";
-
         } catch (Exception e) {
             logger.error("Error during Discord health check: {}", e.getMessage(), e);
             DiscordAlertService.handleBlockchainDown(
@@ -107,7 +107,6 @@ public class DiscordAlertService {
                     "unknown",
                     -1
             );
-            return getError(response, "Health check failed: " + e.getMessage()).toString();
         }
     }
 
@@ -139,7 +138,7 @@ public class DiscordAlertService {
             return new ExplorerHealthInfo(
                     blockTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
                     minutesSince,
-                    "latest"
+                    pwrj.getLatestBlockNumber()
             );
 
         } catch (Exception e) {
@@ -231,37 +230,37 @@ public class DiscordAlertService {
         );
     }
 
-    public static void handleRpcFailure() {
-        boolean wasUp = !isRpcDown.getAndSet(true);
-        if (wasUp) {
-            try {
-                sendDownAlert("RPC connection failed", -1, "unknown", -1);
-            } catch (Exception e) {
-                logger.error("Failed to send RPC down alert: {}", e.getMessage(), e);
-            }
-        }
-    }
-
-    public static void handleRpcRecovery() {
-        boolean wasDown = isRpcDown.getAndSet(false);
-        if (wasDown) {
-            try {
-                sendUpAlert(-1, "unknown", -1);
-            } catch (Exception e) {
-                logger.error("Failed to send RPC up alert: {}", e.getMessage(), e);
-            }
-        }
-    }
-
-    public static void handleRpcReset() {
-        try {
-            String message = "@amir619h ⚠️ RPC Reset Detected - Auto-resetting DB!";
-            sendDiscordMessage(message);
-            logger.info("RPC reset alert sent to Discord");
-        } catch (Exception e) {
-            logger.error("Failed to send RPC reset alert: {}", e.getMessage(), e);
-        }
-    }
+//    public static void handleRpcFailure() {
+//        boolean wasUp = !isRpcDown.getAndSet(true);
+//        if (wasUp) {
+//            try {
+//                sendDownAlert("RPC connection failed", -1, "unknown", -1);
+//            } catch (Exception e) {
+//                logger.error("Failed to send RPC down alert: {}", e.getMessage(), e);
+//            }
+//        }
+//    }
+//
+//    public static void handleRpcRecovery() {
+//        boolean wasDown = isRpcDown.getAndSet(false);
+//        if (wasDown) {
+//            try {
+//                sendUpAlert(-1, "unknown", -1);
+//            } catch (Exception e) {
+//                logger.error("Failed to send RPC up alert: {}", e.getMessage(), e);
+//            }
+//        }
+//    }
+//
+//    public static void handleRpcReset() {
+//        try {
+//            String message = "@amir619h ⚠️ RPC Reset Detected - Auto-resetting DB!";
+//            sendDiscordMessage(message);
+//            logger.info("RPC reset alert sent to Discord");
+//        } catch (Exception e) {
+//            logger.error("Failed to send RPC reset alert: {}", e.getMessage(), e);
+//        }
+//    }
 
     public static Object getBotDebugInfo(Request req, Response res) {
         try {
@@ -301,15 +300,6 @@ public class DiscordAlertService {
         return isBotReady.get();
     }
 
-    private static class ExplorerHealthInfo {
-        final String latestBlockTime;
-        final long minutesSinceLastBlock;
-        final String latestBlockNumber;
-
-        ExplorerHealthInfo(String latestBlockTime, long minutesSinceLastBlock, String latestBlockNumber) {
-            this.latestBlockTime = latestBlockTime;
-            this.minutesSinceLastBlock = minutesSinceLastBlock;
-            this.latestBlockNumber = latestBlockNumber;
-        }
+    private record ExplorerHealthInfo(String latestBlockTime, long minutesSinceLastBlock, long latestBlockNumber) {
     }
 }

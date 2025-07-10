@@ -52,7 +52,7 @@ public class GET {
 
 //        get("/stats", StakingService::getStats);
         get("/healthCheck/", HealthCheckService::checkBlockchainHealth);
-        get("/discordAlert/", DiscordAlertService::checkBlockchainHealthAndAlert);
+//        get("/discordAlert/", DiscordAlertService::checkBlockchainHealthAndAlert);
         get("/BotStatus/", DiscordAlertService::getBotDebugInfo);
         path("/admin/", () -> {
             get("reset/", AdminService::resetSystem);

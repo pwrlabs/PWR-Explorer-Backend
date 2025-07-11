@@ -32,17 +32,24 @@ public class WebsocketService {
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private static final CacheManager cacheManager = new CacheManager(new PWRJ(Config.getPwrRpcUrl()));
     private static final Logger logger = LoggerFactory.getLogger(WebsocketService.class);
-    private static final long MAX_IDLE_TIMEOUT = 60 * 60 * 12 * 1000; // 12 hours
+    private static final long MAX_IDLE_TIMEOUT = 60 * 10 * 1000; // 10 minutes
     private static volatile boolean started = false;
+    private static volatile int startCount = 0;
+    private static String data = "";
 
     public WebsocketService() {
-        // Schedule periodic updates, e.g., every 5 seconds
         synchronized (WebsocketService.class) {
             if (!started) {
-                scheduler.scheduleAtFixedRate(this::sendExplorerInfo, 0, 10, TimeUnit.SECONDS);
+                int period = 10;
+                if (startCount == 0) {
+                    period = 0;
+                    startCount++;
+                }
+                scheduler.scheduleWithFixedDelay(this::sendExplorerInfo, 0, period, TimeUnit.SECONDS);
                 started = true;
             }
-        }    }
+        }
+    }
 
     @OnWebSocketConnect
     public void onConnect(Session session) {
@@ -50,6 +57,7 @@ public class WebsocketService {
             session.setIdleTimeout(MAX_IDLE_TIMEOUT);
             sessions.add(session);
             session.getRemote().sendString("Connection established");
+            session.getRemote().sendString(data);
             logger.info("WebSocket connection established from {}", session.getRemoteAddress().getAddress());
         } catch (Exception e) {
             logger.error("Error during WebSocket connection: {}", e.getMessage());
@@ -143,6 +151,7 @@ public class WebsocketService {
                             "blocks", blocksResult != null ? blocksResult.getJSONArray(0) : 0,
                             "fourteenDaysTxn", otherDataObj.get("fourteenDaysTxn")
                     );
+                    data = message.toString();
 
                     broadcast(message.toString());
                 } catch (Exception e) {

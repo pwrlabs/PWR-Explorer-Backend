@@ -1,14 +1,20 @@
 package Core;
 
+import Database.Queries;
 import Services.AdminService;
+import com.github.pwrlabs.pwrj.entities.Block;
+import com.github.pwrlabs.pwrj.entities.FalconTransaction;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
+import io.pwrlabs.util.encoders.BiResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static Database.Queries.getLastStoredBlock;
+import static Database.Queries.insertBlock;
 import static Services.DiscordAlertService.isRpcDown;
 
 public class Synchronizer {
@@ -16,18 +22,14 @@ public class Synchronizer {
     private static volatile boolean running = false;
     private static volatile boolean rpcHealthy = true;
     private static final boolean blockchainHealthy = true;
-    private static long previousBlockTimestamp = -1;
-    private static long previousBlockNumber = -1;
-    private static final List<Long> blockBuffer = new ArrayList<>();
-    private static final int BATCH_SIZE = 10;
-    private static final long BATCH_MAX_TIME_MS = 2000; //2 seconds
-    private static long batchStartTime = 0;
+    //    private static long previousBlockTimestamp = -1;
+//    private static long previousBlockNumber = -1;
+    private static final Map<Long, List<FalconTransaction>> txnsBuffer = new ConcurrentHashMap<>();
     private static final long sleepBetweenBlockFetches = 100;
 
     public static void sync(PWRJ pwrj) {
         running = true;
         long blockToCheck = Math.max(getLastStoredBlock() + 1, 1);
-
         logger.info("Synchronizer starting at block {}", blockToCheck);
 
         while (running) {
@@ -53,7 +55,19 @@ public class Synchronizer {
                 }
 
                 while (blockToCheck <= chainLatestBlock && running) {
-                    if (!processBlock(blockToCheck)) {
+                    try {
+                        long fetchStart = System.currentTimeMillis();
+                        BiResult<Block, List<FalconTransaction>> blockAndTransactions = pwrj.getBlockAndTransactions(blockToCheck);
+                        Block block = blockAndTransactions.getFirst();
+                        List<FalconTransaction> txns = blockAndTransactions.getSecond();
+                        logger.info("Fetched {} transactions for block {} in {} ms", txns.size(), blockToCheck, System.currentTimeMillis() - fetchStart);
+
+                        insertBlock(block);
+                        Queries.incrementSubmittedBlocksCount(block);
+                        Queries.updateLastStoredBlock(blockToCheck);
+
+                        Processor.processTxns(blockToCheck, txns);
+                    } catch (Exception e) {
                         if (isRpcDown.get()) {// Check if we should continue or break
                             break;// Actual RPC error - break the loop
                         } else {
@@ -64,6 +78,7 @@ public class Synchronizer {
                             continue;
                         }
                     }
+
                     blockToCheck++;
                     throttleProcessing();
                 }
@@ -100,94 +115,6 @@ public class Synchronizer {
 //        DiscordAlertService.handleRpcReset();
         AdminService.resetSystemInternal("Chain reset detected - Expected: " + expected + ", Actual: " + actual);
     }
-
-    private static boolean processBlock(long blockNumber) {
-        try {
-            // checkBlockHealth(block);
-            blockBuffer.add(blockNumber);
-
-            if (blockBuffer.size() == 1) {
-                batchStartTime = System.currentTimeMillis();
-            }
-
-            long now = System.currentTimeMillis();
-
-            boolean sizeReached = blockBuffer.size() >= BATCH_SIZE;
-            boolean timeReached = (now - batchStartTime) >= BATCH_MAX_TIME_MS;
-
-            if (timeReached) {
-                logger.info("time reached {}", true);
-            }
-
-            if (sizeReached || timeReached) {
-                Processor.processIncomingBlocks(blockBuffer);
-                blockBuffer.clear();
-                batchStartTime = 0;
-            }
-
-            return true;
-        } catch (Exception e) {
-            blockBuffer.clear();
-            logger.error("Error processing block {}", blockNumber, e);
-            return false;
-        }
-    }
-
-//    private static void checkBlockHealth(Block block) {
-//        try {
-//            long currentBlockNumber = block.getBlockNumber();
-//            long currentTimestamp = block.getTimestamp();
-//            if (previousBlockNumber == -1 || previousBlockTimestamp == -1) {
-//                previousBlockNumber = currentBlockNumber;
-//                previousBlockTimestamp = currentTimestamp;
-//                logger.info("Initializing block health check with first block: {}", currentBlockNumber);
-//                return;
-//            }
-//            if (currentBlockNumber <= previousBlockNumber) {
-//                logger.debug("Skipping block {} because block number is not newer than previous ({})", currentBlockNumber, previousBlockNumber);
-//                return;
-//            }
-//            if (currentTimestamp <= previousBlockTimestamp) {
-//                logger.debug("Skipping block {} because timestamp is not newer than previous ({} <= {})",
-//                        currentBlockNumber, currentTimestamp, previousBlockTimestamp);
-//                return;
-//            }
-//            long diffMillis = currentTimestamp - previousBlockTimestamp;
-//            long diffMinutes = Duration.ofMillis(diffMillis).toMinutes();
-//            if (diffMinutes >= BLOCK_TIMEOUT_MINUTES) {
-//                logger.info("Block {} timestamp = {}, previous = {}", currentBlockNumber, Instant.ofEpochMilli(currentTimestamp), Instant.ofEpochMilli(previousBlockTimestamp));
-//                logger.info("Block {}, time diff with previous = {} minutes", currentBlockNumber, diffMinutes);
-//
-//                if (!DiscordAlertService.isBlockchainDown.get()) {
-//                    logger.warn("Blockchain unhealthy: Block {} is {} minutes old", currentBlockNumber, diffMinutes);
-////                    DiscordAlertService.handleBlockchainDown(
-////                            "Block interval too large",
-////                            currentBlockNumber,
-////                            Instant.ofEpochMilli(currentTimestamp).toString(),
-////                            diffMinutes
-////                    );
-//                }
-//            } else if (DiscordAlertService.isBlockchainDown.get()) {
-//                // Log recovery info
-//                logger.info("Block {} timestamp = {}, previous = {}", currentBlockNumber,
-//                        Instant.ofEpochMilli(currentTimestamp), Instant.ofEpochMilli(previousBlockTimestamp));
-//                logger.info("Block {}, time diff with previous = {} minutes", currentBlockNumber, diffMinutes);
-//                logger.info("Blockchain recovered with block {} at {} ({} mins diff)",
-//                        currentBlockNumber,
-//                        Instant.ofEpochMilli(currentTimestamp),
-//                        diffMinutes);
-////                DiscordAlertService.handleBlockchainUp(
-////                        currentBlockNumber,
-////                        Instant.ofEpochMilli(currentTimestamp).toString(),
-////                        diffMinutes
-////                );
-//            }
-//            previousBlockNumber = currentBlockNumber;
-//            previousBlockTimestamp = currentTimestamp;
-//        } catch (Exception e) {
-//            logger.error("Error checking block health for {}", block.getBlockNumber(), e);
-//        }
-//    }
 
     private static void handleRpcError() {
         if (rpcHealthy) {

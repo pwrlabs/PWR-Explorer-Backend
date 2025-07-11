@@ -4,8 +4,6 @@ import Core.Cache.CacheManager;
 import DataModel.NewTxn;
 import com.github.pwrlabs.pwrj.entities.FalconTransaction;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bouncycastle.util.encoders.Hex;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -21,7 +19,7 @@ import static Utils.Helpers.*;
 import static Utils.ResponseBuilder.*;
 
 public class TransactionService {
-    private static final Logger logger = LogManager.getLogger(TransactionService.class);
+//    private static final Logger logger = LogManager.getLogger(TransactionService.class);
     private static CacheManager cacheManager;
     private static PWRJ pwrj;
     private static final BigDecimal ONE_PWR_TO_USD = new BigDecimal("1.0"); // Adjust value as needed

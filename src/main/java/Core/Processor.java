@@ -3,12 +3,11 @@ package Core;
 import DataModel.UserTransactionInfo;
 import Database.Queries;
 import Main.Main;
-import Utils.Settings;
 import com.github.pwrlabs.pwrj.entities.Block;
 import com.github.pwrlabs.pwrj.entities.FalconTransaction;
 import io.pwrlabs.util.encoders.BiResult;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static Database.Queries.*;
 
 public class Processor {
-    private static final Logger logger = LogManager.getLogger(Processor.class);
+    private static final Logger logger = LoggerFactory.getLogger(Processor.class);
     private static final Map<String, UserTransactionInfo> userTransactionsBuffer = new ConcurrentHashMap<>();
     private static long timeSinceLastFlush = System.currentTimeMillis();
 

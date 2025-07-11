@@ -1,7 +1,8 @@
 package Database;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,7 +13,7 @@ import static Database.Constants.Constants.*;
 import static Database.DatabaseConnection.getConnection;
 
 public class DatabaseInitialization {
-    private static final Logger logger = LogManager.getLogger(DatabaseInitialization.class);
+    private static final Logger logger = LoggerFactory.getLogger(DatabaseInitialization.class);
     private static final int NUMBER_OF_SHARDS = 2;
 
     public static void initialize() {

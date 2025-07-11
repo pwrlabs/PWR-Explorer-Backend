@@ -4,11 +4,10 @@ import DataModel.Block;
 import Utils.Settings;
 import DataModel.NewTxn;
 import com.github.pwrlabs.pwrj.entities.FalconTransaction;
-import com.google.common.math.BigIntegerMath;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -22,7 +21,7 @@ import static Database.Constants.Constants.*;
 import static Database.DatabaseConnection.getConnection;
 
 public class Queries {
-    private static final Logger logger = LogManager.getLogger(Queries.class);
+    private static final Logger logger = LoggerFactory.getLogger(Queries.class);
     private static final int NUMBER_OF_SHARDS = 1;
 
     public static void batchInsertTxns(List<FalconTransaction> txns) {

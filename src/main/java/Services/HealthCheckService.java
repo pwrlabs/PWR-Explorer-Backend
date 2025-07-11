@@ -4,8 +4,8 @@ import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import com.postmarkapp.postmark.client.ApiClient;
 import com.postmarkapp.postmark.client.data.model.message.Message;
 import com.postmarkapp.postmark.client.data.model.message.MessageResponse;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static Utils.ResponseBuilder.*;
 
 public class HealthCheckService {
-    private static final Logger logger = LogManager.getLogger(HealthCheckService.class);
+    private static final Logger logger = LoggerFactory.getLogger(HealthCheckService.class);
 
     private static final String POSTMARK_SERVER_URL = "api.postmarkapp.com";
     private static final String POSTMARK_TOKEN = "7c24d497-d46a-40e3-b7d9-cb14fdf3d760";

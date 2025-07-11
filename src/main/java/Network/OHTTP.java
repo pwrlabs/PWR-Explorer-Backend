@@ -1,8 +1,8 @@
 package Network;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -11,7 +11,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class OHTTP {
-    private static final Logger logger = LogManager.getLogger(OHTTP.class);
+    private static final Logger logger = LoggerFactory.getLogger(OHTTP.class);
     public static JSONObject sendGetRequest(String url, JSONObject jsonBody) throws Exception {
 
         // Create a URL object with the target URL

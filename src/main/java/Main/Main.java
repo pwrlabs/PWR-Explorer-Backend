@@ -8,11 +8,8 @@ import Database.DatabaseInitialization;
 import Core.Synchronizer;
 import Services.*;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import java.io.IOException;
-import java.sql.SQLException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static spark.Spark.*;
 
@@ -20,7 +17,7 @@ public class Main {
     public static final PWRJ pwrj = new PWRJ(Config.getPwrRpcUrl());
     public static CacheManager cacheManager;
     public static Thread synchronizerThread;
-    private static final Logger logger = LogManager.getLogger(Main.class);
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) throws Exception {
         port(8081);

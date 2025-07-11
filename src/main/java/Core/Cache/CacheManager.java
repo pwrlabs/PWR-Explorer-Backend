@@ -6,9 +6,9 @@ import DataModel.NewTxn;
 import com.github.pwrlabs.pwrj.entities.Validator;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import com.github.benmanes.caffeine.cache.*;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import static Database.Queries.*;
 
 public class CacheManager {
-    private final Logger logger = LogManager.getLogger(CacheManager.class.getName());
+    private final Logger logger = LoggerFactory.getLogger(CacheManager.class.getName());
     private final AsyncLoadingCache<Integer, List<Block>> blocksCache;
     private final AsyncLoadingCache<Integer, List<NewTxn>> recentTxnCache;
     private final AsyncLoadingCache<String, Integer> activeValidatorsCountCache;

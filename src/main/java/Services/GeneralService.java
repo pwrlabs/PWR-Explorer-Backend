@@ -34,7 +34,6 @@ public class GeneralService {
     }
 
     public static Object getExplorerInfo(Request request, Response response) {
-        getLastXTransactions(5);
         try {
             response.header("Content-Type", "application/json");
 

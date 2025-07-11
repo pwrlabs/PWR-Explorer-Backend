@@ -25,6 +25,8 @@ public class Main {
     public static void main(String[] args) throws Exception {
         port(8081);
 
+        webSocket("/websocket", WebsocketService.class);
+
         options("/*",
                 (request, response) -> {
 
@@ -82,6 +84,7 @@ public class Main {
             logger.info("⏳ Waiting for Discord bot to initialize...");
             Thread.sleep(1000);
         }
+
         startSynchronizer(pwrj);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

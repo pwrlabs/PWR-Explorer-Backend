@@ -34,18 +34,13 @@ public class WebsocketService {
     private static final Logger logger = LoggerFactory.getLogger(WebsocketService.class);
     private static final long MAX_IDLE_TIMEOUT = 60 * 10 * 1000; // 10 minutes
     private static volatile boolean started = false;
-    private static volatile int startCount = 0;
     private static String data = "";
 
     public WebsocketService() {
         synchronized (WebsocketService.class) {
             if (!started) {
-                int period = 10;
-                if (startCount == 0) {
-                    period = 0;
-                    startCount++;
-                }
-                scheduler.scheduleWithFixedDelay(this::sendExplorerInfo, 0, period, TimeUnit.SECONDS);
+                buildExplorerInfoSync();
+                scheduler.scheduleWithFixedDelay(this::sendExplorerInfo, 0, 5, TimeUnit.SECONDS);
                 started = true;
             }
         }
@@ -163,6 +158,93 @@ public class WebsocketService {
             logger.error("Error scheduling explorer info: ", e);
         }
     }
+
+    private void buildExplorerInfoSync() {
+        try {
+            CompletableFuture<JSONArray> blocksFuture = CompletableFuture.supplyAsync(() -> {
+                JSONArray blocks = new JSONArray();
+                List<Block> blockList = cacheManager.getBlocks(5);
+                for (Block block : blockList) {
+                    JSONObject object = new JSONObject();
+                    object.put("blockHeight", block.blockNumber());
+                    object.put("timeStamp", block.timeStamp() / 1000);
+                    object.put("txnsCount", block.txnCount());
+                    object.put("blockReward", block.blockReward());
+                    object.put("blockSubmitter", returnHexStringWith0x(block.blockSubmitter()));
+                    blocks.put(object);
+                }
+                return new JSONArray().put(blocks);
+            });
+
+            CompletableFuture<JSONArray> txnsFuture = CompletableFuture.supplyAsync(() -> {
+                JSONArray txns = new JSONArray();
+                List<NewTxn> txnsList = cacheManager.getRecentTxns(5);
+                for (NewTxn txn : txnsList) {
+                    if (txn == null) continue;
+                    JSONObject object = new JSONObject();
+                    object.put("txnHash", returnHexStringWith0x(txn.hash()));
+                    object.put("timeStamp", txn.timestamp() / 1000);
+                    object.put("from", returnHexStringWith0x(txn.fromAddress()));
+                    object.put("to", returnHexStringWith0x(txn.toAddress()));
+                    object.put("value", txn.value());
+                    txns.put(object);
+                }
+                return new JSONArray().put(txns);
+            });
+
+            CompletableFuture<JSONArray> otherDataFuture = CompletableFuture.supplyAsync(() -> {
+                Instant start = Instant.now();
+                JSONObject data = new JSONObject();
+
+                data.put("fourteenDaysTxn", cacheManager.getFourteenDaysTxn());
+                data.put("totalTransactionsCount", cacheManager.getTotalTransactionCount());
+                data.put("validators", cacheManager.getActiveValidatorsCount());
+                data.put("tps", cacheManager.getAverageTps(100, cacheManager.getBlocksCount()));
+
+                long duration = Duration.between(start, Instant.now()).toMillis();
+                return new JSONArray().put(data).put(duration);
+            });
+
+            // Combine all futures
+            CompletableFuture.allOf(blocksFuture, txnsFuture, otherDataFuture).thenAccept(v -> {
+                try {
+                    JSONArray blocksResult = blocksFuture.get();
+                    JSONArray txnsResult = txnsFuture.get();
+                    JSONArray otherData = otherDataFuture.get();
+
+                    JSONArray arr = blocksResult != null ? blocksResult.optJSONArray(0) : null;
+                    JSONObject otherDataObj = (JSONObject) otherData.get(0);
+
+                    long blocksCount = 0;
+                    if (arr != null && !arr.isEmpty()) {
+                        blocksCount = arr.optJSONObject(0).optLong("blockHeight", 0);
+                    }
+
+                    JSONObject message = getSuccess(
+                            "price", Settings.getPrice(),
+                            "priceChange", 2.5,
+                            "marketCap", 1_000_000_000L,
+                            "totalTransactionsCount", otherDataObj.getLong("totalTransactionsCount"),
+                            "blocksCount", blocksCount,
+                            "validators", otherDataObj.getInt("validators"),
+                            "tps", otherDataObj.getDouble("tps"),
+                            "txns", txnsResult.getJSONArray(0),
+                            "blocks", blocksResult != null ? blocksResult.getJSONArray(0) : 0,
+                            "fourteenDaysTxn", otherDataObj.get("fourteenDaysTxn")
+                    );
+                    data = message.toString();
+
+                    broadcast(message.toString());
+                } catch (Exception e) {
+                    logger.error("Error building explorer info: ", e);
+                }
+            });
+
+        } catch (Exception e) {
+            logger.error("Error building initial explorer info: ", e);
+        }
+    }
+
 
     // Actually sends the message to all active sessions
     private void broadcast(String message) {

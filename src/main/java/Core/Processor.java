@@ -8,9 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.*;
 
 import static Database.Queries.*;
 
@@ -18,13 +16,13 @@ public class Processor {
     private static final Logger logger = LoggerFactory.getLogger(Processor.class);
     private static final Map<String, UserTransactionInfo> userTransactionsBuffer = new ConcurrentHashMap<>();
     private static long timeSinceLastFlush = System.currentTimeMillis();
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(20);
+    private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 20, 1, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
 
     public static void processTxns(long block, List<FalconTransaction> txnsToProcess) throws Exception {
         long totalStart = System.currentTimeMillis();
         long txnsCount = txnsToProcess.size();
 
-        scheduler.submit(() -> {
+        executor.execute(() -> {
             logger.info("Started processing {} transactions for block {}", txnsCount, block);
             for (FalconTransaction txn : txnsToProcess) {
                 if (txn instanceof FalconTransaction.FalconJoinAsValidator joinTxn) {

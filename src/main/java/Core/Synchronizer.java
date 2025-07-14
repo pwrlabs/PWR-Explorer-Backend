@@ -53,6 +53,8 @@ public class Synchronizer {
                     initializeValidators(pwrj.getBlockByNumber(blockToCheck));
                 }
 
+                int maxRetries = 5;
+                int retryCount = 0;
                 while (blockToCheck <= chainLatestBlock && running) {
                     try {
                         logger.info("Block to check: {}", blockToCheck);
@@ -69,16 +71,26 @@ public class Synchronizer {
                         Queries.updateLastStoredBlock(blockToCheck);
 
                         Processor.processTxns(blockToCheck, txns);
+
+                        retryCount = 0;
                     } catch (Exception e) {
                         if (isRpcDown.get()) {
                             logger.error("RPC down breaking loop");
-                            break;// Actual RPC error - break the loop
+                            break;
                         } else {
-                            // Just a "block not ready" condition - skip this block and try the next one
-                            logger.error("Skipping block {} (not ready), continuing with next block", blockToCheck);
+                            long retryTime = System.currentTimeMillis();
+                            logger.error("Error fetching block {}, attempt {}: {}", blockToCheck, retryCount + 1, e.getMessage());
                             e.printStackTrace();
-                            blockToCheck++;
-                            throttleProcessing();
+
+                            retryCount++;
+                            if (retryCount >= maxRetries) {
+                                logger.warn("Skipping block {} after {} failed attempts", blockToCheck, maxRetries);
+                                blockToCheck++;
+                                retryCount = 0;
+                            }
+
+                            long timeTook = System.currentTimeMillis() - retryTime;
+                            Thread.sleep(Math.max(100 - timeTook, 0));
                             continue;
                         }
                     }

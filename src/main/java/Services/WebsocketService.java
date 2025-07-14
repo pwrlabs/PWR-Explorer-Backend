@@ -79,7 +79,7 @@ public class WebsocketService {
             for (Block block : blockList.reversed()) {
                 if (Long.parseLong(block.blockNumber()) > latestBlockSent) {
                     JSONObject blockObj = new JSONObject();
-                    blockObj.put("blockHeight", block.blockNumber());
+                    blockObj.put("blockHeight", Long.parseLong(block.blockNumber()));
                     blockObj.put("timeStamp", block.timeStamp() / 1000);
                     blockObj.put("txnsCount", block.txnCount());
                     blockObj.put("blockReward", block.blockReward());

@@ -22,9 +22,6 @@ public class Synchronizer {
     private static volatile boolean running = false;
     private static volatile boolean rpcHealthy = true;
     private static final boolean blockchainHealthy = true;
-    //    private static long previousBlockTimestamp = -1;
-//    private static long previousBlockNumber = -1;
-    private static final Map<Long, List<FalconTransaction>> txnsBuffer = new ConcurrentHashMap<>();
     private static final long sleepBetweenBlockFetches = 100;
 
     public static void sync(PWRJ pwrj) {

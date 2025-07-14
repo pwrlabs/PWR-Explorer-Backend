@@ -33,7 +33,7 @@ public class GeneralService {
         cacheManager = new CacheManager(pwrj);
     }
 
-    public static Object getExplorerInfo(Request request, Response response) {
+    public static Object getAllExplorerInfo(Request request, Response response) {
         try {
             response.header("Content-Type", "application/json");
 
@@ -110,59 +110,36 @@ public class GeneralService {
         }
     }
 
-    public static Object getDailyStats(Request request, Response response) {
+    public static Object getExplorerInfo(Request request, Response response) {
         try {
             response.header("Content-Type", "application/json");
 
-            JSONArray blocks = new JSONArray();
-            JSONArray txns = new JSONArray();
+            CompletableFuture<JSONArray> otherDataFuture = CompletableFuture.supplyAsync(() -> {
+                Instant start = Instant.now();
+                JSONObject data = new JSONObject();
 
-            List<Block> blockList = cacheManager.getBlocks(5);
-            for (Block block : blockList) {
-                JSONObject object = new JSONObject();
-                object.put("blockNumber", block.blockNumber());
-                object.put("blockHeight", cacheManager.getBlocksCount());
-                object.put("timeStamp", block.timeStamp() / 1000);
-                object.put("txnsCount", block.txnCount());
-                object.put("blockReward", block.blockReward());
-                object.put("blockSubmitter", returnHexStringWith0x(block.blockSubmitter()));
+                data.put("fourteenDaysTxn", cacheManager.getFourteenDaysTxn());
+                data.put("validators", cacheManager.getActiveValidatorsCount());
+                data.put("tps", cacheManager.getAverageTps(100, cacheManager.getBlocksCount()));
 
-                blocks.put(object);
-            }
+                long duration = Duration.between(start, Instant.now()).toMillis();
+                return new JSONArray().put(data).put(duration);
+            });
 
-            List<NewTxn> txnsList = cacheManager.getRecentTxns(5);
-            for (NewTxn txn : txnsList) {
-                if (txn == null) continue;
-                JSONObject object = new JSONObject();
-                object.put("txnHash", returnHexStringWith0x(txn.hash()));
-                object.put("timeStamp", txn.timestamp() / 1000);
-                object.put("from", returnHexStringWith0x(txn.fromAddress()));
-                object.put("to", returnHexStringWith0x(txn.toAddress()));
-                object.put("value", txn.value());
+            JSONArray otherData = otherDataFuture.get();
+            JSONObject otherDataObj = (JSONObject) otherData.get(0);
 
-                txns.put(object);
-            }
-
-            JSONObject responseObject = new JSONObject();
-            responseObject.put("price", Settings.getPrice());
-            responseObject.put("priceChange", 2.5);
-            responseObject.put("marketCap", 1000000000L);
-            responseObject.put("totalTransactionsCount", cacheManager.getTxnsCountPast24Hours());
-            responseObject.put("blocksCount", cacheManager.getBlocksCount());
-            responseObject.put("validators", cacheManager.getActiveValidatorsCount());
-            responseObject.put("tps", cacheManager.getAverageTps(100, cacheManager.getBlocksCount()));
-            responseObject.put("txns", txns);
-            responseObject.put("blocks", blocks);
-            responseObject.put("avgTxnFeeChange", cacheManager.getAvgTxnFeePercentageChange());
-            responseObject.put("totalTxnFeesChange", cacheManager.getTotalTxnFeesPercentageChange());
-            responseObject.put("avgTxnFeePast24Hours", cacheManager.getAverageTxnFeePast24Hours());
-            responseObject.put("totalTxnFeesPast24Hours", cacheManager.getTotalTxnsFeesPast24Hours());
-            responseObject.put("txnCountChange", cacheManager.getTxnCountPercentageChange());
-
-            return responseObject.toString();
+            return getSuccess(
+                    "price", Settings.getPrice(),
+                    "priceChange", 2.5,
+                    "marketCap", 1000000000L,
+                    "validators", otherDataObj.getInt("validators"),
+                    "tps", otherDataObj.getDouble("tps"),
+                    "fourteenDaysTxn", otherDataObj.get("fourteenDaysTxn")
+            );
         } catch (Exception e) {
-            logger.error("An error occurred while fetching daily stats: ", e);
-            return getError(response, e.getLocalizedMessage());
+            logger.error("An error occurred while fetching explorer info: ", e);
+            return getError(response, e.getMessage());
         }
     }
 

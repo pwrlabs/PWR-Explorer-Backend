@@ -19,8 +19,10 @@ public class GET {
         });
 
         //Explorer Calls
-        get("/explorerInfo/", GeneralService::getExplorerInfo);
-        get("/dailyStats", GeneralService::getDailyStats);//not used in UI
+        path("/explorerInfo/", () -> {
+            get("", GeneralService::getExplorerInfo);
+            get("all/", GeneralService::getAllExplorerInfo);
+        });
 
         // Block calls
         get("/latestBlocks/", BlockService::getLatestBlocks);
@@ -53,7 +55,7 @@ public class GET {
 //        get("/stats", StakingService::getStats);
         get("/healthCheck/", HealthCheckService::checkBlockchainHealth);
 //        get("/discordAlert/", DiscordAlertService::checkBlockchainHealthAndAlert);
-        get("/BotStatus/", DiscordAlertService::getBotDebugInfo);
+//        get("/BotStatus/", DiscordAlertService::getBotDebugInfo);
         path("/admin/", () -> {
             get("reset/", AdminService::resetSystem);
         });

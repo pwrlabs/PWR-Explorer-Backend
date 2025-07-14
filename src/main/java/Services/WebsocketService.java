@@ -34,13 +34,14 @@ public class WebsocketService {
     private static final Logger logger = LoggerFactory.getLogger(WebsocketService.class);
     private static final long MAX_IDLE_TIMEOUT = 60 * 10 * 1000; // 10 minutes
     private static volatile boolean started = false;
-    private static String data = "";
+    private static long latestBlockSent = 0;
+    private static long latestTxnTimestamp = System.currentTimeMillis();
 
     public WebsocketService() {
         synchronized (WebsocketService.class) {
             if (!started) {
-                buildExplorerInfoSync();
-                scheduler.scheduleWithFixedDelay(this::sendExplorerInfo, 0, 5, TimeUnit.SECONDS);
+                scheduler.scheduleWithFixedDelay(this::sendLatestBlocks, 0, 3, TimeUnit.SECONDS);
+                scheduler.scheduleWithFixedDelay(this::sendLatestTxns, 0, 3, TimeUnit.SECONDS);
                 started = true;
             }
         }
@@ -52,7 +53,6 @@ public class WebsocketService {
             session.setIdleTimeout(MAX_IDLE_TIMEOUT);
             sessions.add(session);
             session.getRemote().sendString("Connection established");
-            session.getRemote().sendString(data);
             logger.info("WebSocket connection established from {}", session.getRemoteAddress().getAddress());
         } catch (Exception e) {
             logger.error("Error during WebSocket connection: {}", e.getMessage());
@@ -72,179 +72,61 @@ public class WebsocketService {
         logger.error("WebSocket error for session {}: {}", session, error.getMessage());
     }
 
-    // Builds and sends the explorer info to all sessions
-    private void sendExplorerInfo() {
+    private void sendLatestBlocks() {
         try {
-            CompletableFuture<JSONArray> blocksFuture = CompletableFuture.supplyAsync(() -> {
-                JSONArray blocks = new JSONArray();
-                List<Block> blockList = cacheManager.getBlocks(5);
-                for (Block block : blockList) {
-                    JSONObject object = new JSONObject();
-                    object.put("blockHeight", block.blockNumber());
-                    object.put("timeStamp", block.timeStamp() / 1000);
-                    object.put("txnsCount", block.txnCount());
-                    object.put("blockReward", block.blockReward());
-                    object.put("blockSubmitter", returnHexStringWith0x(block.blockSubmitter()));
-                    blocks.put(object);
+            List<Block> blockList = cacheManager.getBlocks(5);
+            long blocksCount = cacheManager.getBlocksCount();
+            for (Block block : blockList.reversed()) {
+                if (Long.parseLong(block.blockNumber()) > latestBlockSent) {
+                    JSONObject blockObj = new JSONObject();
+                    blockObj.put("blockHeight", block.blockNumber());
+                    blockObj.put("timeStamp", block.timeStamp() / 1000);
+                    blockObj.put("txnsCount", block.txnCount());
+                    blockObj.put("blockReward", block.blockReward());
+                    blockObj.put("blockSubmitter", returnHexStringWith0x(block.blockSubmitter()));
+
+                    JSONObject res = new JSONObject();
+                    res.put("type", "new_block");
+                    res.put("block", blockObj);
+                    res.put("blocks_count", blocksCount);
+                    broadcast(res.toString());
+
+                    latestBlockSent = Long.parseLong(block.blockNumber());
                 }
-                return new JSONArray().put(blocks);
-            });
-
-            CompletableFuture<JSONArray> txnsFuture = CompletableFuture.supplyAsync(() -> {
-                JSONArray txns = new JSONArray();
-                List<NewTxn> txnsList = cacheManager.getRecentTxns(5);
-                for (NewTxn txn : txnsList) {
-                    if (txn == null) continue;
-                    JSONObject object = new JSONObject();
-                    object.put("txnHash", returnHexStringWith0x(txn.hash()));
-                    object.put("timeStamp", txn.timestamp() / 1000);
-                    object.put("from", returnHexStringWith0x(txn.fromAddress()));
-                    object.put("to", returnHexStringWith0x(txn.toAddress()));
-                    object.put("value", txn.value());
-                    txns.put(object);
-                }
-                return new JSONArray().put(txns);
-            });
-
-            CompletableFuture<JSONArray> otherDataFuture = CompletableFuture.supplyAsync(() -> {
-                Instant start = Instant.now();
-                JSONObject data = new JSONObject();
-
-                data.put("fourteenDaysTxn", cacheManager.getFourteenDaysTxn());
-                data.put("totalTransactionsCount", cacheManager.getTotalTransactionCount());
-                data.put("validators", cacheManager.getActiveValidatorsCount());
-                data.put("tps", cacheManager.getAverageTps(100, cacheManager.getBlocksCount()));
-
-                long duration = Duration.between(start, Instant.now()).toMillis();
-                return new JSONArray().put(data).put(duration);
-            });
-
-            // Combine all futures
-            CompletableFuture.allOf(blocksFuture, txnsFuture, otherDataFuture).thenAccept(v -> {
-                try {
-                    JSONArray blocksResult = blocksFuture.get();
-                    JSONArray txnsResult = txnsFuture.get();
-                    JSONArray otherData = otherDataFuture.get();
-
-                    JSONArray arr = blocksResult != null ? blocksResult.optJSONArray(0) : null;
-                    JSONObject otherDataObj = (JSONObject) otherData.get(0);
-
-                    long blocksCount = 0;
-                    if (arr != null && !arr.isEmpty()) {
-                        blocksCount = arr.optJSONObject(0).optLong("blockHeight", 0);
-                    }
-
-                    JSONObject message = getSuccess(
-                            "price", Settings.getPrice(),
-                            "priceChange", 2.5,
-                            "marketCap", 1_000_000_000L,
-                            "totalTransactionsCount", otherDataObj.getLong("totalTransactionsCount"),
-                            "blocksCount", blocksCount,
-                            "validators", otherDataObj.getInt("validators"),
-                            "tps", otherDataObj.getDouble("tps"),
-                            "txns", txnsResult.getJSONArray(0),
-                            "blocks", blocksResult != null ? blocksResult.getJSONArray(0) : 0,
-                            "fourteenDaysTxn", otherDataObj.get("fourteenDaysTxn")
-                    );
-                    data = message.toString();
-
-                    broadcast(message.toString());
-                } catch (Exception e) {
-                    logger.error("Error building explorer info: ", e);
-                }
-            });
-
+            }
         } catch (Exception e) {
-            logger.error("Error scheduling explorer info: ", e);
+            logger.error("Failed to send latest blocks: ", e);
         }
     }
 
-    private void buildExplorerInfoSync() {
+    private void sendLatestTxns() {
         try {
-            CompletableFuture<JSONArray> blocksFuture = CompletableFuture.supplyAsync(() -> {
-                JSONArray blocks = new JSONArray();
-                List<Block> blockList = cacheManager.getBlocks(5);
-                for (Block block : blockList) {
-                    JSONObject object = new JSONObject();
-                    object.put("blockHeight", block.blockNumber());
-                    object.put("timeStamp", block.timeStamp() / 1000);
-                    object.put("txnsCount", block.txnCount());
-                    object.put("blockReward", block.blockReward());
-                    object.put("blockSubmitter", returnHexStringWith0x(block.blockSubmitter()));
-                    blocks.put(object);
+            List<NewTxn> txnsList = cacheManager.getRecentTxns(5);
+            long txnsCount = cacheManager.getTotalTransactionCount();
+
+            for (NewTxn txn : txnsList.reversed()) {
+                if (txn == null) continue;
+                if (txn.timestamp() > latestTxnTimestamp) {
+                    JSONObject txnObj = new JSONObject();
+                    txnObj.put("txnHash", returnHexStringWith0x(txn.hash()));
+                    txnObj.put("timeStamp", txn.timestamp() / 1000);
+                    txnObj.put("from", returnHexStringWith0x(txn.fromAddress()));
+                    txnObj.put("to", returnHexStringWith0x(txn.toAddress()));
+                    txnObj.put("value", txn.value());
+
+                    JSONObject res = new JSONObject();
+                    res.put("type", "new_txn");
+                    res.put("txn", txnObj);
+                    res.put("txns_count", txnsCount);
+                    broadcast(res.toString());
+
+                    latestTxnTimestamp = txn.timestamp();
                 }
-                return new JSONArray().put(blocks);
-            });
-
-            CompletableFuture<JSONArray> txnsFuture = CompletableFuture.supplyAsync(() -> {
-                JSONArray txns = new JSONArray();
-                List<NewTxn> txnsList = cacheManager.getRecentTxns(5);
-                for (NewTxn txn : txnsList) {
-                    if (txn == null) continue;
-                    JSONObject object = new JSONObject();
-                    object.put("txnHash", returnHexStringWith0x(txn.hash()));
-                    object.put("timeStamp", txn.timestamp() / 1000);
-                    object.put("from", returnHexStringWith0x(txn.fromAddress()));
-                    object.put("to", returnHexStringWith0x(txn.toAddress()));
-                    object.put("value", txn.value());
-                    txns.put(object);
-                }
-                return new JSONArray().put(txns);
-            });
-
-            CompletableFuture<JSONArray> otherDataFuture = CompletableFuture.supplyAsync(() -> {
-                Instant start = Instant.now();
-                JSONObject data = new JSONObject();
-
-                data.put("fourteenDaysTxn", cacheManager.getFourteenDaysTxn());
-                data.put("totalTransactionsCount", cacheManager.getTotalTransactionCount());
-                data.put("validators", cacheManager.getActiveValidatorsCount());
-                data.put("tps", cacheManager.getAverageTps(100, cacheManager.getBlocksCount()));
-
-                long duration = Duration.between(start, Instant.now()).toMillis();
-                return new JSONArray().put(data).put(duration);
-            });
-
-            // Combine all futures
-            CompletableFuture.allOf(blocksFuture, txnsFuture, otherDataFuture).thenAccept(v -> {
-                try {
-                    JSONArray blocksResult = blocksFuture.get();
-                    JSONArray txnsResult = txnsFuture.get();
-                    JSONArray otherData = otherDataFuture.get();
-
-                    JSONArray arr = blocksResult != null ? blocksResult.optJSONArray(0) : null;
-                    JSONObject otherDataObj = (JSONObject) otherData.get(0);
-
-                    long blocksCount = 0;
-                    if (arr != null && !arr.isEmpty()) {
-                        blocksCount = arr.optJSONObject(0).optLong("blockHeight", 0);
-                    }
-
-                    JSONObject message = getSuccess(
-                            "price", Settings.getPrice(),
-                            "priceChange", 2.5,
-                            "marketCap", 1_000_000_000L,
-                            "totalTransactionsCount", otherDataObj.getLong("totalTransactionsCount"),
-                            "blocksCount", blocksCount,
-                            "validators", otherDataObj.getInt("validators"),
-                            "tps", otherDataObj.getDouble("tps"),
-                            "txns", txnsResult.getJSONArray(0),
-                            "blocks", blocksResult != null ? blocksResult.getJSONArray(0) : 0,
-                            "fourteenDaysTxn", otherDataObj.get("fourteenDaysTxn")
-                    );
-                    data = message.toString();
-
-                    broadcast(message.toString());
-                } catch (Exception e) {
-                    logger.error("Error building explorer info: ", e);
-                }
-            });
-
+            }
         } catch (Exception e) {
-            logger.error("Error building initial explorer info: ", e);
+            logger.error("Failed to send latest txns: ", e);
         }
     }
-
 
     // Actually sends the message to all active sessions
     private void broadcast(String message) {

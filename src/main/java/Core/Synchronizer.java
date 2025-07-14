@@ -76,6 +76,7 @@ public class Synchronizer {
                         } else {
                             // Just a "block not ready" condition - skip this block and try the next one
                             logger.error("Skipping block {} (not ready), continuing with next block", blockToCheck);
+                            e.printStackTrace();
                             blockToCheck++;
                             throttleProcessing();
                             continue;

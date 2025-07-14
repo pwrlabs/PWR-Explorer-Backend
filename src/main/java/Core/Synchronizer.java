@@ -55,6 +55,9 @@ public class Synchronizer {
 
                 while (blockToCheck <= chainLatestBlock && running) {
                     try {
+                        logger.info("Block to check: {}", blockToCheck);
+                        logger.info("Chain latest block: {}", chainLatestBlock);
+                        logger.info("Running ?: {}", running);
                         long fetchStart = System.currentTimeMillis();
                         BiResult<Block, List<FalconTransaction>> blockAndTransactions = pwrj.getBlockAndTransactions(blockToCheck);
                         Block block = blockAndTransactions.getFirst();
@@ -68,10 +71,11 @@ public class Synchronizer {
                         Processor.processTxns(blockToCheck, txns);
                     } catch (Exception e) {
                         if (isRpcDown.get()) {
+                            logger.error("RPC down breaking loop");
                             break;// Actual RPC error - break the loop
                         } else {
                             // Just a "block not ready" condition - skip this block and try the next one
-                            logger.debug("Skipping block {} (not ready), continuing with next block", blockToCheck);
+                            logger.error("Skipping block {} (not ready), continuing with next block", blockToCheck);
                             blockToCheck++;
                             throttleProcessing();
                             continue;
@@ -80,6 +84,7 @@ public class Synchronizer {
 
                     blockToCheck++;
                     throttleProcessing();
+                    logger.info("Finished ev going to next block: {}", blockToCheck);
                 }
 
                 long elapsedTime = System.currentTimeMillis() - startTime;

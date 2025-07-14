@@ -84,35 +84,6 @@ public class Queries {
         }
     }
 
-    public static void insertBatchBlocks(List<com.github.pwrlabs.pwrj.entities.Block> blocks) {
-        String sql = "INSERT INTO \"Block\" (" + BLOCK_NUMBER + ", " + BLOCK_HASH + ", " + FEE_RECIPIENT + ", " + TIMESTAMP + ", " + TRANSACTIONS_COUNT + ", " + BLOCK_REWARD + ", " + BLOCK_SIZE + ", " + SUCCESS + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            conn.setAutoCommit(false);
-
-            logger.info("Retrieved connection and started inserting blocks");
-
-            for (com.github.pwrlabs.pwrj.entities.Block block : blocks) {
-                pstmt.setLong(1, block.getBlockNumber());
-                pstmt.setString(2, block.getBlockHash().toLowerCase());
-                pstmt.setString(3, block.getProposer().toLowerCase());
-                pstmt.setLong(4, block.getTimestamp());
-                pstmt.setInt(5, block.getTransactionCount());
-                pstmt.setLong(6, block.getBlockReward());
-                pstmt.setInt(7, block.getBlockSize());
-                pstmt.setBoolean(8, block.isProcessedWithoutCriticalErrors());
-
-                pstmt.addBatch();
-            }
-
-            pstmt.executeBatch();
-            conn.commit();
-            logger.info("Successfully inserted blocks");
-        } catch (Exception e) {
-            logger.error("Failed to insert from block {} -> {}: ", blocks.getFirst().getBlockNumber(), blocks.getLast().getBlockNumber(), e);
-        }
-    }
-
     public static void insertValidator(String address, long joiningTime) {
         address = address.toLowerCase();
         if (address.startsWith("0x")) {
@@ -826,76 +797,11 @@ public class Queries {
         return false;
     }
 
-    /* TODO: This function was previously used to get the first and last txns for a user but since it was very slow
-        it was replaced by this function getFirstAndLastTransactionsByAddress.
-        What we need to consider here is that the new function works with the new db design which has not been implemented yet
-        on the main explorer because we need to reset the db so if any changes need to be done to the main explorer without resetting
-        the db we need to replace the new function by this function temporarily.
-        Note that the test explorer already supports these changes since the db was reset for it!!
-    */
-    public static Pair<NewTxn, NewTxn> getFirstAndLastTransactionsByAddressOld(String address) {
-        CompletableFuture<NewTxn> firstTxnFuture = CompletableFuture.supplyAsync(() -> {
-            NewTxn firstTxn = null;
-            String tableName = getTransactionsTableName("0");
-
-            String sql = "(" + "SELECT * FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ? " + "ORDER BY " + TIMESTAMP + " ASC LIMIT 1" + ") UNION ALL (" + "SELECT * FROM " + tableName + " WHERE " + TO_ADDRESS + " = ? " + "ORDER BY " + TIMESTAMP + " ASC LIMIT 1" + ") ORDER BY " + TIMESTAMP + " ASC LIMIT 1";
-
-            try (Connection conn = getConnection(); PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-
-                preparedStatement.setString(1, address);
-                preparedStatement.setString(2, address);
-
-                try (ResultSet rs = preparedStatement.executeQuery()) {
-                    if (rs.next()) {
-                        firstTxn = populateNewTxnObject(rs);
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("Error querying first transaction for address {}: {}", address, e.getMessage());
-            }
-            return firstTxn;
-        });
-
-        CompletableFuture<NewTxn> lastTxnFuture = CompletableFuture.supplyAsync(() -> {
-            NewTxn lastTxn = null;
-            String tableName = getTransactionsTableName("0");
-
-            String sql = "(" + "SELECT * FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ? " + "ORDER BY " + TIMESTAMP + " DESC LIMIT 1" + ") UNION ALL (" + "SELECT * FROM " + tableName + " WHERE " + TO_ADDRESS + " = ? " + "ORDER BY " + TIMESTAMP + " DESC LIMIT 1" + ") ORDER BY " + TIMESTAMP + " DESC LIMIT 1";
-
-            try (Connection conn = getConnection(); PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-
-                preparedStatement.setString(1, address);
-                preparedStatement.setString(2, address);
-
-                try (ResultSet rs = preparedStatement.executeQuery()) {
-                    if (rs.next()) {
-                        lastTxn = populateNewTxnObject(rs);
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("Error querying last transaction for address {}: {}", address, e.getMessage());
-            }
-            return lastTxn;
-        });
-
-        try {
-            // Wait for both futures to complete and combine results
-            NewTxn firstTxn = firstTxnFuture.get();
-            NewTxn lastTxn = lastTxnFuture.get();
-            return new Pair<>(firstTxn, lastTxn);
-        } catch (Exception e) {
-            logger.error("Error while querying transactions in parallel for address {}: {}", address, e.getMessage());
-        }
-
-        return new Pair<>(null, null);
-    }
-
-    /* TODO: We also have this function to get a user txns count but we changed it since in the new db design where we added the
-        users history table we can get the txn count of a user directly from the table.
-        So same thing here for this function we need to check where the user's txns count is being returned
-        and replace it by the old count function if we are not resetting the database.
-        Note that the test explorer already supports these changes since the db was reset for it!!
-     */
+    /* TODO: For future devs working on the explorer if db is being reset consider adding a new table
+        which will hold the total txns count and on each block maybe or a specific interval we update the count since now
+        to get the txns count we are counting them from the txns table which is not scalable but for now we are caching them
+        which works fine and smoothly.
+   */
     public static int getTotalTxnCountOld(String address) {
         address = address.toLowerCase();
         if (address.startsWith("0x")) {
@@ -923,12 +829,6 @@ public class Queries {
         return totalCount;
     }
 
-    /* TODO: For future devs working on the explorer if db is being reset consider adding a new table
-        which will hold the total txns count and on each block maybe or a specific interval we update the count since now
-        to get the txns count we are counting them from the txns table which is not scalable but for now we are caching them
-        which works fine and smoothly.
-    */
-
     private static NewTxn populateNewTxnObject(ResultSet rs) throws SQLException {
         return new NewTxn(rs.getString(HASH), rs.getLong(BLOCK_NUMBER), rs.getInt(POSITION_IN_BLOCK), rs.getString(FROM_ADDRESS), rs.getString(TO_ADDRESS), rs.getLong(TIMESTAMP), rs.getLong(VALUE), rs.getString(TXN_TYPE), rs.getLong(TXN_FEE), rs.getBoolean(SUCCESS));
     }
@@ -936,45 +836,6 @@ public class Queries {
     private static String getTransactionsTableName(String hash) {
         int shardIndex = Math.abs(hash.hashCode()) % NUMBER_OF_SHARDS;
         return "\"Transactions_Shard_" + shardIndex + "\"";
-    }
-
-    public record Pair<T, U>(T first, U second) {
-    }
-
-    private record QueryResult(Connection connection, PreparedStatement statement,
-                               ResultSet ResultSet) implements AutoCloseable {
-
-        @Override
-        public void close() throws SQLException {
-            if (ResultSet != null) ResultSet.close();
-            if (statement != null) statement.close();
-            if (connection != null) connection.close();
-        }
-    }
-
-    private static QueryResult executeQuery(String sql, Object... params) throws SQLException {
-        Connection connection = getConnection();
-        try {
-            PreparedStatement stmt = connection.prepareStatement(sql);
-            for (int i = 0; i < params.length; i++) {
-                stmt.setObject(i + 1, params[i]);
-            }
-            ResultSet rs = stmt.executeQuery();
-            return new QueryResult(connection, stmt, rs);
-        } catch (SQLException e) {
-            connection.close();
-            throw e;
-        }
-    }
-
-    private static void executeUpdate(String sql, Object... params) throws SQLException {
-        try (Connection connection = getConnection()) {
-            PreparedStatement stmt = connection.prepareStatement(sql);
-            for (int i = 0; i < params.length; i++) {
-                stmt.setObject(i + 1, params[i]);
-            }
-            stmt.executeUpdate();
-        }
     }
 
     public static long getMaxProcessedBlockNumber() {
@@ -993,6 +854,18 @@ public class Queries {
         return 0;
     }
 
+    public static void initializeValidators(com.github.pwrlabs.pwrj.entities.Block block) {
+        String sql = "INSERT INTO \"Validator\" VALUES(?, ?, ?, ?, ?)";
+        Object[] defaultValues = {block.getTimestamp(), 0, 0, 0};
+
+        try {
+            executeUpdate(sql, "f5fe6ae4ba7aa68c1ab340652d243b899859075b", block.getTimestamp(), 0, 0, 0);
+            executeUpdate(sql, "8796f287962c5de43b564f62d67314b7980738fc", block.getTimestamp(), 0, 0, 0);
+        } catch (Exception e) {
+            logger.error("An error occurred while initializing validators: ", e);
+        }
+    }
+
     public static void incrementSubmittedBlocksCount(com.github.pwrlabs.pwrj.entities.Block block) {
         String sql = "UPDATE \"Validator\" SET submitted_blocks_count = submitted_blocks_count + 1 WHERE address = ?;";
 
@@ -1008,7 +881,6 @@ public class Queries {
             logger.error("Failed to increment submitted block count: {}", e.getMessage());
         }
     }
-
 
     public static void updateLifetimeReward(String address, long lifetimeRewards) {
         address = address.toLowerCase();
@@ -1065,6 +937,47 @@ public class Queries {
 
         } catch (Exception e) {
             logger.error("Failed to batch update latest block numbers: {}", e.getMessage());
+        }
+    }
+
+
+    ///* Utils *///
+    public record Pair<T, U>(T first, U second) {
+    }
+
+    private record QueryResult(Connection connection, PreparedStatement statement,
+                               ResultSet ResultSet) implements AutoCloseable {
+
+        @Override
+        public void close() throws SQLException {
+            if (ResultSet != null) ResultSet.close();
+            if (statement != null) statement.close();
+            if (connection != null) connection.close();
+        }
+    }
+
+    private static QueryResult executeQuery(String sql, Object... params) throws SQLException {
+        Connection connection = getConnection();
+        try {
+            PreparedStatement stmt = connection.prepareStatement(sql);
+            for (int i = 0; i < params.length; i++) {
+                stmt.setObject(i + 1, params[i]);
+            }
+            ResultSet rs = stmt.executeQuery();
+            return new QueryResult(connection, stmt, rs);
+        } catch (SQLException e) {
+            connection.close();
+            throw e;
+        }
+    }
+
+    private static void executeUpdate(String sql, Object... params) throws SQLException {
+        try (Connection connection = getConnection()) {
+            PreparedStatement stmt = connection.prepareStatement(sql);
+            for (int i = 0; i < params.length; i++) {
+                stmt.setObject(i + 1, params[i]);
+            }
+            stmt.executeUpdate();
         }
     }
 }

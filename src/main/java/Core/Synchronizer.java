@@ -10,11 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-import static Database.Queries.getLastStoredBlock;
-import static Database.Queries.insertBlock;
+import static Database.Queries.*;
 import static Services.DiscordAlertService.isRpcDown;
 
 public class Synchronizer {
@@ -49,6 +46,10 @@ public class Synchronizer {
                     long elapsedTime = System.currentTimeMillis() - startTime;
                     if (elapsedTime < sleepBetweenBlockFetches) Thread.sleep(sleepBetweenBlockFetches - elapsedTime);
                     continue;
+                }
+
+                if (blockToCheck == 1) {
+                    initializeValidators(pwrj.getBlockByNumber(blockToCheck));
                 }
 
                 while (blockToCheck <= chainLatestBlock && running) {

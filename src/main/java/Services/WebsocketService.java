@@ -40,8 +40,8 @@ public class WebsocketService {
     public WebsocketService() {
         synchronized (WebsocketService.class) {
             if (!started) {
-                scheduler.scheduleWithFixedDelay(this::sendLatestBlocks, 0, 3, TimeUnit.SECONDS);
-                scheduler.scheduleWithFixedDelay(this::sendLatestTxns, 0, 3, TimeUnit.SECONDS);
+                scheduler.scheduleWithFixedDelay(this::sendLatestBlocks, 3, 3, TimeUnit.SECONDS);
+                scheduler.scheduleWithFixedDelay(this::sendLatestTxns, 3, 3, TimeUnit.SECONDS);
                 started = true;
             }
         }

@@ -24,6 +24,7 @@ public class Synchronizer {
     public static void sync(PWRJ pwrj) {
         running = true;
         long blockToCheck = Math.max(getLastStoredBlock() + 1, 1);
+        blockToCheck = 2280;
         logger.info("Synchronizer starting at block {}", blockToCheck);
 
         while (running) {
@@ -66,7 +67,7 @@ public class Synchronizer {
 
                         Processor.processTxns(blockToCheck, txns);
                     } catch (Exception e) {
-                        if (isRpcDown.get()) {// Check if we should continue or break
+                        if (isRpcDown.get()) {
                             break;// Actual RPC error - break the loop
                         } else {
                             // Just a "block not ready" condition - skip this block and try the next one

@@ -90,7 +90,7 @@ public class Synchronizer {
                             }
 
                             long timeTook = System.currentTimeMillis() - retryTime;
-                            Thread.sleep(Math.max(100 - timeTook, 0));
+                            Thread.sleep(100 - timeTook);
                             continue;
                         }
                     }

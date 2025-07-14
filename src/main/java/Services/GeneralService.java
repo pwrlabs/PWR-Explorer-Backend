@@ -42,7 +42,7 @@ public class GeneralService {
                 List<Block> blockList = cacheManager.getBlocks(5);
                 for (Block block : blockList) {
                     JSONObject object = new JSONObject();
-                    object.put("blockHeight", block.blockNumber());
+                    object.put("blockHeight", Long.parseLong(block.blockNumber()));
                     object.put("timeStamp", block.timeStamp() / 1000);
                     object.put("txnsCount", block.txnCount());
                     object.put("blockReward", block.blockReward());

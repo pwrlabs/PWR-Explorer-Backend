@@ -19,7 +19,7 @@
         <dependency>
             <groupId>com.github.pwrlabs</groupId>
             <artifactId>pwrj</artifactId>
-            <version>11.2.0</version>
+            <version>11.7.4</version>
         </dependency>
 
         <dependency>
@@ -54,14 +54,10 @@
         <!-- Log4j2 API and Core -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <version>2.20.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <version>2.20.0</version>
         </dependency>
+
         <!-- Bridge for other logging frameworks -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -99,8 +95,6 @@
             <version>5.0.0-beta.18</version>
         </dependency>
     </dependencies>
-
-
 
     <build>
         <plugins>

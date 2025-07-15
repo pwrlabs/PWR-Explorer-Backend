@@ -3,8 +3,8 @@ package Services;
 import Core.Synchronizer;
 import Database.DatabaseInitialization;
 import Main.Main;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
@@ -14,7 +14,7 @@ import static Utils.ResponseBuilder.getError;
 import static Utils.ResponseBuilder.getSuccess;
 
 public class AdminService {
-    private static final Logger logger = LogManager.getLogger(AdminService.class);
+    private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
     private static final ReentrantLock lock = new ReentrantLock();
 
     public static Object resetSystem(Request request, Response response) {

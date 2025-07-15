@@ -1,7 +1,8 @@
 package Database;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,7 +13,7 @@ import static Database.Constants.Constants.*;
 import static Database.DatabaseConnection.getConnection;
 
 public class DatabaseInitialization {
-    private static final Logger logger = LogManager.getLogger(DatabaseInitialization.class);
+    private static final Logger logger = LoggerFactory.getLogger(DatabaseInitialization.class);
     private static final int NUMBER_OF_SHARDS = 2;
 
     public static void initialize() {
@@ -28,6 +29,7 @@ public class DatabaseInitialization {
         for (String sql : initializationQueue) {
             initializeTable(sql);
         }
+        createAndInitializeBlockNumberTable();
     }
 
     public static void resetDatabase() {
@@ -74,6 +76,26 @@ public class DatabaseInitialization {
             FIRST_TXN_HASH + " VARCHAR(256), " +
             LAST_TXN_TIMESTAMP + " BIGINT, " +
             LAST_TXN_HASH + " VARCHAR(256))";
+
+    private static void createAndInitializeBlockNumberTable()  {
+        String sqlCreateTable = "CREATE TABLE IF NOT EXISTS \"LastBlock\" (" +
+                "id INTEGER PRIMARY KEY, " +
+                "block_number BIGINT, " +
+                "timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+                ");";
+
+        String sqlInsertInitial = "INSERT INTO \"LastBlock\" (id, block_number) " +
+                "SELECT 1, 0 " +
+                "WHERE NOT EXISTS (SELECT 1 FROM \"LastBlock\" WHERE id = 1);";
+
+        try (Connection connection = getConnection();
+             Statement stmt = connection.createStatement()) {
+            stmt.execute(sqlCreateTable);
+            stmt.execute(sqlInsertInitial);
+        } catch (SQLException e) {
+            logger.error("Failed to create and initialize latest block table", e);
+        }
+    }
 
 
     final static String[] initializationQueue = new String[]{
@@ -133,6 +155,7 @@ public class DatabaseInitialization {
             dropTable(connection, "\"InitialDelegation\"");
             dropTable(connection, "\"Validator\"");
             dropTable(connection, "\"UsersHistory\"");
+            dropTable(connection, "\"LastBlock\"");
         } catch (Exception e) {
             logger.error("Error dropping tables: ", e);
         }

@@ -3,8 +3,6 @@ package Services;
 import Core.Cache.CacheManager;
 import com.github.pwrlabs.pwrj.entities.Validator;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import spark.Request;
@@ -21,7 +19,7 @@ import static Utils.ResponseBuilder.getError;
 import static Utils.ResponseBuilder.getSuccess;
 
 public class NodeService {
-    private static final Logger logger = LogManager.getLogger(NodeService.class);
+//    private static final Logger logger = LogManager.getLogger(NodeService.class);
     private static CacheManager cacheManager;
     private static PWRJ pwrj;
 

@@ -5,8 +5,6 @@ import DataModel.Block;
 import DataModel.NewTxn;
 import Database.Queries;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import spark.Request;
@@ -20,7 +18,7 @@ import static Utils.ResponseBuilder.getError;
 import static Utils.ResponseBuilder.getSuccess;
 
 public class BlockService {
-    private static final Logger logger = LogManager.getLogger(BlockService.class);
+//    private static final Logger logger = LogManager.getLogger(BlockService.class);
     private static CacheManager cacheManager;
 
     public static void initialize(PWRJ pwrjInstance) {

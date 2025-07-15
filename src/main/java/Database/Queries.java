@@ -4,11 +4,10 @@ import DataModel.Block;
 import Utils.Settings;
 import DataModel.NewTxn;
 import com.github.pwrlabs.pwrj.entities.FalconTransaction;
-import com.google.common.math.BigIntegerMath;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -22,26 +21,14 @@ import static Database.Constants.Constants.*;
 import static Database.DatabaseConnection.getConnection;
 
 public class Queries {
-    private static final Logger logger = LogManager.getLogger(Queries.class);
+    private static final Logger logger = LoggerFactory.getLogger(Queries.class);
     private static final int NUMBER_OF_SHARDS = 1;
 
     public static void batchInsertTxns(List<FalconTransaction> txns) {
         String tableName = getTransactionsTableName("0");  // or dynamic if needed
-        String sql = "INSERT INTO " + tableName + " (" +
-                HASH + ", " +
-                BLOCK_NUMBER + ", " +
-                POSITION_IN_BLOCK + ", " +
-                FROM_ADDRESS + ", " +
-                TO_ADDRESS + ", " +
-                TIMESTAMP + ", " +
-                VALUE + ", " +
-                TXN_TYPE + ", " +
-                TXN_FEE + ", " +
-                SUCCESS +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO " + tableName + " (" + HASH + ", " + BLOCK_NUMBER + ", " + POSITION_IN_BLOCK + ", " + FROM_ADDRESS + ", " + TO_ADDRESS + ", " + TIMESTAMP + ", " + VALUE + ", " + TXN_TYPE + ", " + TXN_FEE + ", " + SUCCESS + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             logger.info("Retrieved connection and started inserting txns");
 
             conn.setAutoCommit(false);
@@ -85,42 +72,15 @@ public class Queries {
         }
     }
 
-    public static void insertBlock(List<com.github.pwrlabs.pwrj.entities.Block> blocks) {
-        String sql = "INSERT INTO \"Block\" (" +
-                BLOCK_NUMBER + ", " +
-                BLOCK_HASH + ", " +
-                FEE_RECIPIENT + ", " +
-                TIMESTAMP + ", " +
-                TRANSACTIONS_COUNT + ", " +
-                BLOCK_REWARD + ", " +
-                BLOCK_SIZE + ", " +
-                SUCCESS +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    public static void insertBlock(com.github.pwrlabs.pwrj.entities.Block block) {
+        String sql = "INSERT INTO \"Block\" (" + BLOCK_NUMBER + ", " + BLOCK_HASH + ", " + FEE_RECIPIENT + ", " + TIMESTAMP + ", " + TRANSACTIONS_COUNT + ", " + BLOCK_REWARD + ", " + BLOCK_SIZE + ", " + SUCCESS + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            conn.setAutoCommit(false);
-
-            logger.info("Retrieved connection and started inserting blocks");
-
-            for (com.github.pwrlabs.pwrj.entities.Block block : blocks) {
-                pstmt.setLong(1, block.getBlockNumber());
-                pstmt.setString(2, block.getBlockHash().toLowerCase());
-                pstmt.setString(3, block.getProposer().toLowerCase());
-                pstmt.setLong(4, block.getTimestamp());
-                pstmt.setInt(5, block.getTransactionCount());
-                pstmt.setLong(6, block.getBlockReward());
-                pstmt.setInt(7, block.getBlockSize());
-                pstmt.setBoolean(8, block.isProcessedWithoutCriticalErrors());
-
-                pstmt.addBatch();
-            }
-
-            pstmt.executeBatch();
-            conn.commit();
-            logger.info("Successfully inserted blocks");
+        try {
+            logger.info("Retrieved connection and started inserting block {}", block.getBlockNumber());
+            executeUpdate(sql, block.getBlockNumber(), block.getBlockHash().toLowerCase(), block.getProposer().toLowerCase(), block.getTimestamp(), block.getTransactionCount(), block.getBlockReward(), block.getBlockSize(), block.isProcessedWithoutCriticalErrors());
+            logger.info("Successfully inserted block {}", block.getBlockNumber());
         } catch (Exception e) {
-            logger.error("Failed to insert from block {} -> {}: ", blocks.getFirst().getBlockNumber(), blocks.getLast().getBlockNumber(), e);
+            logger.error("Failed to insert block {}: ", block.getBlockNumber(), e);
         }
     }
 
@@ -129,13 +89,7 @@ public class Queries {
         if (address.startsWith("0x")) {
             address = address.substring(2);
         }
-        String sql = "INSERT INTO \"Validator\" (" +
-                ADDRESS + ", " +
-                JOINING_TIME + ", " +
-                LIFETIME_REWARDS + ", " +
-                SUBMITTED_BLOCKS_COUNT + ", " +
-                LATEST_BLOCK_NUMBER +
-                ") VALUES (?,?,0,0,0)";
+        String sql = "INSERT INTO \"Validator\" (" + ADDRESS + ", " + JOINING_TIME + ", " + LIFETIME_REWARDS + ", " + SUBMITTED_BLOCKS_COUNT + ", " + LATEST_BLOCK_NUMBER + ") VALUES (?,?,0,0,0)";
 
         try {
             executeUpdate(sql, address, joiningTime);
@@ -145,17 +99,7 @@ public class Queries {
     }
 
     public static void upsertUserHistory(String address, String txnHash, long txnTimestamp, int incrementCount) {
-        String sql = "INSERT INTO \"UsersHistory\" (" +
-                ADDRESS + ", " +
-                TRANSACTIONS_COUNT + ", " +
-                FIRST_TXN_TIMESTAMP + ", " +
-                FIRST_TXN_HASH + ", " +
-                LAST_TXN_TIMESTAMP + ", " +
-                LAST_TXN_HASH + ") VALUES (?, ?, ?, ?, ?, ?) " +
-                "ON CONFLICT (" + ADDRESS + ") DO UPDATE SET " +
-                TRANSACTIONS_COUNT + " = \"UsersHistory\"." + TRANSACTIONS_COUNT + " + ?, " +
-                LAST_TXN_TIMESTAMP + " = ?, " +
-                LAST_TXN_HASH + " = ?";
+        String sql = "INSERT INTO \"UsersHistory\" (" + ADDRESS + ", " + TRANSACTIONS_COUNT + ", " + FIRST_TXN_TIMESTAMP + ", " + FIRST_TXN_HASH + ", " + LAST_TXN_TIMESTAMP + ", " + LAST_TXN_HASH + ") VALUES (?, ?, ?, ?, ?, ?) " + "ON CONFLICT (" + ADDRESS + ") DO UPDATE SET " + TRANSACTIONS_COUNT + " = \"UsersHistory\"." + TRANSACTIONS_COUNT + " + ?, " + LAST_TXN_TIMESTAMP + " = ?, " + LAST_TXN_HASH + " = ?";
 
         try {
             executeUpdate(sql, address, incrementCount, txnTimestamp, txnHash, txnTimestamp, txnHash, incrementCount, txnTimestamp, txnHash);
@@ -166,9 +110,7 @@ public class Queries {
     }
 
     public static void updateInitialDelegations(String userAddress, String validatorAddress, long initialDelegation) {
-        String sql = "INSERT INTO \"InitialDelegation\" (" + USER_ADDRESS + ", " + VALIDATOR_ADDRESS + ", " + INITIAL_DELEGATION + ") " +
-                "VALUES (?, ?, ?) " +
-                "ON CONFLICT (" + USER_ADDRESS + ", " + VALIDATOR_ADDRESS + ") DO UPDATE SET " + INITIAL_DELEGATION + " = ?;";
+        String sql = "INSERT INTO \"InitialDelegation\" (" + USER_ADDRESS + ", " + VALIDATOR_ADDRESS + ", " + INITIAL_DELEGATION + ") " + "VALUES (?, ?, ?) " + "ON CONFLICT (" + USER_ADDRESS + ", " + VALIDATOR_ADDRESS + ") DO UPDATE SET " + INITIAL_DELEGATION + " = ?;";
 
         try {
             executeUpdate(sql, userAddress, validatorAddress, initialDelegation, initialDelegation);
@@ -178,15 +120,7 @@ public class Queries {
     }
 
     public static void updateBlock(long blockNumber, String blockHash, byte[] feeRecipient, long timestamp, int transactionsCount, long blockReward, int size, boolean success) {
-        String sql = "UPDATE \"Block\" SET " +
-                BLOCK_HASH + " = ?, " +
-                FEE_RECIPIENT + " = ?, " +
-                TIMESTAMP + " = ?, " +
-                TRANSACTIONS_COUNT + " = ?, " +
-                BLOCK_REWARD + " = ?, " +
-                SIZE + " = ?, " +
-                SUCCESS + " = ? " +
-                "WHERE " + BLOCK_NUMBER + " = ?;";
+        String sql = "UPDATE \"Block\" SET " + BLOCK_HASH + " = ?, " + FEE_RECIPIENT + " = ?, " + TIMESTAMP + " = ?, " + TRANSACTIONS_COUNT + " = ?, " + BLOCK_REWARD + " = ?, " + SIZE + " = ?, " + SUCCESS + " = ? " + "WHERE " + BLOCK_NUMBER + " = ?;";
 
         try {
             executeUpdate(sql, blockHash, feeRecipient, timestamp, transactionsCount, blockReward, size, success, blockNumber);
@@ -231,11 +165,32 @@ public class Queries {
         return 0;
     }
 
+    public static long getLastStoredBlock() {
+        String sql = "SELECT " + BLOCK_NUMBER + " FROM \"LastBlock\";";
+
+        try (QueryResult result = executeQuery(sql)) {
+            ResultSet rs = result.ResultSet();
+            if (rs.next()) {
+                return rs.getLong(1);
+            }
+        } catch (Exception e) {
+            logger.error("Failed to get last stored block number: {}", e.getLocalizedMessage());
+        }
+        return 0;
+    }
+
+    public static void updateLastStoredBlock(long blockNumber) {
+        String sql = "UPDATE \"LastBlock\" SET " + BLOCK_NUMBER + " = ?";
+
+        try {
+            executeUpdate(sql, blockNumber);
+        } catch (Exception e) {
+            logger.error("Failed to update last stored block number: {}", e.getLocalizedMessage());
+        }
+    }
+
     public static long getLatestBlockNumberForFeeRecipient(String feeRecipient) {
-        String sql = "SELECT " + TIMESTAMP + " FROM \"Block\" " +
-                "WHERE LOWER(" + FEE_RECIPIENT + ") = ? " +
-                "ORDER BY " + BLOCK_NUMBER + " DESC " +
-                "LIMIT 1";
+        String sql = "SELECT " + TIMESTAMP + " FROM \"Block\" " + "WHERE LOWER(" + FEE_RECIPIENT + ") = ? " + "ORDER BY " + BLOCK_NUMBER + " DESC " + "LIMIT 1";
 
         try (QueryResult result = executeQuery(sql, feeRecipient)) {
             ResultSet rs = result.ResultSet();
@@ -249,10 +204,7 @@ public class Queries {
     }
 
     public static double getAverageTps(int numberOfBlocks, long lastBlockNumber) {
-        String sql = "SELECT " + TRANSACTIONS_COUNT + ", " + TIMESTAMP + " FROM \"Block\" " +
-                "WHERE " + BLOCK_NUMBER + " > ? " +
-                "ORDER BY " + BLOCK_NUMBER + " DESC " +
-                "LIMIT ?";
+        String sql = "SELECT " + TRANSACTIONS_COUNT + ", " + TIMESTAMP + " FROM \"Block\" " + "WHERE " + BLOCK_NUMBER + " > ? " + "ORDER BY " + BLOCK_NUMBER + " DESC " + "LIMIT ?";
 
         long totalTxns = 0;
         Long firstTimestamp = null;
@@ -278,8 +230,7 @@ public class Queries {
             double timeSpanSeconds = (firstTimestamp - lastTimestamp) / 1000.0;
 
             // Calculate TPS
-            return BigDecimal.valueOf(totalTxns).divide(BigDecimal.valueOf(timeSpanSeconds), 1, BigDecimal.ROUND_HALF_UP)
-                    .doubleValue();
+            return BigDecimal.valueOf(totalTxns).divide(BigDecimal.valueOf(timeSpanSeconds), 1, BigDecimal.ROUND_HALF_UP).doubleValue();
         } catch (Exception e) {
             logger.error("Failed to calculate TPS: {}", e.getLocalizedMessage());
             return 0;
@@ -337,10 +288,7 @@ public class Queries {
 
         int offset = Math.max(0, (page - 1) * pageSize);
 
-        String sql = "SELECT * " +
-                "FROM " + tableName +
-                " ORDER BY block_number DESC, position_in_block ASC " +
-                "LIMIT ? OFFSET ?;";
+        String sql = "SELECT * " + "FROM " + tableName + " ORDER BY block_number DESC, position_in_block ASC " + "LIMIT ? OFFSET ?;";
 
         try (QueryResult result = executeQuery(sql, pageSize, offset)) {
             ResultSet rs = result.ResultSet();
@@ -360,9 +308,7 @@ public class Queries {
         String tableName = getTransactionsTableName("0");
 
         // Query to get transactions from the highest block number
-        String sql = "SELECT * FROM " + tableName +
-                " ORDER BY " + TIMESTAMP + " DESC " +
-                " LIMIT ?;";
+        String sql = "SELECT * FROM " + tableName + " ORDER BY " + TIMESTAMP + " DESC " + " LIMIT ?;";
 
         try (QueryResult result = executeQuery(sql, x)) {
             ResultSet rs = result.ResultSet();
@@ -379,9 +325,7 @@ public class Queries {
 
     public static List<Block> getLastXBlocks(int x) {
         List<Block> blocks = new ArrayList<>();
-        String sql = "SELECT * FROM \"Block\" " +
-                "ORDER BY " + BLOCK_NUMBER + " DESC " +
-                "LIMIT ?;";
+        String sql = "SELECT * FROM \"Block\" " + "ORDER BY " + BLOCK_NUMBER + " DESC " + "LIMIT ?;";
 
         try (QueryResult result = executeQuery(sql, x)) {
             ResultSet rs = result.ResultSet();
@@ -407,9 +351,7 @@ public class Queries {
 
     public static List<Block> getLastXBlocks(int pageSize, int page) {
         List<Block> blocks = new ArrayList<>();
-        String sql = "SELECT * FROM \"Block\" " +
-                "ORDER BY " + BLOCK_NUMBER + " DESC " +
-                "LIMIT ? OFFSET ?";
+        String sql = "SELECT * FROM \"Block\" " + "ORDER BY " + BLOCK_NUMBER + " DESC " + "LIMIT ? OFFSET ?";
 
         if (pageSize * page > 100_000) {
             page = (int) Math.ceil((double) 100_000 / pageSize);
@@ -426,15 +368,7 @@ public class Queries {
                 long blockReward = rs.getLong(BLOCK_REWARD);
                 int size = rs.getInt(BLOCK_SIZE);
 
-                Block block = new Block(
-                        blockHash,
-                        String.valueOf(blockNumber),
-                        timestamp,
-                        feeRecipient,
-                        blockReward,
-                        size,
-                        transactionsCount
-                );
+                Block block = new Block(blockHash, String.valueOf(blockNumber), timestamp, feeRecipient, blockReward, size, transactionsCount);
                 blocks.add(block);
             }
 
@@ -448,8 +382,7 @@ public class Queries {
         long blockNumber = Long.parseLong(blockNumberString);
         List<NewTxn> txns = new ArrayList<>();
         String tableName = getTransactionsTableName("0");
-        String sql = "SELECT * FROM " + tableName + " WHERE " + BLOCK_NUMBER + " = ? " +
-                "ORDER BY " + POSITION_IN_BLOCK + " ASC;";
+        String sql = "SELECT * FROM " + tableName + " WHERE " + BLOCK_NUMBER + " = ? " + "ORDER BY " + POSITION_IN_BLOCK + " ASC;";
 
         try (QueryResult result = executeQuery(sql, blockNumber)) {
             ResultSet rs = result.ResultSet();
@@ -490,9 +423,7 @@ public class Queries {
 
         String tableName = getTransactionsTableName("0");
 
-        String sql = "SELECT * FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ? " +
-                "ORDER BY " + TIMESTAMP + " DESC " +
-                "LIMIT ? OFFSET ?;";
+        String sql = "SELECT * FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ? " + "ORDER BY " + TIMESTAMP + " DESC " + "LIMIT ? OFFSET ?;";
 
         try (QueryResult result = executeQuery(sql, address, address, pageSize, (page - 1) * pageSize)) {
             ResultSet rs = result.ResultSet();
@@ -511,13 +442,7 @@ public class Queries {
         double percentageChange = 0.0;
         String tableName = getTransactionsTableName("0");
 
-        String sql = "SELECT " +
-                "CASE WHEN COUNT(*) FILTER (WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) = 0 THEN 0 " +
-                "ELSE ((AVG(" + TXN_FEE + ") FILTER (WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) / " +
-                "AVG(" + TXN_FEE + ") FILTER (WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '48 hours')) * 1000 AND " +
-                TIMESTAMP + " < EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) - 1) * 100) " +
-                "END AS percentage_change " +
-                "FROM " + tableName + ";";
+        String sql = "SELECT " + "CASE WHEN COUNT(*) FILTER (WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) = 0 THEN 0 " + "ELSE ((AVG(" + TXN_FEE + ") FILTER (WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) / " + "AVG(" + TXN_FEE + ") FILTER (WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '48 hours')) * 1000 AND " + TIMESTAMP + " < EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) - 1) * 100) " + "END AS percentage_change " + "FROM " + tableName + ";";
 
         try (QueryResult result = executeQuery(sql)) {
             ResultSet rs = result.ResultSet();
@@ -538,12 +463,7 @@ public class Queries {
         double percentageChange = 0.0;
         String tableName = getTransactionsTableName("0");
 
-        String sql = "SELECT " +
-                "CASE WHEN COUNT(*) FILTER (WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) = 0 THEN 0 " +
-                "ELSE ((SUM(" + TXN_FEE + ") FILTER (WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) / " +
-                "SUM(" + TXN_FEE + ") FILTER (WHERE \"" + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '48 hours')) * 1000 AND \"" + TIMESTAMP + "\" < EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) - 1) * 100) " +
-                "END AS percentage_change " +
-                "FROM " + tableName + ";";
+        String sql = "SELECT " + "CASE WHEN COUNT(*) FILTER (WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) = 0 THEN 0 " + "ELSE ((SUM(" + TXN_FEE + ") FILTER (WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) / " + "SUM(" + TXN_FEE + ") FILTER (WHERE \"" + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '48 hours')) * 1000 AND \"" + TIMESTAMP + "\" < EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) - 1) * 100) " + "END AS percentage_change " + "FROM " + tableName + ";";
 
         try (QueryResult result = executeQuery(sql)) {
             ResultSet rs = result.ResultSet();
@@ -565,8 +485,7 @@ public class Queries {
         BigInteger averageFee = BigInteger.ZERO;
         String tableName = getTransactionsTableName("0");
 
-        String sql = "SELECT AVG(" + TXN_FEE + ") AS average_fee FROM " + tableName +
-                " WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000;";
+        String sql = "SELECT AVG(" + TXN_FEE + ") AS average_fee FROM " + tableName + " WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000;";
 
         try (QueryResult result = executeQuery(sql)) {
             ResultSet rs = result.ResultSet();
@@ -592,8 +511,7 @@ public class Queries {
         BigInteger totalFees = BigInteger.ZERO;
         String tableName = getTransactionsTableName("0");
 
-        String sql = "SELECT SUM(" + TXN_FEE + ") AS total_fees FROM " + tableName +
-                " WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000;";
+        String sql = "SELECT SUM(" + TXN_FEE + ") AS total_fees FROM " + tableName + " WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000;";
 
         try (QueryResult result = executeQuery(sql)) {
             ResultSet rs = result.ResultSet();
@@ -619,8 +537,7 @@ public class Queries {
         int transactionCount = 0;
         String tableName = getTransactionsTableName("0");
 
-        String sql = "SELECT COUNT(*) AS transaction_count FROM " + tableName +
-                " WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000;";
+        String sql = "SELECT COUNT(*) AS transaction_count FROM " + tableName + " WHERE \"" + TIMESTAMP + "\" >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000;";
 
         try (QueryResult result = executeQuery(sql)) {
             ResultSet rs = result.ResultSet();
@@ -641,12 +558,7 @@ public class Queries {
         double percentageChange = 0.0;
         String tableName = getTransactionsTableName("0");
 
-        String sql = "SELECT CASE " +
-                "WHEN COUNT(*) FILTER (WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '48 hours')) * 1000 AND " + TIMESTAMP + " < EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) = 0 THEN 0 " +
-                "ELSE (COUNT(*) FILTER (WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) * 1.0 / " +
-                "COUNT(*) FILTER (WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '48 hours')) * 1000 AND " + TIMESTAMP + " < EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) - 1) * 100 " +
-                "END AS percentage_change " +
-                "FROM " + tableName + ";";
+        String sql = "SELECT CASE " + "WHEN COUNT(*) FILTER (WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '48 hours')) * 1000 AND " + TIMESTAMP + " < EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) = 0 THEN 0 " + "ELSE (COUNT(*) FILTER (WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) * 1.0 / " + "COUNT(*) FILTER (WHERE " + TIMESTAMP + " >= EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '48 hours')) * 1000 AND " + TIMESTAMP + " < EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - INTERVAL '24 hours')) * 1000) - 1) * 100 " + "END AS percentage_change " + "FROM " + tableName + ";";
 
         try (QueryResult result = executeQuery(sql)) {
             ResultSet rs = result.ResultSet();
@@ -667,12 +579,7 @@ public class Queries {
         final long MILLIS_PER_DAY = 86400000; // 24 * 60 * 60 * 1000
         long currentTimeMillis = System.currentTimeMillis();
 
-        String sql = "SELECT COALESCE(SUM(" + SIZE + "), 0) as total_size, " +
-                "COALESCE(SUM(" + BLOCK_REWARD + "), 0) as total_rewards, " +
-                "COUNT(*) as block_count, " +
-                "COALESCE(AVG(" + SIZE + "), 0) as avg_size, " +
-                "COALESCE(SUM(" + TRANSACTIONS_COUNT + "), 0) as total_txns " +
-                "FROM \"Block\" WHERE " + TIMESTAMP + " >= ? AND " + TIMESTAMP + " < ?";
+        String sql = "SELECT COALESCE(SUM(" + SIZE + "), 0) as total_size, " + "COALESCE(SUM(" + BLOCK_REWARD + "), 0) as total_rewards, " + "COUNT(*) as block_count, " + "COALESCE(AVG(" + SIZE + "), 0) as avg_size, " + "COALESCE(SUM(" + TRANSACTIONS_COUNT + "), 0) as total_txns " + "FROM \"Block\" WHERE " + TIMESTAMP + " >= ? AND " + TIMESTAMP + " < ?";
 
         try (QueryResult result = executeQuery(sql, currentTimeMillis - MILLIS_PER_DAY, currentTimeMillis)) {
             ResultSet rs = result.ResultSet();
@@ -681,45 +588,27 @@ public class Queries {
                 int avgBlockSize = (int) rs.getDouble("avg_size");
                 long totalRewards = rs.getLong("total_rewards");
                 long totalTxns = rs.getLong("total_txns");
-                double networkUtilization = blockCount > 0
-                        ? BigDecimal.valueOf(((double) avgBlockSize / (double) Settings.getBlockSizeLimit()) * 100)
-                        .setScale(2, BigDecimal.ROUND_HALF_UP)
-                        .doubleValue()
-                        : 0.0;
+                double networkUtilization = blockCount > 0 ? BigDecimal.valueOf(((double) avgBlockSize / (double) Settings.getBlockSizeLimit()) * 100).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue() : 0.0;
 
-                return new JSONObject()
-                        .put("blocksCount", blockCount)
-                        .put("averageBlockSize", avgBlockSize)
-                        .put("totalRewards", totalRewards)
-                        .put("totalTransactions", totalTxns)
-                        .put("networkUtilization", networkUtilization);
+                return new JSONObject().put("blocksCount", blockCount).put("averageBlockSize", avgBlockSize).put("totalRewards", totalRewards).put("totalTransactions", totalTxns).put("networkUtilization", networkUtilization);
             }
         } catch (SQLException e) {
             logger.error("Error getting 24h block stats: {}", e.getLocalizedMessage());
         }
 
-        return new JSONObject()
-                .put("blocksCount", 0)
-                .put("averageBlockSize", 0)
-                .put("totalRewards", 0)
-                .put("totalTransactions", 0)
-                .put("networkUtilization", 0.0);
+        return new JSONObject().put("blocksCount", 0).put("averageBlockSize", 0).put("totalRewards", 0).put("totalTransactions", 0).put("networkUtilization", 0.0);
     }
 
     public static BigInteger getTotalFees() {
         String tableName = getTransactionsTableName("0");
         // First get the min and max day timestamps from the table
-        String boundsQuery = "SELECT " +
-                "MIN(timestamp / 86400000) as min_day, " +
-                "MAX(timestamp / 86400000) as max_day " +
-                "FROM " + tableName;
+        String boundsQuery = "SELECT " + "MIN(timestamp / 86400000) as min_day, " + "MAX(timestamp / 86400000) as max_day " + "FROM " + tableName;
 
         try (Connection conn = DatabaseConnection.getConnection()) {
             long startDay, endDay;
 
             // Get the full range of days
-            try (PreparedStatement stmt = conn.prepareStatement(boundsQuery);
-                 ResultSet rs = stmt.executeQuery()) {
+            try (PreparedStatement stmt = conn.prepareStatement(boundsQuery); ResultSet rs = stmt.executeQuery()) {
                 if (!rs.next()) return BigInteger.ZERO;
                 startDay = rs.getLong("min_day");
                 endDay = rs.getLong("max_day");
@@ -732,29 +621,24 @@ public class Queries {
             int numPartitions = (int) Math.ceil((endDay - startDay + 1) / (double) PARTITION_SIZE);
 
             // Sum across all partitions
-            return (BigInteger) IntStream.range(0, numPartitions)
-                    .parallel()
-                    .mapToObj(partition -> {
-                        long partitionStart = startDay + (partition * PARTITION_SIZE);
-                        long partitionEnd = Math.min(partitionStart + PARTITION_SIZE, endDay);
+            return (BigInteger) IntStream.range(0, numPartitions).parallel().mapToObj(partition -> {
+                long partitionStart = startDay + (partition * PARTITION_SIZE);
+                long partitionEnd = Math.min(partitionStart + PARTITION_SIZE, endDay);
 
-                        String sql = "SELECT COALESCE(SUM(txn_fee), 0) " +
-                                "FROM " + tableName + " " +
-                                "WHERE timestamp / 86400000 BETWEEN ? AND ?";
+                String sql = "SELECT COALESCE(SUM(txn_fee), 0) " + "FROM " + tableName + " " + "WHERE timestamp / 86400000 BETWEEN ? AND ?";
 
-                        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                            stmt.setLong(1, partitionStart);
-                            stmt.setLong(2, partitionEnd);
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setLong(1, partitionStart);
+                    stmt.setLong(2, partitionEnd);
 
-                            try (ResultSet rs = stmt.executeQuery()) {
-                                return rs.next() ? rs.getLong(1) : 0L;
-                            }
-                        } catch (SQLException e) {
-                            logger.error("Error summing fees for partition {}: {}", partition, e.getLocalizedMessage());
-                            return BigInteger.ZERO;
-                        }
-                    })
-                    .reduce(BigInteger.ZERO, (a, b) -> ((BigInteger) a).add((BigInteger) b)); // Added explicit casting
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        return rs.next() ? rs.getLong(1) : 0L;
+                    }
+                } catch (SQLException e) {
+                    logger.error("Error summing fees for partition {}: {}", partition, e.getLocalizedMessage());
+                    return BigInteger.ZERO;
+                }
+            }).reduce(BigInteger.ZERO, (a, b) -> ((BigInteger) a).add((BigInteger) b)); // Added explicit casting
 
         } catch (SQLException e) {
             logger.error("Error getting timestamp bounds for shard: {}", e.getLocalizedMessage());
@@ -793,32 +677,10 @@ public class Queries {
             ResultSet rs = result.ResultSet();
             if (rs.next()) {
                 // Populate first transaction
-                firstTxn = new NewTxn(
-                        rs.getString(FIRST_TXN_HASH),
-                        0,
-                        0,
-                        "",
-                        "",
-                        rs.getLong(FIRST_TXN_TIMESTAMP),
-                        0,
-                        "",
-                        0,
-                        false
-                );
+                firstTxn = new NewTxn(rs.getString(FIRST_TXN_HASH), 0, 0, "", "", rs.getLong(FIRST_TXN_TIMESTAMP), 0, "", 0, false);
 
                 // Populate last transaction
-                lastTxn = new NewTxn(
-                        rs.getString(LAST_TXN_HASH),
-                        0,
-                        0,
-                        "",
-                        "",
-                        rs.getLong(LAST_TXN_TIMESTAMP),
-                        0,
-                        "",
-                        0,
-                        false
-                );
+                lastTxn = new NewTxn(rs.getString(LAST_TXN_HASH), 0, 0, "", "", rs.getLong(LAST_TXN_TIMESTAMP), 0, "", 0, false);
             }
         } catch (Exception e) {
             logger.error("Error querying transactions for address {}: {}", address, e.getMessage());
@@ -839,12 +701,7 @@ public class Queries {
         long currentDayStart = (currentTimeMillis / MILLIS_PER_DAY) * MILLIS_PER_DAY;
         long startTimeMillis = currentDayStart - ((DAYS_TO_FETCH - 1) * MILLIS_PER_DAY);
 
-        String sql = "SELECT (" + TIMESTAMP + " / " + MILLIS_PER_DAY + ") * " + MILLIS_PER_DAY + " as day_start, " +
-                "COUNT(*) as count " +
-                "FROM " + tableName + " " +
-                "WHERE " + TIMESTAMP + " >= ? AND " + TIMESTAMP + " < ? " +
-                "GROUP BY (" + TIMESTAMP + " / " + MILLIS_PER_DAY + ") * " + MILLIS_PER_DAY + " " +
-                "ORDER BY day_start DESC";
+        String sql = "SELECT (" + TIMESTAMP + " / " + MILLIS_PER_DAY + ") * " + MILLIS_PER_DAY + " as day_start, " + "COUNT(*) as count " + "FROM " + tableName + " " + "WHERE " + TIMESTAMP + " >= ? AND " + TIMESTAMP + " < ? " + "GROUP BY (" + TIMESTAMP + " / " + MILLIS_PER_DAY + ") * " + MILLIS_PER_DAY + " " + "ORDER BY day_start DESC";
 
         try (QueryResult result = executeQuery(sql, startTimeMillis, currentDayStart + MILLIS_PER_DAY)) {
             ResultSet rs = result.ResultSet();
@@ -872,10 +729,7 @@ public class Queries {
         if (address.startsWith("0x")) {
             address = address.substring(2);
         }
-        String sql = "SELECT " + BLOCK_NUMBER + ", " + TIMESTAMP + ", " + SUCCESS + ", " + BLOCK_REWARD + ", " + TRANSACTIONS_COUNT + " " +
-                "FROM \"Block\" WHERE LOWER(" + FEE_RECIPIENT + ") = ? " +
-                "ORDER BY " + TIMESTAMP + " DESC " +
-                "LIMIT ? OFFSET ?";
+        String sql = "SELECT " + BLOCK_NUMBER + ", " + TIMESTAMP + ", " + SUCCESS + ", " + BLOCK_REWARD + ", " + TRANSACTIONS_COUNT + " " + "FROM \"Block\" WHERE LOWER(" + FEE_RECIPIENT + ") = ? " + "ORDER BY " + TIMESTAMP + " DESC " + "LIMIT ? OFFSET ?";
 
         if (pageSize * page > 100_000) {
             page = (int) Math.ceil((double) 100_000 / pageSize);
@@ -943,90 +797,11 @@ public class Queries {
         return false;
     }
 
-    /* TODO: This function was previously used to get the first and last txns for a user but since it was very slow
-        it was replaced by this function getFirstAndLastTransactionsByAddress.
-        What we need to consider here is that the new function works with the new db design which has not been implemented yet
-        on the main explorer because we need to reset the db so if any changes need to be done to the main explorer without resetting
-        the db we need to replace the new function by this function temporarily.
-        Note that the test explorer already supports these changes since the db was reset for it!!
-    */
-    public static Pair<NewTxn, NewTxn> getFirstAndLastTransactionsByAddressOld(String address) {
-        CompletableFuture<NewTxn> firstTxnFuture = CompletableFuture.supplyAsync(() -> {
-            NewTxn firstTxn = null;
-            String tableName = getTransactionsTableName("0");
-
-            String sql = "(" +
-                    "SELECT * FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ? " +
-                    "ORDER BY " + TIMESTAMP + " ASC LIMIT 1" +
-                    ") UNION ALL (" +
-                    "SELECT * FROM " + tableName + " WHERE " + TO_ADDRESS + " = ? " +
-                    "ORDER BY " + TIMESTAMP + " ASC LIMIT 1" +
-                    ") ORDER BY " + TIMESTAMP + " ASC LIMIT 1";
-
-            try (Connection conn = getConnection();
-                 PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-
-                preparedStatement.setString(1, address);
-                preparedStatement.setString(2, address);
-
-                try (ResultSet rs = preparedStatement.executeQuery()) {
-                    if (rs.next()) {
-                        firstTxn = populateNewTxnObject(rs);
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("Error querying first transaction for address {}: {}", address, e.getMessage());
-            }
-            return firstTxn;
-        });
-
-        CompletableFuture<NewTxn> lastTxnFuture = CompletableFuture.supplyAsync(() -> {
-            NewTxn lastTxn = null;
-            String tableName = getTransactionsTableName("0");
-
-            String sql = "(" +
-                    "SELECT * FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ? " +
-                    "ORDER BY " + TIMESTAMP + " DESC LIMIT 1" +
-                    ") UNION ALL (" +
-                    "SELECT * FROM " + tableName + " WHERE " + TO_ADDRESS + " = ? " +
-                    "ORDER BY " + TIMESTAMP + " DESC LIMIT 1" +
-                    ") ORDER BY " + TIMESTAMP + " DESC LIMIT 1";
-
-            try (Connection conn = getConnection();
-                 PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-
-                preparedStatement.setString(1, address);
-                preparedStatement.setString(2, address);
-
-                try (ResultSet rs = preparedStatement.executeQuery()) {
-                    if (rs.next()) {
-                        lastTxn = populateNewTxnObject(rs);
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("Error querying last transaction for address {}: {}", address, e.getMessage());
-            }
-            return lastTxn;
-        });
-
-        try {
-            // Wait for both futures to complete and combine results
-            NewTxn firstTxn = firstTxnFuture.get();
-            NewTxn lastTxn = lastTxnFuture.get();
-            return new Pair<>(firstTxn, lastTxn);
-        } catch (Exception e) {
-            logger.error("Error while querying transactions in parallel for address {}: {}", address, e.getMessage());
-        }
-
-        return new Pair<>(null, null);
-    }
-
-    /* TODO: We also have this function to get a user txns count but we changed it since in the new db design where we added the
-        users history table we can get the txn count of a user directly from the table.
-        So same thing here for this function we need to check where the user's txns count is being returned
-        and replace it by the old count function if we are not resetting the database.
-        Note that the test explorer already supports these changes since the db was reset for it!!
-     */
+    /* TODO: For future devs working on the explorer if db is being reset consider adding a new table
+        which will hold the total txns count and on each block maybe or a specific interval we update the count since now
+        to get the txns count we are counting them from the txns table which is not scalable but for now we are caching them
+        which works fine and smoothly.
+   */
     public static int getTotalTxnCountOld(String address) {
         address = address.toLowerCase();
         if (address.startsWith("0x")) {
@@ -1036,11 +811,9 @@ public class Queries {
 
         String tableName = getTransactionsTableName("0");
 
-        String sql = "SELECT COUNT(*) AS total_count FROM " + tableName +
-                " WHERE " + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ?;";
+        String sql = "SELECT COUNT(*) AS total_count FROM " + tableName + " WHERE " + FROM_ADDRESS + " = ? OR " + TO_ADDRESS + " = ?;";
 
-        try (Connection conn = getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, address);
             preparedStatement.setString(2, address);
 
@@ -1056,25 +829,8 @@ public class Queries {
         return totalCount;
     }
 
-    /* TODO: For future devs working on the explorer if db is being reset consider adding a new table
-        which will hold the total txns count and on each block maybe or a specific interval we update the count since now
-        to get the txns count we are counting them from the txns table which is not scalable but for now we are caching them
-        which works fine and smoothly.
-    */
-
     private static NewTxn populateNewTxnObject(ResultSet rs) throws SQLException {
-        return new NewTxn(
-                rs.getString(HASH),
-                rs.getLong(BLOCK_NUMBER),
-                rs.getInt(POSITION_IN_BLOCK),
-                rs.getString(FROM_ADDRESS),
-                rs.getString(TO_ADDRESS),
-                rs.getLong(TIMESTAMP),
-                rs.getLong(VALUE),
-                rs.getString(TXN_TYPE),
-                rs.getLong(TXN_FEE),
-                rs.getBoolean(SUCCESS)
-        );
+        return new NewTxn(rs.getString(HASH), rs.getLong(BLOCK_NUMBER), rs.getInt(POSITION_IN_BLOCK), rs.getString(FROM_ADDRESS), rs.getString(TO_ADDRESS), rs.getLong(TIMESTAMP), rs.getLong(VALUE), rs.getString(TXN_TYPE), rs.getLong(TXN_FEE), rs.getBoolean(SUCCESS));
     }
 
     private static String getTransactionsTableName(String hash) {
@@ -1082,14 +838,115 @@ public class Queries {
         return "\"Transactions_Shard_" + shardIndex + "\"";
     }
 
+    public static long getMaxProcessedBlockNumber() {
+        String sql = "SELECT MAX(" + BLOCK_NUMBER + ") FROM \"Block\"";
+
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+                long maxBlock = rs.getLong(1);
+                return maxBlock > 0 ? maxBlock : 0;
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to get max processed block number: {}", e.getMessage());
+        }
+
+        return 0;
+    }
+
+    public static void initializeValidators(com.github.pwrlabs.pwrj.entities.Block block) {
+        String sql = "INSERT INTO \"Validator\" VALUES(?, ?, ?, ?, ?)";
+        Object[] defaultValues = {block.getTimestamp(), 0, 0, 0};
+
+        try {
+            executeUpdate(sql, "f5fe6ae4ba7aa68c1ab340652d243b899859075b", block.getTimestamp(), 0, 0, 0);
+            executeUpdate(sql, "8796f287962c5de43b564f62d67314b7980738fc", block.getTimestamp(), 0, 0, 0);
+        } catch (Exception e) {
+            logger.error("An error occurred while initializing validators: ", e);
+        }
+    }
+
+    public static void incrementSubmittedBlocksCount(com.github.pwrlabs.pwrj.entities.Block block) {
+        String sql = "UPDATE \"Validator\" SET submitted_blocks_count = submitted_blocks_count + 1 WHERE address = ?;";
+
+        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            String address = block.getProposer().toLowerCase();
+            if (address.startsWith("0x")) {
+                address = address.substring(2);
+            }
+
+            pstmt.setString(1, address);
+            pstmt.executeUpdate();
+        } catch (Exception e) {
+            logger.error("Failed to increment submitted block count: {}", e.getMessage());
+        }
+    }
+
+    public static void updateLifetimeReward(String address, long lifetimeRewards) {
+        address = address.toLowerCase();
+        if (address.startsWith("0x")) {
+            address = address.substring(2);
+        }
+        String sql = "UPDATE \"Validator\" SET " + LIFETIME_REWARDS + " = " + LIFETIME_REWARDS + " + ? " + "WHERE " + ADDRESS + " = ?;";
+
+        try {
+            executeUpdate(sql, lifetimeRewards, address.toLowerCase());
+        } catch (Exception e) {
+            logger.error("Failed to update lifetime rewards for validator {}: {}", address, e.getLocalizedMessage());
+        }
+    }
+
+    public static long getLifetimeRewards(String address) {
+        address = address.toLowerCase();
+        if (address.startsWith("0x")) {
+            address = address.substring(2);
+        }
+        String sql = "SELECT " + LIFETIME_REWARDS + " FROM \"Validator\" WHERE " + ADDRESS + " = ?";
+
+        try (QueryResult result = executeQuery(sql, address)) {
+            ResultSet rs = result.ResultSet();
+            if (rs.next()) {
+                return rs.getLong(LIFETIME_REWARDS);
+            }
+        } catch (Exception e) {
+            logger.error("Failed to get lifetime rewards for validator {}: {}", address, e.getLocalizedMessage());
+        }
+        return 0;
+    }
+
+    public static void updateLatestBlockNumber(List<com.github.pwrlabs.pwrj.entities.Block> blocks) {
+        Map<String, Long> proposerLatestBlock = blocks.stream().collect(Collectors.toMap(b -> {
+            String addr = b.getProposer().toLowerCase();
+            return addr.startsWith("0x") ? addr.substring(2) : addr;
+        }, b -> b.getBlockNumber(), Math::max));
+
+        String sql = "UPDATE \"Validator\" SET latest_block_number = ? WHERE address = ?;";
+
+        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            conn.setAutoCommit(false);
+
+            for (Map.Entry<String, Long> entry : proposerLatestBlock.entrySet()) {
+                pstmt.setLong(1, entry.getValue());
+                pstmt.setString(2, entry.getKey());
+                pstmt.addBatch();
+            }
+
+            pstmt.executeBatch();
+            conn.commit();
+
+        } catch (Exception e) {
+            logger.error("Failed to batch update latest block numbers: {}", e.getMessage());
+        }
+    }
+
+
+    ///* Utils *///
     public record Pair<T, U>(T first, U second) {
     }
 
-    private record QueryResult(
-            Connection connection,
-            PreparedStatement statement,
-            ResultSet ResultSet
-    ) implements AutoCloseable {
+    private record QueryResult(Connection connection, PreparedStatement statement,
+                               ResultSet ResultSet) implements AutoCloseable {
 
         @Override
         public void close() throws SQLException {
@@ -1121,117 +978,6 @@ public class Queries {
                 stmt.setObject(i + 1, params[i]);
             }
             stmt.executeUpdate();
-        }
-    }
-
-    public static long getMaxProcessedBlockNumber() {
-        String sql = "SELECT MAX(" + BLOCK_NUMBER + ") FROM \"Block\"";
-
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            if (rs.next()) {
-                long maxBlock = rs.getLong(1);
-                return maxBlock > 0 ? maxBlock : 0;
-            }
-        } catch (SQLException e) {
-            logger.error("Failed to get max processed block number: {}", e.getMessage());
-        }
-
-        return 0;
-    }
-
-    public static void incrementSubmittedBlocksCount(List<com.github.pwrlabs.pwrj.entities.Block> blocks) {
-        String sql = "UPDATE \"Validator\" SET submitted_blocks_count = submitted_blocks_count + 1 WHERE address = ?;";
-
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            conn.setAutoCommit(false);
-
-            for (com.github.pwrlabs.pwrj.entities.Block block : blocks) {
-                String address = block.getProposer().toLowerCase();
-                if (address.startsWith("0x")) {
-                    address = address.substring(2);
-                }
-
-                pstmt.setString(1, address);
-                pstmt.addBatch();
-            }
-
-            pstmt.executeBatch();
-            conn.commit();
-
-        } catch (Exception e) {
-            logger.error("Failed to batch increment submitted blocks count: {}", e.getMessage());
-        }
-    }
-
-
-    public static void updateLifetimeReward(String address, long lifetimeRewards) {
-        address = address.toLowerCase();
-        if (address.startsWith("0x")) {
-            address = address.substring(2);
-        }
-        String sql = "UPDATE \"Validator\" SET " +
-                LIFETIME_REWARDS + " = " + LIFETIME_REWARDS + " + ? " +
-                "WHERE " + ADDRESS + " = ?;";
-
-        try {
-            executeUpdate(sql, lifetimeRewards, address.toLowerCase());
-        } catch (Exception e) {
-            logger.error("Failed to update lifetime rewards for validator {}: {}", address, e.getLocalizedMessage());
-        }
-    }
-
-    public static long getLifetimeRewards(String address) {
-        address = address.toLowerCase();
-        if (address.startsWith("0x")) {
-            address = address.substring(2);
-        }
-        String sql = "SELECT " + LIFETIME_REWARDS + " FROM \"Validator\" WHERE " + ADDRESS + " = ?";
-
-        try (QueryResult result = executeQuery(sql, address)) {
-            ResultSet rs = result.ResultSet();
-            if (rs.next()) {
-                return rs.getLong(LIFETIME_REWARDS);
-            }
-        } catch (Exception e) {
-            logger.error("Failed to get lifetime rewards for validator {}: {}", address, e.getLocalizedMessage());
-        }
-        return 0;
-    }
-
-    public static void updateLatestBlockNumber(List<com.github.pwrlabs.pwrj.entities.Block> blocks) {
-        Map<String, Long> proposerLatestBlock = blocks.stream()
-                .collect(Collectors.toMap(
-                        b -> {
-                            String addr = b.getProposer().toLowerCase();
-                            return addr.startsWith("0x") ? addr.substring(2) : addr;
-                        },
-                        b -> b.getBlockNumber(),
-                        Math::max
-                ));
-
-        String sql = "UPDATE \"Validator\" SET latest_block_number = ? WHERE address = ?;";
-
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            conn.setAutoCommit(false);
-
-            for (Map.Entry<String, Long> entry : proposerLatestBlock.entrySet()) {
-                pstmt.setLong(1, entry.getValue());
-                pstmt.setString(2, entry.getKey());
-                pstmt.addBatch();
-            }
-
-            pstmt.executeBatch();
-            conn.commit();
-
-        } catch (Exception e) {
-            logger.error("Failed to batch update latest block numbers: {}", e.getMessage());
         }
     }
 }

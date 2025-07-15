@@ -16,8 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 
-import static Database.Queries.getLastXBlocks;
-import static Database.Queries.getTransactions;
+import static Database.Queries.*;
 import static Utils.Helpers.populateTxnsResponse;
 import static Utils.Helpers.returnHexStringWith0x;
 
@@ -31,7 +30,7 @@ enum SubscriptionType {
 public class WebsocketService {
     private static final Set<Session> sessions = new CopyOnWriteArraySet<>();
     private static final Map<Session, SubscriptionType> subscriptions = new ConcurrentHashMap<>();
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(6);
     private static final CacheManager cacheManager = new CacheManager(new PWRJ(Config.getPwrRpcUrl()));
     private static final Logger logger = LoggerFactory.getLogger(WebsocketService.class);
     private static final long MAX_IDLE_TIMEOUT = 10 * 60 * 1000; // 10 minutes
@@ -160,7 +159,7 @@ public class WebsocketService {
 
     private void sendLastXBlocks() {
         try {
-            List<Block> blockList = getLastXBlocks(10, 0);
+            List<Block> blockList = getLastXBlocks(10);
 
             for (Block block : blockList.reversed()) {
                 if (Long.parseLong(block.blockNumber()) > latestBlockSent) {
@@ -188,7 +187,7 @@ public class WebsocketService {
 
     private void sendLastXTxns() {
         try {
-            List<NewTxn> txns = getTransactions(10, 0);
+            List<NewTxn> txns = getLastXTransactions(10);
 
             for (NewTxn txn : txns.reversed()) {
                 if (txn == null) continue;

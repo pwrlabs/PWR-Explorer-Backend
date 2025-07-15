@@ -69,7 +69,8 @@ public class Synchronizer {
                         Processor.processTxns(blockToCheck, txns);
 
                         retryCount = 0;
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e) {
                         if (isRpcDown.get()) {
                             logger.error("RPC down breaking loop");
                             break;

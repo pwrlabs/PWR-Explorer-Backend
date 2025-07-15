@@ -30,12 +30,14 @@ enum SubscriptionType {
 public class WebsocketService {
     private static final Set<Session> sessions = new CopyOnWriteArraySet<>();
     private static final Map<Session, SubscriptionType> subscriptions = new ConcurrentHashMap<>();
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(6);
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
     private static final CacheManager cacheManager = new CacheManager(new PWRJ(Config.getPwrRpcUrl()));
     private static final Logger logger = LoggerFactory.getLogger(WebsocketService.class);
     private static final long MAX_IDLE_TIMEOUT = 10 * 60 * 1000; // 10 minutes
     private static volatile boolean started = false;
     private static long latestBlockSent = 0;
+    private static long latestB = 0;
+    private static long latestT = 0;
     private static long latestTxnTimestamp = 0;
 
     public WebsocketService() {
@@ -162,9 +164,9 @@ public class WebsocketService {
             List<Block> blockList = getLastXBlocks(10);
 
             for (Block block : blockList.reversed()) {
-                if (Long.parseLong(block.blockNumber()) > latestBlockSent) {
+                if (Long.parseLong(block.blockNumber()) > latestB) {
                     JSONObject blockObj = new JSONObject();
-                    blockObj.put("blockHeight", block.blockNumber());
+                    blockObj.put("blockHeight", Long.parseLong(block.blockNumber()));
                     blockObj.put("timeStamp", block.timeStamp() / 1000);
                     blockObj.put("txnsCount", block.txnCount());
                     blockObj.put("blockReward", block.blockReward());
@@ -177,7 +179,7 @@ public class WebsocketService {
 
                     broadcast(res.toString(), SubscriptionType.ALL_BLOCKS);
 
-                    latestBlockSent = Math.max(latestBlockSent, Long.parseLong(block.blockNumber()));
+                    latestB = Long.parseLong(block.blockNumber());
                 }
             }
         } catch (Exception e) {
@@ -191,7 +193,7 @@ public class WebsocketService {
 
             for (NewTxn txn : txns.reversed()) {
                 if (txn == null) continue;
-                if (txn.timestamp() > latestTxnTimestamp) {
+                if (txn.timestamp() > latestT) {
                     JSONObject txnObj = populateTxnsResponse(txn);
 
                     JSONObject res = new JSONObject();
@@ -201,7 +203,7 @@ public class WebsocketService {
 
                     broadcast(res.toString(), SubscriptionType.ALL_TXNS);
 
-                    latestTxnTimestamp = Math.max(txn.timestamp(), latestTxnTimestamp);
+                    latestT = txn.timestamp();
                 }
             }
         } catch (Exception e) {

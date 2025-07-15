@@ -24,7 +24,6 @@ public class Synchronizer {
     public static void sync(PWRJ pwrj) {
         running = true;
         long blockToCheck = Math.max(getLastStoredBlock() + 1, 1);
-//        blockToCheck = 2280;
         logger.info("Synchronizer starting at block {}", blockToCheck);
 
         while (running) {
@@ -57,9 +56,6 @@ public class Synchronizer {
                 int retryCount = 0;
                 while (blockToCheck <= chainLatestBlock && running) {
                     try {
-                        logger.info("Block to check: {}", blockToCheck);
-                        logger.info("Chain latest block: {}", chainLatestBlock);
-                        logger.info("Running ?: {}", running);
                         long fetchStart = System.currentTimeMillis();
                         BiResult<Block, List<FalconTransaction>> blockAndTransactions = pwrj.getBlockAndTransactions(blockToCheck);
                         Block block = blockAndTransactions.getFirst();
@@ -97,7 +93,6 @@ public class Synchronizer {
 
                     blockToCheck++;
                     throttleProcessing();
-                    logger.info("Finished ev going to next block: {}", blockToCheck);
                 }
 
                 long elapsedTime = System.currentTimeMillis() - startTime;

@@ -13,28 +13,12 @@ public class Config {
         return dbURL;
     }
 
-    public static String getDatabasePassword() {
-        String dbPassword = dotenv.get("DB_PASSWORD");
-        if (dbPassword == null || dbPassword.trim().isEmpty()) {
-            throw new IllegalStateException("Database password not found in environment variables");
-        }
-        return dbPassword;
-    }
-
     public static String getPwrRpcUrl() {
         String pwrRpcUrl = dotenv.get("RPC_URL");
         if (pwrRpcUrl == null || pwrRpcUrl.trim().isEmpty()) {
             throw new IllegalStateException("PWR RPC URL not found in environment variables");
         }
         return pwrRpcUrl;
-    }
-
-    public static String getDatabaseUserName() {
-        String dbUserName = dotenv.get("DB_USERNAME");
-        if (dbUserName == null || dbUserName.trim().isEmpty()) {
-            throw new IllegalStateException("Database username not found in environment variables");
-        }
-        return dbUserName;
     }
 
     public static String getDiscordBotToken() {
@@ -51,5 +35,13 @@ public class Config {
             throw new IllegalStateException("Discord channel ID not found in environment variables");
         }
         return discordChannelId;
+    }
+
+    public static String getEnvironment() {
+        String env = dotenv.get("ENV");
+        if (env == null || env.trim().isEmpty()) {
+            env = "dev";
+        }
+        return env;
     }
 }

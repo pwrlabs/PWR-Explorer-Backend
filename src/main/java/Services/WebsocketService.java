@@ -214,8 +214,7 @@ public class WebsocketService {
         for (Session session : sessions) {
             try {
                 SubscriptionType sub = subscriptions.get(session);
-                if (sub == targetType ||
-                        (sub == SubscriptionType.LATEST_INFO && targetType == SubscriptionType.LATEST_INFO)) {
+                if (sub == targetType) {
                     session.getRemote().sendString(message);
                 }
             } catch (Exception e) {

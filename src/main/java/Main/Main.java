@@ -6,6 +6,7 @@ import Core.Cache.CacheManager;
 import Database.Config;
 import Database.DatabaseInitialization;
 import Core.Synchronizer;
+import Database.Queries;
 import Services.*;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import org.slf4j.Logger;

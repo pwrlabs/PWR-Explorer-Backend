@@ -30,4 +30,6 @@ public class Constants {
     public static final String SUBMITTED_BLOCKS_COUNT = "submitted_blocks_count";
     public static final String LATEST_BLOCK_NUMBER = "latest_block_number";
     public static final long BLOCK_TIMEOUT_MINUTES = 10;
+    public static final String ID = "id";
+    public static final String TXNS_COUNT = "transactions_count";
 }

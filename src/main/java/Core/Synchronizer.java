@@ -36,11 +36,11 @@ public class Synchronizer {
                 }
 
                 long lastStoredBlock = getLastStoredBlock();
-//                if (chainLatestBlock < lastStoredBlock) {
-//                    handleChainReset(lastStoredBlock, chainLatestBlock);
-//                    blockToCheck = 1;
-//                    continue;
-//                }
+                if (chainLatestBlock < lastStoredBlock) {
+                    handleChainReset(lastStoredBlock, chainLatestBlock);
+                    blockToCheck = 1;
+                    continue;
+                }
 
                 if (blockToCheck > chainLatestBlock) {
                     long elapsedTime = System.currentTimeMillis() - startTime;
@@ -69,8 +69,7 @@ public class Synchronizer {
                         Processor.processTxns(blockToCheck, txns);
 
                         retryCount = 0;
-                    }
-                    catch (Exception e) {
+                    } catch (Exception e) {
                         if (isRpcDown.get()) {
                             logger.error("RPC down breaking loop");
                             break;

@@ -84,15 +84,12 @@ public class DatabaseInitialization {
                 TXNS_COUNT + " NUMERIC(13, 0)" +
                 ")";
 
-        long count = Queries.getTotalTransactionCountOld();
         String sqlInsertInitial = "INSERT INTO \"TxnsCount\" (" + ID + ", " + TXNS_COUNT + ") " +
-                "SELECT 1, " + count + " " +
+                "SELECT 1, 0 " +
                 "WHERE NOT EXISTS (SELECT 1 FROM \"TxnsCount\" WHERE " + ID + " = 1);";
 
         try (Connection connection = getConnection();
              Statement stmt = connection.createStatement()) {
-            dropTable(connection, "\"TxnsCount\"");
-
             stmt.execute(sqlCreateTable);
             stmt.execute(sqlInsertInitial);
         } catch (SQLException e) {

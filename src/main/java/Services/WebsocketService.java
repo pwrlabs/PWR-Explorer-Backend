@@ -7,6 +7,7 @@ import Database.Config;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -162,6 +163,7 @@ public class WebsocketService {
     private void sendLastXBlocks() {
         try {
             List<Block> blockList = getLastXBlocks(10);
+            JSONArray blocksArray = new JSONArray();
 
             for (Block block : blockList.reversed()) {
                 if (Long.parseLong(block.blockNumber()) > latestB) {
@@ -172,15 +174,19 @@ public class WebsocketService {
                     blockObj.put("blockReward", block.blockReward());
                     blockObj.put("blockSubmitter", returnHexStringWith0x(block.blockSubmitter()));
 
-                    JSONObject res = new JSONObject();
-                    res.put("event", "all_blocks");
-                    res.put("type", "new_block");
-                    res.put("block", blockObj);
-
-                    broadcast(res.toString(), SubscriptionType.ALL_BLOCKS);
+                    blocksArray.put(blockObj);
 
                     latestB = Long.parseLong(block.blockNumber());
                 }
+            }
+
+            if (!blocksArray.isEmpty()) {
+                JSONObject res = new JSONObject();
+                res.put("event", "all_blocks");
+                res.put("type", "new_blocks");
+                res.put("blocks", blocksArray);
+
+                broadcast(res.toString(), SubscriptionType.ALL_BLOCKS);
             }
         } catch (Exception e) {
             logger.error("Failed to send last X blocks: ", e);
@@ -189,23 +195,27 @@ public class WebsocketService {
 
     private void sendLastXTxns() {
         try {
-            List<NewTxn> txns = getLastXTransactions(10);
+            List<NewTxn> txns = getLastXTransactions(20);
+            JSONArray txnsArray = new JSONArray();
 
             for (NewTxn txn : txns.reversed()) {
                 if (txn == null) continue;
                 if (txn.timestamp() > latestT) {
                     JSONObject txnObj = populateTxnsResponse(txn);
-
-                    JSONObject res = new JSONObject();
-                    res.put("event", "all_txns");
-                    res.put("type", "new_txn");
-                    res.put("txn", txnObj);
-                    res.put("txns_count", cacheManager.getTotalTransactionCount());
-
-                    broadcast(res.toString(), SubscriptionType.ALL_TXNS);
+                    txnsArray.put(txnObj);
 
                     latestT = txn.timestamp();
                 }
+            }
+
+            if (!txnsArray.isEmpty()) {
+                JSONObject res = new JSONObject();
+                res.put("event", "all_txns");
+                res.put("type", "new_txns");
+                res.put("txns", txnsArray);
+                res.put("txns_count", cacheManager.getTotalTransactionCount());
+
+                broadcast(res.toString(), SubscriptionType.ALL_TXNS);
             }
         } catch (Exception e) {
             logger.error("Failed to send last X txns: ", e);

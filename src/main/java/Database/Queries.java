@@ -66,15 +66,16 @@ public class Queries {
 
             logger.info("Successfully inserted txns");
 
-            String updateSql = "UPDATE \"TxnsCount\" SET " + TXNS_COUNT + " = " + TXNS_COUNT + " + ? WHERE " + ID + " = 1";
-            try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
-                updateStmt.setInt(1, txns.size());
-                updateStmt.executeUpdate();
-            }
-            logger.info("Successfully updated txns count");
-
         } catch (Exception e) {
             throw new RuntimeException("Batch insert transactions failed: " + e.getMessage(), e);
+        }
+
+        String updateSql = "UPDATE \"TxnsCount\" SET " + TXNS_COUNT + " = " + TXNS_COUNT + " + ? WHERE " + ID + " = 1";
+        try {
+            executeUpdate(updateSql, txns.size());
+            logger.info("Successfully updated txns count");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -652,14 +653,14 @@ public class Queries {
         }
     }
 
-    public static int getTotalTransactionCount() {
-        int totalCount = 0;
-        String sql = "SELECT " + TXNS_COUNT + " AS total_count FROM \"TxnsCount\" ";
+    public static long getTotalTransactionCount() {
+        long totalCount = 0;
+        String sql = "SELECT " + TXNS_COUNT + " AS total_count FROM \"TxnsCount\"";
 
         try (QueryResult result = executeQuery(sql)) {
             ResultSet rs = result.ResultSet();
             if (rs.next()) {
-                totalCount = rs.getInt("total_count");
+                totalCount = rs.getLong("total_count");
             }
         } catch (Exception e) {
             logger.error("Failed to get txns count: {}", e.getLocalizedMessage());

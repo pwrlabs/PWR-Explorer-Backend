@@ -33,10 +33,10 @@ public class Helpers {
         }
     }
 
-    public static JSONObject createPaginationMetadata(int totalCount, int currentPage, int itemsPerPage) {
+    public static JSONObject createPaginationMetadata(long totalCount, int currentPage, int itemsPerPage) {
         int totalPages = (int) Math.ceil((double) totalCount / itemsPerPage);
         int startIndex = (currentPage - 1) * itemsPerPage;
-        int endIndex = Math.min(startIndex + itemsPerPage, totalCount);
+        long endIndex = Math.min(startIndex + itemsPerPage, totalCount);
 
         JSONObject metadata = new JSONObject();
         metadata.put("totalPages", totalPages);

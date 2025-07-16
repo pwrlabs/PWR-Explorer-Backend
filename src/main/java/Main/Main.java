@@ -68,7 +68,7 @@ public class Main {
 
         RateLimiter.initRateLimiter();
 
-        DatabaseInitialization.initialize();
+        DatabaseInitialization.resetDatabase();
         cacheManager = new CacheManager(pwrj);
 
         BlockService.initialize(pwrj);

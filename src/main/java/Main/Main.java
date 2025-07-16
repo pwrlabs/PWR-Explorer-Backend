@@ -77,9 +77,11 @@ public class Main {
 
         GET.run();
 
-        while (!DiscordAlertService.isReady()) {
-            logger.info("⏳ Waiting for Discord bot to initialize...");
-            Thread.sleep(1000);
+        if (Config.getEnvironment().equals("prod")) {
+            while (!DiscordAlertService.isReady()) {
+                logger.info("⏳ Waiting for Discord bot to initialize...");
+                Thread.sleep(1000);
+            }
         }
 
         startSynchronizer(pwrj);

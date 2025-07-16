@@ -37,7 +37,9 @@ public class DiscordAlertService {
     private static final PWRJ pwrj = new PWRJ(Config.getPwrRpcUrl());
 
     static {
-        initializeDiscordBot();
+        if (Config.getEnvironment().equals("prod")) {
+            initializeDiscordBot();
+        }
     }
 
     private static void initializeDiscordBot() {

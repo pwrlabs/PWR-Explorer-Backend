@@ -170,7 +170,8 @@ public class DatabaseInitialization {
         try (Connection connection = getConnection()) {
             // Drop tables with foreign key constraints first (transactions tables that reference Block)
             for (int i = 0; i < NUMBER_OF_SHARDS; i++) {
-                dropTable(connection, "\"Transactions_Shard_" + i + "\"");
+                String tableName = "\"Transactions_Shard_" + i + "\"";
+                dropTable(connection, tableName);
             }
             // Then drop the remaining tables
             dropTable(connection, "\"Block\"");

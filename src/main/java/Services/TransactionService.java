@@ -131,7 +131,6 @@ public class TransactionService {
 
             List<NewTxn> txns = getUserTxns(address, page, count);
             int totalTxnCount = getTotalTxnCountOld(address);
-            System.out.println("=========== " +totalTxnCount);
 
             JSONArray transactions = new JSONArray();
             for (NewTxn txn : txns) {

@@ -655,9 +655,7 @@ public class Queries {
 
     public static int getTotalTransactionCount() {
         int totalCount = 0;
-        String tableName = getTransactionsTableName("0");
-        String sql = "SELECT COUNT(*) AS total_count FROM " + tableName;
-//        String sql = "SELECT " + TXNS_COUNT + " AS total_count FROM \"TxnsCount\" ";
+        String sql = "SELECT " + TXNS_COUNT + " AS total_count FROM \"TxnsCount\" ";
 
         try (QueryResult result = executeQuery(sql)) {
             ResultSet rs = result.ResultSet();

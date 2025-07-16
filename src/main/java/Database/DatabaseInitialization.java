@@ -83,9 +83,8 @@ public class DatabaseInitialization {
                 ID + " INT PRIMARY KEY, " +
                 TXNS_COUNT + " NUMERIC(13, 0))";
 
-        int count = Queries.getTotalTransactionCount();
         String sqlInsertInitial = "INSERT INTO \"TxnsCount\" (" + ID + ", " + TXNS_COUNT + ") " +
-                "SELECT 1, " + count + " " +
+                "SELECT 1, 0 " +
                 "WHERE NOT EXISTS (SELECT 1 FROM \"TxnsCount\" WHERE " + ID + " = 1);";
 
         try (Connection connection = getConnection();

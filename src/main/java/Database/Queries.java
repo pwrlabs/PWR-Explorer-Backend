@@ -669,6 +669,23 @@ public class Queries {
         return totalCount;
     }
 
+    public static long getTotalTransactionCountOld() {
+        long totalCount = 0;
+        String tableName = getTransactionsTableName("0");
+        String sql = "SELECT COUNT(*) AS total_count FROM " + tableName;
+
+        try (QueryResult result = executeQuery(sql)) {
+            ResultSet rs = result.ResultSet();
+            if (rs.next()) {
+                totalCount = rs.getLong("total_count");
+            }
+        } catch (Exception e) {
+            logger.error("Failed to get txns count: {}", e.getLocalizedMessage());
+        }
+
+        return totalCount;
+    }
+
     public static Pair<NewTxn, NewTxn> getFirstAndLastTransactionsByAddress(String address) {
         if (address.startsWith("0x")) {
             address = address.substring(2);

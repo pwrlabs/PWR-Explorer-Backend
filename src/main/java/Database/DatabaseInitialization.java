@@ -81,15 +81,18 @@ public class DatabaseInitialization {
     private static void createAndInitializeTxnsCountTable() {
         String sqlCreateTable = "CREATE TABLE IF NOT EXISTS \"TxnsCount\" (" +
                 ID + " INT PRIMARY KEY, " +
-                TXNS_COUNT + " NUMERIC(13, 0))";
+                TXNS_COUNT + " NUMERIC(13, 0)" +
+                ")";
 
-        int count = Queries.getTotalTransactionCount();
+        long count = Queries.getTotalTransactionCountOld();
         String sqlInsertInitial = "INSERT INTO \"TxnsCount\" (" + ID + ", " + TXNS_COUNT + ") " +
                 "SELECT 1, " + count + " " +
                 "WHERE NOT EXISTS (SELECT 1 FROM \"TxnsCount\" WHERE " + ID + " = 1);";
 
         try (Connection connection = getConnection();
              Statement stmt = connection.createStatement()) {
+            dropTable(connection, "\"TxnsCount\"");
+
             stmt.execute(sqlCreateTable);
             stmt.execute(sqlInsertInitial);
         } catch (SQLException e) {

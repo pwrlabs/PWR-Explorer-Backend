@@ -39,7 +39,7 @@ public class TransactionService {
             int offset = (page - 1) * count;
 
             List<NewTxn> txns = getTransactions(count, offset);
-            int totalTxnCount = cacheManager.getTotalTransactionCount();
+            long totalTxnCount = cacheManager.getTotalTransactionCount();
 
             for (NewTxn txn : txns) {
                 JSONObject object = populateTxnsResponse(txn);
@@ -131,7 +131,6 @@ public class TransactionService {
 
             List<NewTxn> txns = getUserTxns(address, page, count);
             int totalTxnCount = getTotalTxnCountOld(address);
-            System.out.println("=========== " +totalTxnCount);
 
             JSONArray transactions = new JSONArray();
             for (NewTxn txn : txns) {

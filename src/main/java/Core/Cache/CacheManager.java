@@ -25,7 +25,7 @@ public class CacheManager {
     private final AsyncLoadingCache<Integer, List<NewTxn>> recentTxnCache;
     private final AsyncLoadingCache<String, Integer> activeValidatorsCountCache;
     private final AsyncLoadingCache<String, Long> blocksCountCache;
-    private final AsyncLoadingCache<String, Integer> totalTxnCountCache;
+    private final AsyncLoadingCache<String, Long> totalTxnCountCache;
     private final AsyncLoadingCache<String, Map<Long, Integer>> fourteenDaysTxnCache;
     private final AsyncLoadingCache<String, Double> averageTpsCache;
     private final AsyncLoadingCache<String, JSONObject> blockStatsCache;
@@ -188,7 +188,7 @@ public class CacheManager {
         return 0;
     }
 
-    public int getTotalTransactionCount() {
+    public long getTotalTransactionCount() {
         try {
             return totalTxnCountCache.get("count").get();
         } catch (Exception e) {

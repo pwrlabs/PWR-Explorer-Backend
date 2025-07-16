@@ -200,6 +200,7 @@ public class WebsocketService {
                     res.put("event", "all_txns");
                     res.put("type", "new_txn");
                     res.put("txn", txnObj);
+                    res.put("txns_count", cacheManager.getTotalTransactionCount());
 
                     broadcast(res.toString(), SubscriptionType.ALL_TXNS);
 

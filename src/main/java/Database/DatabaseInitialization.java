@@ -84,15 +84,12 @@ public class DatabaseInitialization {
                 TXNS_COUNT + " NUMERIC(13, 0)" +
                 ")";
 
-        long count = Queries.getTotalTransactionCountOld();
         String sqlInsertInitial = "INSERT INTO \"TxnsCount\" (" + ID + ", " + TXNS_COUNT + ") " +
-                "SELECT 1, " + count + " " +
+                "SELECT 1, 0 " +
                 "WHERE NOT EXISTS (SELECT 1 FROM \"TxnsCount\" WHERE " + ID + " = 1);";
 
         try (Connection connection = getConnection();
              Statement stmt = connection.createStatement()) {
-            dropTable(connection, "\"TxnsCount\"");
-
             stmt.execute(sqlCreateTable);
             stmt.execute(sqlInsertInitial);
         } catch (SQLException e) {
@@ -170,7 +167,8 @@ public class DatabaseInitialization {
         try (Connection connection = getConnection()) {
             // Drop tables with foreign key constraints first (transactions tables that reference Block)
             for (int i = 0; i < NUMBER_OF_SHARDS; i++) {
-                dropTable(connection, "\"Transactions_Shard_" + i + "\"");
+                String tableName = "\"Transactions_Shard_" + i + "\"";
+                dropTable(connection, tableName);
             }
             // Then drop the remaining tables
             dropTable(connection, "\"Block\"");

@@ -1,6 +1,8 @@
 package Core.Cache;
 
 import DataModel.Block;
+import Database.Constants.Repository.Blocks.BlocksRepo;
+import Database.Constants.Repository.Blocks.BlocksRepoImpl;
 import Database.Queries;
 import DataModel.NewTxn;
 import com.github.pwrlabs.pwrj.entities.Validator;
@@ -21,6 +23,7 @@ import static Database.Queries.*;
 
 public class CacheManager {
     private final Logger logger = LoggerFactory.getLogger(CacheManager.class.getName());
+
     private final AsyncLoadingCache<Integer, List<Block>> blocksCache;
     private final AsyncLoadingCache<Integer, List<NewTxn>> recentTxnCache;
     private final AsyncLoadingCache<String, Integer> activeValidatorsCountCache;
@@ -42,10 +45,12 @@ public class CacheManager {
 
 
     public CacheManager(PWRJ pwrj) {
+        BlocksRepo blocksRepo = new BlocksRepoImpl();
+
         blocksCache = Caffeine.newBuilder()
                 .maximumSize(4)
                 .expireAfterWrite(2, TimeUnit.SECONDS)
-                .buildAsync(Queries::getLastXBlocks);
+                .buildAsync(blocksRepo::getLastXBlocks);
 
         recentTxnCache = Caffeine.newBuilder()
                 .maximumSize(4)
@@ -60,7 +65,7 @@ public class CacheManager {
         blocksCountCache = Caffeine.newBuilder()
                 .maximumSize(1)
                 .expireAfterWrite(2, TimeUnit.SECONDS)
-                .buildAsync(key -> getLastStoredBlock());
+                .buildAsync(key -> blocksRepo.getLastStoredBlock());
 
         averageTpsCache = Caffeine.newBuilder()
                 .maximumSize(2)
@@ -75,7 +80,7 @@ public class CacheManager {
         blockStatsCache = Caffeine.newBuilder()
                 .maximumSize(1)
                 .expireAfterWrite(1, TimeUnit.MINUTES)
-                .buildAsync(key -> Queries.get24HourBlockStats());
+                .buildAsync(key -> blocksRepo.get24HourBlockStats());
 
         // special caches with automatics background refetch
         totalTxnCountCache = Caffeine.newBuilder()

@@ -79,18 +79,6 @@ public class Queries {
         }
     }
 
-    public static void insertBlock(com.github.pwrlabs.pwrj.entities.Block block) {
-        String sql = "INSERT INTO \"Block\" (" + BLOCK_NUMBER + ", " + BLOCK_HASH + ", " + FEE_RECIPIENT + ", " + TIMESTAMP + ", " + TRANSACTIONS_COUNT + ", " + BLOCK_REWARD + ", " + BLOCK_SIZE + ", " + SUCCESS + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-        try {
-            logger.info("Retrieved connection and started inserting block {}", block.getBlockNumber());
-            executeUpdate(sql, block.getBlockNumber(), block.getBlockHash().toLowerCase(), block.getProposer().toLowerCase(), block.getTimestamp(), block.getTransactionCount(), block.getBlockReward(), block.getBlockSize(), block.isProcessedWithoutCriticalErrors());
-            logger.info("Successfully inserted block {}", block.getBlockNumber());
-        } catch (Exception e) {
-            logger.error("Failed to insert block {}: ", block.getBlockNumber(), e);
-        }
-    }
-
     public static void insertValidator(String address, long joiningTime) {
         address = address.toLowerCase();
         if (address.startsWith("0x")) {
@@ -114,100 +102,6 @@ public class Queries {
             logger.error("Error upserting user history for address {}: {}", address, e.getLocalizedMessage());
             throw new RuntimeException("Failed to upsert user history", e);
         }
-    }
-
-    public static void updateInitialDelegations(String userAddress, String validatorAddress, long initialDelegation) {
-        String sql = "INSERT INTO \"InitialDelegation\" (" + USER_ADDRESS + ", " + VALIDATOR_ADDRESS + ", " + INITIAL_DELEGATION + ") " + "VALUES (?, ?, ?) " + "ON CONFLICT (" + USER_ADDRESS + ", " + VALIDATOR_ADDRESS + ") DO UPDATE SET " + INITIAL_DELEGATION + " = ?;";
-
-        try {
-            executeUpdate(sql, userAddress, validatorAddress, initialDelegation, initialDelegation);
-        } catch (Exception e) {
-            logger.error("Failed to update initial delegation for user {}: {}", userAddress, e.getLocalizedMessage());
-        }
-    }
-
-    public static void updateBlock(long blockNumber, String blockHash, byte[] feeRecipient, long timestamp, int transactionsCount, long blockReward, int size, boolean success) {
-        String sql = "UPDATE \"Block\" SET " + BLOCK_HASH + " = ?, " + FEE_RECIPIENT + " = ?, " + TIMESTAMP + " = ?, " + TRANSACTIONS_COUNT + " = ?, " + BLOCK_REWARD + " = ?, " + SIZE + " = ?, " + SUCCESS + " = ? " + "WHERE " + BLOCK_NUMBER + " = ?;";
-
-        try {
-            executeUpdate(sql, blockHash, feeRecipient, timestamp, transactionsCount, blockReward, size, success, blockNumber);
-        } catch (Exception e) {
-            logger.error("Failed to update block {}: {}", blockNumber, e.getLocalizedMessage());
-        }
-    }
-
-    public static Block getDbBlock(long blockNumber) {
-        String sql = "SELECT * FROM \"Block\" WHERE " + BLOCK_NUMBER + " = ?;";
-        Block block = null;
-
-        try (QueryResult result = executeQuery(sql, blockNumber)) {
-            ResultSet rs = result.ResultSet();
-            if (rs.next()) {
-                String feeRecipient = rs.getString(FEE_RECIPIENT);
-                long timestamp = rs.getLong(TIMESTAMP);
-                int transactionsCount = rs.getInt(TRANSACTIONS_COUNT);
-                long blockReward = rs.getLong(BLOCK_REWARD);
-                int size = rs.getInt(BLOCK_SIZE);
-                String blockHash = rs.getString(BLOCK_HASH);
-                String blockNumberString = "" + blockNumber;
-                block = new Block(blockHash, blockNumberString, timestamp, feeRecipient, blockReward, size, transactionsCount);
-            }
-        } catch (Exception e) {
-            logger.error("Failed to get block {} from db: {}", blockNumber, e.getLocalizedMessage());
-        }
-        return block;
-    }
-
-    public static long getLastBlockNumber() {
-        String sql = "SELECT MAX(" + BLOCK_NUMBER + ") FROM \"Block\";";
-
-        try (QueryResult result = executeQuery(sql)) {
-            ResultSet rs = result.ResultSet();
-            if (rs.next()) {
-                return rs.getLong(1);
-            }
-        } catch (Exception e) {
-            logger.error("Failed to get last block number: {}", e.getLocalizedMessage());
-        }
-        return 0;
-    }
-
-    public static long getLastStoredBlock() {
-        String sql = "SELECT " + BLOCK_NUMBER + " FROM \"LastBlock\";";
-
-        try (QueryResult result = executeQuery(sql)) {
-            ResultSet rs = result.ResultSet();
-            if (rs.next()) {
-                return rs.getLong(1);
-            }
-        } catch (Exception e) {
-            logger.error("Failed to get last stored block number: {}", e.getLocalizedMessage());
-        }
-        return 0;
-    }
-
-    public static void updateLastStoredBlock(long blockNumber) {
-        String sql = "UPDATE \"LastBlock\" SET " + BLOCK_NUMBER + " = ?";
-
-        try {
-            executeUpdate(sql, blockNumber);
-        } catch (Exception e) {
-            logger.error("Failed to update last stored block number: {}", e.getLocalizedMessage());
-        }
-    }
-
-    public static long getLatestBlockNumberForFeeRecipient(String feeRecipient) {
-        String sql = "SELECT " + TIMESTAMP + " FROM \"Block\" " + "WHERE LOWER(" + FEE_RECIPIENT + ") = ? " + "ORDER BY " + BLOCK_NUMBER + " DESC " + "LIMIT 1";
-
-        try (QueryResult result = executeQuery(sql, feeRecipient)) {
-            ResultSet rs = result.ResultSet();
-            if (rs.next()) {
-                return rs.getLong(TIMESTAMP);
-            }
-        } catch (SQLException e) {
-            logger.error("Error getting latest block number for fee recipient {}: {}", feeRecipient, e.getMessage());
-        }
-        return -1;
     }
 
     public static double getAverageTps(int numberOfBlocks, long lastBlockNumber) {
@@ -266,22 +160,6 @@ public class Queries {
         return txn;
     }
 
-    public static String getBlockHash(long blockNumber) {
-        String blockHash = null;
-        String sql = "SELECT " + BLOCK_HASH + " FROM \"Block\" WHERE " + BLOCK_NUMBER + " = ?;";
-
-        try (QueryResult result = executeQuery(sql, blockNumber)) {
-            ResultSet rs = result.ResultSet();
-            if (rs.next()) {
-                blockHash = rs.getString(BLOCK_HASH);
-            }
-        } catch (Exception e) {
-            logger.error("Failed to get hash of block {}: {}", blockNumber, e.getLocalizedMessage());
-        }
-
-        return blockHash;
-    }
-
     public static List<NewTxn> getTransactions(int pageSize, int page) {
         List<NewTxn> txns = new ArrayList<>();
         String tableName = getTransactionsTableName("0");
@@ -327,79 +205,6 @@ public class Queries {
             logger.error("Failed to get past {} txns: ", x, e);
         }
 
-        return txns;
-    }
-
-    public static List<Block> getLastXBlocks(int x) {
-        List<Block> blocks = new ArrayList<>();
-        String sql = "SELECT * FROM \"Block\" " + "ORDER BY " + BLOCK_NUMBER + " DESC " + "LIMIT ?;";
-
-        try (QueryResult result = executeQuery(sql, x)) {
-            ResultSet rs = result.ResultSet();
-            while (rs.next()) {
-                long blockNumber = rs.getLong(BLOCK_NUMBER);
-                String blockHash = rs.getString(BLOCK_HASH);
-                String feeRecipient = rs.getString(FEE_RECIPIENT);
-                long timestamp = rs.getLong(TIMESTAMP);
-                int transactionsCount = rs.getInt(TRANSACTIONS_COUNT);
-                long blockReward = rs.getLong(BLOCK_REWARD);
-                int size = rs.getInt(BLOCK_SIZE);
-                String blockNumberString = "" + blockNumber;
-
-                Block block = new Block(blockHash, blockNumberString, timestamp, feeRecipient, blockReward, size, transactionsCount);
-                blocks.add(block);
-            }
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-        }
-
-        return blocks;
-    }
-
-    public static List<Block> getLastXBlocks(int pageSize, int page) {
-        List<Block> blocks = new ArrayList<>();
-        String sql = "SELECT * FROM \"Block\" " + "ORDER BY " + BLOCK_NUMBER + " DESC " + "LIMIT ? OFFSET ?";
-
-        if (pageSize * page > 100_000) {
-            page = (int) Math.ceil((double) 100_000 / pageSize);
-        }
-
-        try (QueryResult result = executeQuery(sql, pageSize, page)) {
-            ResultSet rs = result.ResultSet();
-            while (rs.next()) {
-                long blockNumber = rs.getLong(BLOCK_NUMBER);
-                String blockHash = rs.getString(BLOCK_HASH);
-                String feeRecipient = rs.getString(FEE_RECIPIENT);
-                long timestamp = rs.getLong(TIMESTAMP);
-                int transactionsCount = rs.getInt(TRANSACTIONS_COUNT);
-                long blockReward = rs.getLong(BLOCK_REWARD);
-                int size = rs.getInt(BLOCK_SIZE);
-
-                Block block = new Block(blockHash, String.valueOf(blockNumber), timestamp, feeRecipient, blockReward, size, transactionsCount);
-                blocks.add(block);
-            }
-
-        } catch (Exception e) {
-            logger.error("Error retrieving blocks: {}", e.getLocalizedMessage());
-        }
-        return blocks;
-    }
-
-    public static List<NewTxn> getBlockTxns(String blockNumberString) {
-        long blockNumber = Long.parseLong(blockNumberString);
-        List<NewTxn> txns = new ArrayList<>();
-        String tableName = getTransactionsTableName("0");
-        String sql = "SELECT * FROM " + tableName + " WHERE " + BLOCK_NUMBER + " = ? " + "ORDER BY " + POSITION_IN_BLOCK + " ASC;";
-
-        try (QueryResult result = executeQuery(sql, blockNumber)) {
-            ResultSet rs = result.ResultSet();
-            while (rs.next()) {
-                NewTxn txn = populateNewTxnObject(rs);
-                txns.add(txn);
-            }
-        } catch (Exception e) {
-            logger.error("Failed to get block {} txns: {}", blockNumber, e.getLocalizedMessage());
-        }
         return txns;
     }
 
@@ -582,30 +387,6 @@ public class Queries {
         return percentageChange;
     }
 
-    public static JSONObject get24HourBlockStats() {
-        final long MILLIS_PER_DAY = 86400000; // 24 * 60 * 60 * 1000
-        long currentTimeMillis = System.currentTimeMillis();
-
-        String sql = "SELECT COALESCE(SUM(" + SIZE + "), 0) as total_size, " + "COALESCE(SUM(" + BLOCK_REWARD + "), 0) as total_rewards, " + "COUNT(*) as block_count, " + "COALESCE(AVG(" + SIZE + "), 0) as avg_size, " + "COALESCE(SUM(" + TRANSACTIONS_COUNT + "), 0) as total_txns " + "FROM \"Block\" WHERE " + TIMESTAMP + " >= ? AND " + TIMESTAMP + " < ?";
-
-        try (QueryResult result = executeQuery(sql, currentTimeMillis - MILLIS_PER_DAY, currentTimeMillis)) {
-            ResultSet rs = result.ResultSet();
-            if (rs.next()) {
-                int blockCount = rs.getInt("block_count");
-                int avgBlockSize = (int) rs.getDouble("avg_size");
-                long totalRewards = rs.getLong("total_rewards");
-                long totalTxns = rs.getLong("total_txns");
-                double networkUtilization = blockCount > 0 ? BigDecimal.valueOf(((double) avgBlockSize / (double) Settings.getBlockSizeLimit()) * 100).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue() : 0.0;
-
-                return new JSONObject().put("blocksCount", blockCount).put("averageBlockSize", avgBlockSize).put("totalRewards", totalRewards).put("totalTransactions", totalTxns).put("networkUtilization", networkUtilization);
-            }
-        } catch (SQLException e) {
-            logger.error("Error getting 24h block stats: {}", e.getLocalizedMessage());
-        }
-
-        return new JSONObject().put("blocksCount", 0).put("averageBlockSize", 0).put("totalRewards", 0).put("totalTransactions", 0).put("networkUtilization", 0.0);
-    }
-
     public static BigInteger getTotalFees() {
         String tableName = getTransactionsTableName("0");
         // First get the min and max day timestamps from the table
@@ -730,62 +511,6 @@ public class Queries {
         return txns;
     }
 
-    public static JSONArray getBlocksCreated(String address, int pageSize, int page) {
-        address = address.toLowerCase();
-        if (address.startsWith("0x")) {
-            address = address.substring(2);
-        }
-        String sql = "SELECT " + BLOCK_NUMBER + ", " + TIMESTAMP + ", " + SUCCESS + ", " + BLOCK_REWARD + ", " + TRANSACTIONS_COUNT + " " + "FROM \"Block\" WHERE LOWER(" + FEE_RECIPIENT + ") = ? " + "ORDER BY " + TIMESTAMP + " DESC " + "LIMIT ? OFFSET ?";
-
-        if (pageSize * page > 100_000) {
-            page = (int) Math.ceil((double) 100_000 / pageSize);
-        }
-
-        JSONArray blocks = new JSONArray();
-        try (QueryResult result = executeQuery(sql, address, pageSize, page)) {
-            ResultSet rs = result.ResultSet();
-            while (rs.next()) {
-                JSONObject block = new JSONObject();
-                long blockNumber = rs.getLong(BLOCK_NUMBER);
-                long timestamp = rs.getLong(TIMESTAMP);
-                int transactionsCount = rs.getInt(TRANSACTIONS_COUNT);
-                long blockReward = rs.getLong(BLOCK_REWARD);
-                boolean success = rs.getBoolean(SUCCESS);
-
-                block.put("blockHeight", blockNumber);
-                block.put("timeStamp", timestamp);
-                block.put("txnsCount", transactionsCount);
-                block.put("blockReward", blockReward);
-                block.put("blockSubmitter", "0x" + address);
-                block.put("error", !success);
-
-                blocks.put(block);
-            }
-        } catch (SQLException e) {
-            logger.error("Failed to fetch created blocks {}", e.getLocalizedMessage());
-        }
-        return blocks;
-    }
-
-    public static int getBlocksSubmitted(String address) {
-        address = address.toLowerCase();
-        if (address.startsWith("0x")) {
-            address = address.substring(2);
-        }
-        String sql = "SELECT " + SUBMITTED_BLOCKS_COUNT + " FROM \"Validator\" WHERE LOWER(" + ADDRESS + ") = ?";
-
-        try (QueryResult result = executeQuery(sql, address)) {
-            ResultSet rs = result.ResultSet();
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-            return 0;
-        } catch (SQLException e) {
-            logger.error("Failed to fetch submitted blocks {}", e.getLocalizedMessage());
-            return 0;
-        }
-    }
-
     public static boolean isNewUser(String address) {
         address = address.toLowerCase();
         if (address.startsWith("0x")) {
@@ -835,29 +560,13 @@ public class Queries {
         return totalCount;
     }
 
-    private static NewTxn populateNewTxnObject(ResultSet rs) throws SQLException {
+    public static NewTxn populateNewTxnObject(ResultSet rs) throws SQLException {
         return new NewTxn(rs.getString(HASH), rs.getLong(BLOCK_NUMBER), rs.getInt(POSITION_IN_BLOCK), rs.getString(FROM_ADDRESS), rs.getString(TO_ADDRESS), rs.getLong(TIMESTAMP), rs.getLong(VALUE), rs.getString(TXN_TYPE), rs.getLong(TXN_FEE), rs.getBoolean(SUCCESS));
     }
 
-    private static String getTransactionsTableName(String hash) {
+    public static String getTransactionsTableName(String hash) {
         int shardIndex = Math.abs(hash.hashCode()) % NUMBER_OF_SHARDS;
         return "\"Transactions_Shard_" + shardIndex + "\"";
-    }
-
-    public static long getMaxProcessedBlockNumber() {
-        String sql = "SELECT MAX(" + BLOCK_NUMBER + ") FROM \"Block\"";
-
-        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
-
-            if (rs.next()) {
-                long maxBlock = rs.getLong(1);
-                return maxBlock > 0 ? maxBlock : 0;
-            }
-        } catch (SQLException e) {
-            logger.error("Failed to get max processed block number: {}", e.getMessage());
-        }
-
-        return 0;
     }
 
     public static void initializeValidators(com.github.pwrlabs.pwrj.entities.Block block) {
@@ -869,36 +578,6 @@ public class Queries {
             executeUpdate(sql, "8796f287962c5de43b564f62d67314b7980738fc", block.getTimestamp(), 0, 0, 0);
         } catch (Exception e) {
             logger.error("An error occurred while initializing validators: ", e);
-        }
-    }
-
-    public static void incrementSubmittedBlocksCount(com.github.pwrlabs.pwrj.entities.Block block) {
-        String sql = "UPDATE \"Validator\" SET submitted_blocks_count = submitted_blocks_count + 1 WHERE address = ?;";
-
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            String address = block.getProposer().toLowerCase();
-            if (address.startsWith("0x")) {
-                address = address.substring(2);
-            }
-
-            pstmt.setString(1, address);
-            pstmt.executeUpdate();
-        } catch (Exception e) {
-            logger.error("Failed to increment submitted block count: {}", e.getMessage());
-        }
-    }
-
-    public static void updateLifetimeReward(String address, long lifetimeRewards) {
-        address = address.toLowerCase();
-        if (address.startsWith("0x")) {
-            address = address.substring(2);
-        }
-        String sql = "UPDATE \"Validator\" SET " + LIFETIME_REWARDS + " = " + LIFETIME_REWARDS + " + ? " + "WHERE " + ADDRESS + " = ?;";
-
-        try {
-            executeUpdate(sql, lifetimeRewards, address.toLowerCase());
-        } catch (Exception e) {
-            logger.error("Failed to update lifetime rewards for validator {}: {}", address, e.getLocalizedMessage());
         }
     }
 
@@ -918,32 +597,6 @@ public class Queries {
             logger.error("Failed to get lifetime rewards for validator {}: {}", address, e.getLocalizedMessage());
         }
         return 0;
-    }
-
-    public static void updateLatestBlockNumber(List<com.github.pwrlabs.pwrj.entities.Block> blocks) {
-        Map<String, Long> proposerLatestBlock = blocks.stream().collect(Collectors.toMap(b -> {
-            String addr = b.getProposer().toLowerCase();
-            return addr.startsWith("0x") ? addr.substring(2) : addr;
-        }, b -> b.getBlockNumber(), Math::max));
-
-        String sql = "UPDATE \"Validator\" SET latest_block_number = ? WHERE address = ?;";
-
-        try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            conn.setAutoCommit(false);
-
-            for (Map.Entry<String, Long> entry : proposerLatestBlock.entrySet()) {
-                pstmt.setLong(1, entry.getValue());
-                pstmt.setString(2, entry.getKey());
-                pstmt.addBatch();
-            }
-
-            pstmt.executeBatch();
-            conn.commit();
-
-        } catch (Exception e) {
-            logger.error("Failed to batch update latest block numbers: {}", e.getMessage());
-        }
     }
 
 

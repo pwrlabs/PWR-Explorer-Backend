@@ -1,5 +1,7 @@
 package Core;
 
+import Database.Constants.Repository.Blocks.BlocksRepo;
+import Database.Constants.Repository.Blocks.BlocksRepoImpl;
 import Database.Queries;
 import Services.AdminService;
 import com.github.pwrlabs.pwrj.entities.Block;
@@ -11,11 +13,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-import static Database.Queries.*;
 import static Services.DiscordAlertService.isRpcDown;
 
 public class Synchronizer {
     private static final Logger logger = LoggerFactory.getLogger(Synchronizer.class);
+    private static final BlocksRepo blocksRepo = new BlocksRepoImpl();
     private static volatile boolean running = false;
     private static volatile boolean rpcHealthy = true;
     private static final boolean blockchainHealthy = true;
@@ -23,7 +25,7 @@ public class Synchronizer {
 
     public static void sync(PWRJ pwrj) {
         running = true;
-        long blockToCheck = Math.max(getLastStoredBlock() + 1, 1);
+        long blockToCheck = Math.max(blocksRepo.getLastStoredBlock() + 1, 1);
         logger.info("Synchronizer starting at block {}", blockToCheck);
 
         while (running) {
@@ -35,7 +37,7 @@ public class Synchronizer {
                     continue;
                 }
 
-                long lastStoredBlock = getLastStoredBlock();
+                long lastStoredBlock = blocksRepo.getLastStoredBlock();
                 if (chainLatestBlock < lastStoredBlock) {
                     handleChainReset(lastStoredBlock, chainLatestBlock);
                     blockToCheck = 1;
@@ -49,7 +51,7 @@ public class Synchronizer {
                 }
 
                 if (blockToCheck == 1) {
-                    initializeValidators(pwrj.getBlockByNumber(blockToCheck));
+                    Queries.initializeValidators(pwrj.getBlockByNumber(blockToCheck));
                 }
 
                 int maxRetries = 5;
@@ -62,9 +64,9 @@ public class Synchronizer {
                         List<FalconTransaction> txns = blockAndTransactions.getSecond();
                         logger.info("Fetched {} transactions for block {} in {} ms", txns.size(), blockToCheck, System.currentTimeMillis() - fetchStart);
 
-                        insertBlock(block);
-                        Queries.incrementSubmittedBlocksCount(block);
-                        Queries.updateLastStoredBlock(blockToCheck);
+                        blocksRepo.insertBlock(block);
+                        blocksRepo.incrementSubmittedBlocksCount(block);
+                        blocksRepo.updateLastStoredBlock(blockToCheck);
 
                         Processor.processTxns(blockToCheck, txns);
 
@@ -76,7 +78,6 @@ public class Synchronizer {
                         } else {
                             long retryTime = System.currentTimeMillis();
                             logger.error("Error fetching block {}, attempt {}: {}", blockToCheck, retryCount + 1, e.getMessage());
-                            e.printStackTrace();
 
                             retryCount++;
                             if (retryCount >= maxRetries) {

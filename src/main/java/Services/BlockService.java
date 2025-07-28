@@ -3,7 +3,8 @@ package Services;
 import Core.Cache.CacheManager;
 import DataModel.Block;
 import DataModel.NewTxn;
-import Database.Queries;
+import Database.Constants.Repository.Blocks.BlocksRepo;
+import Database.Constants.Repository.Blocks.BlocksRepoImpl;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -12,17 +13,17 @@ import spark.Response;
 
 import java.util.List;
 
-import static Database.Queries.*;
 import static Utils.Helpers.*;
 import static Utils.ResponseBuilder.getError;
 import static Utils.ResponseBuilder.getSuccess;
 
 public class BlockService {
-//    private static final Logger logger = LogManager.getLogger(BlockService.class);
     private static CacheManager cacheManager;
+    private static BlocksRepo blocksRepo;
 
     public static void initialize(PWRJ pwrjInstance) {
         cacheManager = new CacheManager(pwrjInstance);
+        blocksRepo = new BlocksRepoImpl();
     }
 
     public static Object getLatestBlocks(Request request, Response response) {
@@ -36,7 +37,7 @@ public class BlockService {
             long totalBlockCount = cacheManager.getBlocksCount();
 
             JSONArray blocksArray = new JSONArray();
-            List<Block> blockList = getLastXBlocks(count, offset);
+            List<Block> blockList = blocksRepo.getLastXBlocks(count, offset);
 
             for (Block block : blockList) {
                 JSONObject object = new JSONObject();
@@ -69,7 +70,7 @@ public class BlockService {
 
             long blockNumber = Long.parseLong(request.queryParams("blockNumber"));
 
-            Block block = getDbBlock(blockNumber);
+            Block block = blocksRepo.getDbBlock(blockNumber);
             if (block == null) return getError(response, "Invalid DataModel.Block Number");
 
             return getSuccess(
@@ -92,7 +93,7 @@ public class BlockService {
 
             long blockNumber = Long.parseLong(request.queryParams("blockNumber"));
 
-            String blockHash = getBlockHash(blockNumber);
+            String blockHash = blocksRepo.getBlockHash(blockNumber);
             if (blockHash == null) {
                 return getError(response, "Invalid DataModel.Block Number");
             }
@@ -118,12 +119,12 @@ public class BlockService {
             int previousTxnsCount = (page - 1) * count;
             int totalTxnCount;
 
-            Block block = getDbBlock(Long.parseLong(blockNumber));
+            Block block = blocksRepo.getDbBlock(Long.parseLong(blockNumber));
             if (block == null) return getError(response, "Invalid DataModel.Block Number");
 
             int txnsCount = 0;
             JSONArray txns = new JSONArray();
-            List<NewTxn> txnsArray = getBlockTxns(blockNumber);
+            List<NewTxn> txnsArray = blocksRepo.getBlockTxns(blockNumber);
             totalTxnCount = txnsArray.size();
 
             for (int t = previousTxnsCount; t < txnsArray.size(); ++t) {
@@ -164,10 +165,10 @@ public class BlockService {
         int totalBlocksCount;
 
         try {
-            JSONArray blocks = Queries.getBlocksCreated(address.toLowerCase().substring(2), count, offset);
+            JSONArray blocks = blocksRepo.getBlocksCreated(address.toLowerCase().substring(2), count, offset);
 
             if (blocks.isEmpty()) totalBlocksCount = 0;
-            else totalBlocksCount = getBlocksSubmitted(address.toLowerCase().substring(2));
+            else totalBlocksCount = blocksRepo.getBlocksSubmitted(address.toLowerCase().substring(2));
 
             JSONObject metadata = createPaginationMetadata(totalBlocksCount, page, count);
 

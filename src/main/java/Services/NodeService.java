@@ -1,6 +1,8 @@
 package Services;
 
 import Core.Cache.CacheManager;
+import Database.Constants.Repository.Blocks.BlocksRepo;
+import Database.Constants.Repository.Blocks.BlocksRepoImpl;
 import com.github.pwrlabs.pwrj.entities.Validator;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import org.json.JSONArray;
@@ -12,8 +14,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
-import static Database.Queries.getBlocksSubmitted;
-import static Database.Queries.getLatestBlockNumberForFeeRecipient;
 import static Utils.Helpers.*;
 import static Utils.ResponseBuilder.getError;
 import static Utils.ResponseBuilder.getSuccess;
@@ -21,11 +21,13 @@ import static Utils.ResponseBuilder.getSuccess;
 public class NodeService {
 //    private static final Logger logger = LogManager.getLogger(NodeService.class);
     private static CacheManager cacheManager;
+    private static BlocksRepo blocksRepo;
     private static PWRJ pwrj;
 
     public static void initialize(PWRJ pwrjInstance) {
         pwrj = pwrjInstance;
         cacheManager = new CacheManager(pwrj);
+        blocksRepo = new BlocksRepoImpl();
     }
 
     public static Object getNodesInfo(Request request, Response response) throws Exception {
@@ -70,7 +72,7 @@ public class NodeService {
                         .put("votingPowerInPercentage", votingPower)
                         .put("votingPowerInPwr", node.getVotingPower())
                         .put("earnings", sharesInPwr)
-                        .put("blocksSubmitted", getBlocksSubmitted(address)));
+                        .put("blocksSubmitted", blocksRepo.getBlocksSubmitted(address)));
             }
 
             JSONObject metadata = createPaginationMetadata(totalNodesCount, page, count);
@@ -105,8 +107,8 @@ public class NodeService {
                     "votingPower", votingPowerInPwr,
                     "numberOfDelegators", node.getDelegatorsCount(),
                     "totalShares", sharesInPwr,
-                    "blocksCreated", getBlocksSubmitted(address),
-                    "timeOfLastBlock", getLatestBlockNumberForFeeRecipient(address.substring(2)) / 1000
+                    "blocksCreated", blocksRepo.getBlocksSubmitted(address),
+                    "timeOfLastBlock", blocksRepo.getLatestBlockNumberForFeeRecipient(address.substring(2)) / 1000
             );
         } catch (Exception e) {
             return getError(response, e.getLocalizedMessage());

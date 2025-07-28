@@ -4,6 +4,8 @@ import Core.Cache.CacheManager;
 import DataModel.Block;
 import DataModel.NewTxn;
 import Database.Config;
+import Database.Constants.Repository.Blocks.BlocksRepo;
+import Database.Constants.Repository.Blocks.BlocksRepoImpl;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
@@ -32,6 +34,7 @@ public class WebsocketService {
     private static final Set<Session> sessions = new CopyOnWriteArraySet<>();
     private static final Map<Session, SubscriptionType> subscriptions = new ConcurrentHashMap<>();
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
+    private static final BlocksRepo blocksRepo = new BlocksRepoImpl();
     private static final CacheManager cacheManager = new CacheManager(new PWRJ(Config.getPwrRpcUrl()));
     private static final Logger logger = LoggerFactory.getLogger(WebsocketService.class);
     private static final long MAX_IDLE_TIMEOUT = 10 * 60 * 1000; // 10 minutes
@@ -162,7 +165,7 @@ public class WebsocketService {
 
     private void sendLastXBlocks() {
         try {
-            List<Block> blockList = getLastXBlocks(10);
+            List<Block> blockList = blocksRepo.getLastXBlocks(10);
             JSONArray blocksArray = new JSONArray();
 
             for (Block block : blockList.reversed()) {

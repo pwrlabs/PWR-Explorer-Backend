@@ -1,7 +1,7 @@
 package Core;
 
-import Database.Constants.Repository.Blocks.BlocksRepo;
-import Database.Constants.Repository.Blocks.BlocksRepoImpl;
+import Database.Repository.Blocks.BlocksRepo;
+import Database.Repository.Blocks.BlocksRepoImpl;
 import Database.Queries;
 import Services.AdminService;
 import com.github.pwrlabs.pwrj.entities.Block;

@@ -1,4 +1,4 @@
-package Database.Constants.Repository.Blocks;
+package Database.Repository.Blocks;
 
 import DataModel.Block;
 import DataModel.NewTxn;

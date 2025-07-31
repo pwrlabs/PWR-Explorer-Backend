@@ -1,8 +1,8 @@
 package Core.Cache;
 
 import DataModel.Block;
-import Database.Constants.Repository.Blocks.BlocksRepo;
-import Database.Constants.Repository.Blocks.BlocksRepoImpl;
+import Database.Repository.Blocks.BlocksRepo;
+import Database.Repository.Blocks.BlocksRepoImpl;
 import Database.Queries;
 import DataModel.NewTxn;
 import com.github.pwrlabs.pwrj.entities.Validator;

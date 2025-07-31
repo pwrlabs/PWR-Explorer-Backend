@@ -1,4 +1,4 @@
-package Database.Constants.Repository.SqlExecutors;
+package Database.Repository.SqlExecutors;
 
 import DataModel.QueryResult;
 

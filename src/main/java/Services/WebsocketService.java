@@ -4,8 +4,8 @@ import Core.Cache.CacheManager;
 import DataModel.Block;
 import DataModel.NewTxn;
 import Database.Config;
-import Database.Constants.Repository.Blocks.BlocksRepo;
-import Database.Constants.Repository.Blocks.BlocksRepoImpl;
+import Database.Repository.Blocks.BlocksRepo;
+import Database.Repository.Blocks.BlocksRepoImpl;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
@@ -33,10 +33,11 @@ enum SubscriptionType {
 public class WebsocketService {
     private static final Set<Session> sessions = new CopyOnWriteArraySet<>();
     private static final Map<Session, SubscriptionType> subscriptions = new ConcurrentHashMap<>();
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(5);
     private static final BlocksRepo blocksRepo = new BlocksRepoImpl();
     private static final CacheManager cacheManager = new CacheManager(new PWRJ(Config.getPwrRpcUrl()));
     private static final Logger logger = LoggerFactory.getLogger(WebsocketService.class);
+    private static final PWRJ pwrj = new PWRJ(Config.getPwrRpcUrl());
     private static final long MAX_IDLE_TIMEOUT = 10 * 60 * 1000; // 10 minutes
     private static volatile boolean started = false;
     private static long latestBlockSent = 0;
@@ -52,6 +53,8 @@ public class WebsocketService {
 
                 scheduler.scheduleWithFixedDelay(this::sendLastXBlocks, 3, 5, TimeUnit.SECONDS);
                 scheduler.scheduleWithFixedDelay(this::sendLastXTxns, 3, 5, TimeUnit.SECONDS);
+
+                scheduler.scheduleWithFixedDelay(this::clearReferences, 5, 20, TimeUnit.SECONDS);
 
                 started = true;
             }
@@ -108,6 +111,8 @@ public class WebsocketService {
             List<Block> blockList = cacheManager.getBlocks(5);
             long blocksCount = cacheManager.getBlocksCount();
             for (Block block : blockList.reversed()) {
+                logger.info("Block retrieved in websocket: {}", block);
+                logger.info("Latest block sent: {}", latestBlockSent);
                 if (Long.parseLong(block.blockNumber()) > latestBlockSent) {
                     JSONObject blockObj = new JSONObject();
                     blockObj.put("blockHeight", Long.parseLong(block.blockNumber()));
@@ -235,6 +240,19 @@ public class WebsocketService {
             } catch (Exception e) {
                 logger.error("Failed to send WS message to session: ", e);
             }
+        }
+    }
+
+    private void clearReferences() {
+        try {
+            long chainLatestBlock = pwrj.getLatestBlockNumber();
+
+            if (chainLatestBlock < latestBlockSent && chainLatestBlock < latestB) {
+                latestBlockSent = 0;
+                latestB = 0;
+            }
+        } catch (Exception e) {
+            logger.error("Failed to retrieve chain latest block");
         }
     }
 }

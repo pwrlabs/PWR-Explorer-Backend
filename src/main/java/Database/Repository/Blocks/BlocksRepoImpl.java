@@ -1,11 +1,10 @@
-package Database.Constants.Repository.Blocks;
+package Database.Repository.Blocks;
 
 import DataModel.Block;
 import DataModel.NewTxn;
 import DataModel.QueryResult;
-import Database.Constants.Repository.SqlExecutors.JdbcExecutors;
-import Database.Constants.Repository.SqlExecutors.SqlExecutors;
-import Database.Queries;
+import Database.Repository.SqlExecutors.JdbcExecutors;
+import Database.Repository.SqlExecutors.SqlExecutors;
 import Utils.Settings;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -13,8 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -22,7 +19,6 @@ import java.util.List;
 
 import static Database.Constants.Constants.*;
 import static Database.Constants.Constants.SUCCESS;
-import static Database.DatabaseConnection.getConnection;
 import static Database.Queries.getTransactionsTableName;
 import static Database.Queries.populateNewTxnObject;
 

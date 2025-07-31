@@ -1,8 +1,8 @@
 package Services;
 
 import Core.Cache.CacheManager;
-import Database.Constants.Repository.Blocks.BlocksRepo;
-import Database.Constants.Repository.Blocks.BlocksRepoImpl;
+import Database.Repository.Blocks.BlocksRepo;
+import Database.Repository.Blocks.BlocksRepoImpl;
 import com.github.pwrlabs.pwrj.entities.Validator;
 import com.github.pwrlabs.pwrj.protocol.PWRJ;
 import org.json.JSONArray;
